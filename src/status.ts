@@ -10,10 +10,16 @@ const PANE: Record<string, string> = {
 };
 
 function applyStatus(s: Status) {
-  const dot = $("dot");
   const cls = ({ Healthy: "green", Degraded: "yellow", Down: "red", NotInstalled: "grey", WaitingPermissions: "orange" } as Record<Status, string>)[s] ?? "grey";
-  dot.className = "dot " + cls;
-  $("status-label").textContent = s === "WaitingPermissions" ? "Waiting for permissions" : s;
+  const label = s === "WaitingPermissions" ? "Waiting for permissions" : s;
+  for (const id of ["dot", "side-dot"]) {
+    const el = document.getElementById(id);
+    if (el) el.className = "dot " + cls;
+  }
+  for (const id of ["status-text", "side-status"]) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label;
+  }
   $("setup").classList.toggle("hidden", s !== "NotInstalled");
   $("controls").classList.toggle("hidden", s === "NotInstalled");
   const showPerms = s === "WaitingPermissions";

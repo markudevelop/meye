@@ -9,135 +9,173 @@
   </head>
 
   <body>
-  <nav class="tabbar">
-    <button id="tab-btn-status" class="tab-btn">Status</button>
-    <button id="tab-btn-search" class="tab-btn">Search</button>
-    <button id="tab-btn-chat" class="tab-btn">Chat</button>
-    <button id="tab-btn-timeline" class="tab-btn">Timeline</button>
-    <button id="tab-btn-devices" class="tab-btn">Devices</button>
-    <button id="tab-btn-pipes" class="tab-btn">Pipes</button>
-    <button id="tab-btn-settings" class="tab-btn">Settings</button>
-    <button id="tab-btn-advanced" class="tab-btn">Advanced</button>
-  </nav>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <svg class="brand-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Meye</span>
+        </div>
+        <nav class="nav">
+          <button id="tab-btn-status" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg><span>Status</span>
+          </button>
+          <button id="tab-btn-search" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><span>Search</span>
+          </button>
+          <button id="tab-btn-chat" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5Z"/></svg><span>Chat</span>
+          </button>
+          <button id="tab-btn-timeline" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Timeline</span>
+          </button>
+          <button id="tab-btn-devices" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h7M15 17h5"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="13" cy="17" r="2"/></svg><span>Devices</span>
+          </button>
+          <button id="tab-btn-pipes" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v5M15 2v5M7 7h10v3a5 5 0 0 1-10 0V7ZM12 15v7"/></svg><span>Pipes</span>
+          </button>
+          <button id="tab-btn-settings" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span>Settings</span>
+          </button>
+          <button id="tab-btn-advanced" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M13 6l-2 12"/></svg><span>Advanced</span>
+          </button>
+        </nav>
+        <div class="side-foot">
+          <span id="side-dot" class="dot grey"></span>
+          <span id="side-status" class="muted">…</span>
+        </div>
+      </aside>
 
-  <main class="container">
-    <section id="panel-status" class="panel">
-      <header>
-        <span id="dot" class="dot grey"></span>
-        <h1>Meye</h1>
-        <span id="status-label">…</span>
-      </header>
-      <section id="setup" class="hidden">
-        <p class="warn">Not set up yet. This pins a signed copy of screenpipe and installs a LaunchAgent so it always runs. macOS may ask you to grant <b>Screen Recording</b> and <b>Microphone</b> to "Meye Recorder".</p>
-        <button id="btn-setup">Set up &amp; start</button>
-      </section>
-      <section id="controls" class="hidden">
-        <div class="row"><button id="btn-start">Start</button><button id="btn-stop">Stop</button><button id="btn-restart">Restart</button></div>
-        <div class="row"><button id="btn-data">Data folder</button><button id="btn-logs">Logs</button><button id="btn-update">Update screenpipe</button></div>
-      </section>
-      <section id="perms" class="hidden">
-        <p class="warn" id="perms-msg"></p>
-        <div class="row" id="perms-buttons"></div>
-        <div class="row"><button id="btn-recheck">Re-check</button></div>
-      </section>
-      <section id="metrics">
-        <dl>
-          <dt>Version</dt><dd id="m-version">—</dd>
-          <dt>Uptime</dt><dd id="m-uptime">—</dd>
-          <dt>Capture FPS</dt><dd id="m-fps">—</dd>
-          <dt>Audio</dt><dd id="m-audio">—</dd>
-          <dt>Pending transcripts</dt><dd id="m-pending">—</dd>
-          <dt>Monitors</dt><dd id="m-monitors">—</dd>
-        </dl>
-      </section>
-      <details><summary>Recent logs</summary><pre id="logs-pre">—</pre></details>
-    </section>
+      <main class="main">
+        <div class="content">
+          <section id="panel-status" class="panel">
+            <header class="panel-head">
+              <h1>Status</h1>
+              <span id="status-label" class="badge"><span id="dot" class="dot grey"></span><span id="status-text">…</span></span>
+            </header>
+            <section id="setup" class="hidden card">
+              <p class="warn">Not set up yet. This pins a signed copy of screenpipe and installs a LaunchAgent so it always runs. macOS may ask you to grant <b>Screen Recording</b> and <b>Microphone</b> to "Meye Recorder".</p>
+              <button id="btn-setup" class="primary">Set up &amp; start</button>
+            </section>
+            <section id="controls" class="hidden">
+              <div class="row"><button id="btn-start">Start</button><button id="btn-stop">Stop</button><button id="btn-restart">Restart</button></div>
+              <div class="row"><button id="btn-data">Data folder</button><button id="btn-logs">Logs</button><button id="btn-update">Update screenpipe</button></div>
+            </section>
+            <section id="perms" class="hidden card">
+              <p class="warn" id="perms-msg"></p>
+              <div class="row" id="perms-buttons"></div>
+              <div class="row"><button id="btn-recheck" class="primary">Re-check</button></div>
+            </section>
+            <section id="metrics" class="card">
+              <dl>
+                <dt>Version</dt><dd id="m-version">—</dd>
+                <dt>Uptime</dt><dd id="m-uptime">—</dd>
+                <dt>Capture FPS</dt><dd id="m-fps">—</dd>
+                <dt>Audio</dt><dd id="m-audio">—</dd>
+                <dt>Pending transcripts</dt><dd id="m-pending">—</dd>
+                <dt>Monitors</dt><dd id="m-monitors">—</dd>
+              </dl>
+            </section>
+            <details><summary>Recent logs</summary><pre id="logs-pre">—</pre></details>
+          </section>
 
-    <section id="panel-search" class="panel hidden">
-      <div class="row">
-        <input id="s-q" placeholder="search your screen + audio…" />
-        <select id="s-type"><option value="all">all</option><option value="ocr">screen</option><option value="audio">audio</option><option value="ui">ui</option></select>
-        <button id="s-go">Search</button>
-      </div>
-      <div class="row">
-        <input id="s-app" placeholder="app name (optional)" />
-        <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
-      </div>
-      <div id="s-results"></div>
-    </section>
+          <section id="panel-search" class="panel hidden">
+            <header class="panel-head"><h1>Search</h1></header>
+            <div class="row">
+              <input id="s-q" placeholder="search your screen + audio…" />
+              <select id="s-type"><option value="all">all</option><option value="ocr">screen</option><option value="audio">audio</option><option value="ui">ui</option></select>
+              <button id="s-go" class="primary">Search</button>
+            </div>
+            <div class="row">
+              <input id="s-app" placeholder="app name (optional)" />
+              <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
+            </div>
+            <div id="s-results"></div>
+          </section>
 
-    <section id="panel-chat" class="panel hidden">
-      <p class="meta">Ask about your recorded day — Meye searches your screen+audio and answers via your default model preset (DeepSeek).</p>
-      <div id="c-log" style="max-height:340px; overflow:auto"></div>
-      <div class="row">
-        <textarea id="c-input" rows="2" placeholder="e.g. what did I work on this morning?  (⌘/Ctrl+Enter to send)" style="flex:1"></textarea>
-        <button id="c-send">Send</button>
-      </div>
-    </section>
+          <section id="panel-chat" class="panel hidden">
+            <header class="panel-head"><h1>Chat</h1></header>
+            <p class="meta">Ask about your recorded day — Meye searches your screen+audio and answers via your default model preset.</p>
+            <div id="c-log"></div>
+            <div class="row composer">
+              <textarea id="c-input" rows="2" placeholder="e.g. what did I work on this morning?  (⌘/Ctrl+Enter to send)" style="flex:1"></textarea>
+              <button id="c-send" class="primary">Send</button>
+            </div>
+          </section>
 
-    <section id="panel-timeline" class="panel hidden">
-      <p class="meta">Scrub through your captured screen — drag the slider to rewind your day.</p>
-      <div class="row">
-        <input id="t-limit" type="number" value="200" min="10" max="2000" style="max-width:7em" />
-        <button id="t-load">Load recent frames</button>
-      </div>
-      <input id="t-slider" type="range" min="0" max="0" value="0" style="width:100%" />
-      <div id="t-meta" class="meta">—</div>
-      <img id="t-img" style="max-width:100%; border-radius:8px" />
-      <details><summary>OCR text</summary><pre id="t-ocr">—</pre></details>
-    </section>
+          <section id="panel-timeline" class="panel hidden">
+            <header class="panel-head"><h1>Timeline</h1></header>
+            <p class="meta">Scrub through your captured screen — drag the slider to rewind your day.</p>
+            <div class="row">
+              <input id="t-limit" type="number" value="200" min="10" max="2000" style="max-width:7em" />
+              <button id="t-load" class="primary">Load recent frames</button>
+            </div>
+            <input id="t-slider" type="range" min="0" max="0" value="0" style="width:100%" />
+            <div id="t-meta" class="meta">—</div>
+            <img id="t-img" />
+            <details><summary>OCR text</summary><pre id="t-ocr">—</pre></details>
+          </section>
 
-    <section id="panel-devices" class="panel hidden">
-      <div class="row"><button id="d-refresh">Refresh</button><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
-      <h3>Monitors</h3><pre id="d-monitors">—</pre>
-      <h3>Audio devices</h3><pre id="d-audio">—</pre>
-    </section>
+          <section id="panel-devices" class="panel hidden">
+            <header class="panel-head"><h1>Devices</h1></header>
+            <div class="row"><button id="d-refresh" class="primary">Refresh</button><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
+            <h3>Monitors</h3><pre id="d-monitors">—</pre>
+            <h3>Audio devices</h3><pre id="d-audio">—</pre>
+          </section>
 
-    <section id="panel-pipes" class="panel hidden">
-      <p class="meta">Pipes are scheduled agents that turn your screen+audio into outputs (notes, summaries). "Run now" runs one immediately.</p>
-      <h3>Pipe store</h3>
-      <div class="row"><input id="r-q" placeholder="search the registry (e.g. notes, slack, notion)" /><button id="r-go">Search</button></div>
-      <div id="r-results"></div>
-      <h3>Installed pipes</h3>
-      <div class="row"><button id="p-refresh">Refresh</button></div>
-      <div id="p-list">—</div>
-      <div id="p-editor" class="hidden">
-        <h3>Edit config: <span id="p-editing"></span></h3>
-        <textarea id="p-config" rows="12" style="width:100%"></textarea>
-        <div class="row"><button id="p-config-save">Save</button><button id="p-config-cancel">Cancel</button></div>
-      </div>
-      <h3>Logs</h3><pre id="p-logs">—</pre>
-    </section>
+          <section id="panel-pipes" class="panel hidden">
+            <header class="panel-head"><h1>Pipes</h1></header>
+            <p class="meta">Pipes are scheduled agents that turn your screen+audio into outputs (notes, summaries). "Run now" runs one immediately.</p>
+            <h3>Pipe store</h3>
+            <div class="row"><input id="r-q" placeholder="search the registry (e.g. notes, slack, notion)" /><button id="r-go" class="primary">Search</button></div>
+            <div id="r-results"></div>
+            <h3>Installed pipes</h3>
+            <div class="row"><button id="p-refresh">Refresh</button></div>
+            <div id="p-list">—</div>
+            <div id="p-editor" class="hidden card">
+              <h3>Edit config: <span id="p-editing"></span></h3>
+              <textarea id="p-config" rows="12" style="width:100%"></textarea>
+              <div class="row"><button id="p-config-save" class="primary">Save</button><button id="p-config-cancel">Cancel</button></div>
+            </div>
+            <h3>Logs</h3><pre id="p-logs">—</pre>
+          </section>
 
-    <section id="panel-settings" class="panel hidden">
-      <h3>AI model presets</h3>
-      <p class="meta">Pipes need a default preset to run. Subscriptions can't be used here — pipes call a raw API or a local model.</p>
-      <div id="set-list">—</div>
-      <h3>Add preset</h3>
-      <div class="row">
-        <input id="set-id" placeholder="preset id (e.g. deepseek, ollama-local)" />
-        <select id="set-provider">
-          <option value="anthropic">anthropic</option>
-          <option value="openai">openai</option>
-          <option value="native-ollama">native-ollama (local)</option>
-          <option value="custom">custom (OpenAI-compatible, e.g. DeepSeek)</option>
-          <option value="screenpipe-cloud">screenpipe-cloud</option>
-        </select>
-      </div>
-      <div class="row"><input id="set-model" placeholder="model (e.g. claude-sonnet-4-6, deepseek-chat, llama3.2)" /></div>
-      <div class="row" id="set-url-wrap"><input id="set-url" placeholder="base url (ollama/custom, e.g. https://api.deepseek.com)" /></div>
-      <div class="row" id="set-key-wrap"><input id="set-key" type="password" placeholder="api key (openai/anthropic/custom)" /></div>
-      <div class="row"><label><input id="set-default" type="checkbox" checked /> set as default</label><button id="set-create">Create preset</button></div>
-    </section>
+          <section id="panel-settings" class="panel hidden">
+            <header class="panel-head"><h1>Settings</h1></header>
+            <h3>AI model presets</h3>
+            <p class="meta">Pipes need a default preset to run. Subscriptions can't be used here — pipes call a raw API or a local model.</p>
+            <div id="set-list">—</div>
+            <h3>Add preset</h3>
+            <div class="card">
+              <div class="row">
+                <input id="set-id" placeholder="preset id (e.g. deepseek, ollama-local)" />
+                <select id="set-provider">
+                  <option value="anthropic">anthropic</option>
+                  <option value="openai">openai</option>
+                  <option value="native-ollama">native-ollama (local)</option>
+                  <option value="custom">custom (OpenAI-compatible, e.g. DeepSeek)</option>
+                  <option value="screenpipe-cloud">screenpipe-cloud</option>
+                </select>
+              </div>
+              <div class="row"><input id="set-model" placeholder="model (e.g. claude-sonnet-4-6, deepseek-chat, llama3.2)" /></div>
+              <div class="row" id="set-url-wrap"><input id="set-url" placeholder="base url (ollama/custom, e.g. https://api.deepseek.com)" /></div>
+              <div class="row" id="set-key-wrap"><input id="set-key" type="password" placeholder="api key (openai/anthropic/custom)" /></div>
+              <div class="row"><label class="check"><input id="set-default" type="checkbox" checked /> set as default</label><button id="set-create" class="primary">Create preset</button></div>
+            </div>
+          </section>
 
-    <section id="panel-advanced" class="panel hidden">
-      <p class="warn">Power user: run read-only SQL against screenpipe's local DB.</p>
-      <textarea id="a-sql" rows="4" style="width:100%">SELECT * FROM frames ORDER BY timestamp DESC LIMIT 10</textarea>
-      <div class="row"><button id="a-go">Run SQL</button></div>
-      <pre id="a-out">—</pre>
-    </section>
+          <section id="panel-advanced" class="panel hidden">
+            <header class="panel-head"><h1>Advanced</h1></header>
+            <p class="warn">Power user: run read-only SQL against screenpipe's local DB.</p>
+            <textarea id="a-sql" rows="4" style="width:100%">SELECT * FROM frames ORDER BY timestamp DESC LIMIT 10</textarea>
+            <div class="row"><button id="a-go" class="primary">Run SQL</button></div>
+            <pre id="a-out">—</pre>
+          </section>
 
-    <p id="toast" class="toast hidden"></p>
-  </main>
+          <p id="toast" class="toast hidden"></p>
+        </div>
+      </main>
+    </div>
   </body>
 </html>
