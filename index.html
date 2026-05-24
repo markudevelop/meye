@@ -9,35 +9,50 @@
   </head>
 
   <body>
-    <main class="container">
-      <h1>Welcome to Tauri</h1>
+  <main class="container">
+    <header>
+      <span id="dot" class="dot grey"></span>
+      <h1>Screenpipe Keeper</h1>
+      <span id="status-label">…</span>
+    </header>
 
+    <section id="setup" class="hidden">
+      <p class="warn">Not set up yet. This pins a stable copy of screenpipe and installs a
+      LaunchAgent so it always runs. macOS may ask you to re-grant
+      <b>Screen Recording</b> permission for the new binary.</p>
+      <button id="btn-setup">Set up &amp; start</button>
+    </section>
+
+    <section id="controls" class="hidden">
       <div class="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/src/assets/vite.svg" class="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img
-            src="/src/assets/tauri.svg"
-            class="logo tauri"
-            alt="Tauri logo"
-          />
-        </a>
-        <a href="https://www.typescriptlang.org/docs" target="_blank">
-          <img
-            src="/src/assets/typescript.svg"
-            class="logo typescript"
-            alt="typescript logo"
-          />
-        </a>
+        <button id="btn-start">Start</button>
+        <button id="btn-stop">Stop</button>
+        <button id="btn-restart">Restart</button>
       </div>
-      <p>Click on the Tauri logo to learn more about the framework</p>
+      <div class="row">
+        <button id="btn-data">Data folder</button>
+        <button id="btn-logs">Logs</button>
+        <button id="btn-update">Update screenpipe</button>
+      </div>
+    </section>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <p id="greet-msg"></p>
-    </main>
+    <section id="metrics">
+      <dl>
+        <dt>Version</dt><dd id="m-version">—</dd>
+        <dt>Uptime</dt><dd id="m-uptime">—</dd>
+        <dt>Capture FPS</dt><dd id="m-fps">—</dd>
+        <dt>Audio</dt><dd id="m-audio">—</dd>
+        <dt>Pending transcripts</dt><dd id="m-pending">—</dd>
+        <dt>Monitors</dt><dd id="m-monitors">—</dd>
+      </dl>
+    </section>
+
+    <details>
+      <summary>Recent logs</summary>
+      <pre id="logs-pre">—</pre>
+    </details>
+
+    <p id="toast" class="toast hidden"></p>
+  </main>
   </body>
 </html>
