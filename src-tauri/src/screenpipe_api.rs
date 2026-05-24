@@ -39,8 +39,11 @@ pub fn tag_path(kind: &str, id: i64) -> String {
     format!("/tags/{kind}/{id}")
 }
 
-fn client() -> reqwest::Client {
-    reqwest::Client::new()
+/// Shared HTTP client — reused across calls so we don't build a new connection
+/// pool on every request (the health poll fires every 5s).
+pub fn client() -> reqwest::Client {
+    static C: OnceLock<reqwest::Client> = OnceLock::new();
+    C.get_or_init(reqwest::Client::new).clone()
 }
 
 /// Fetch screenpipe's local API token by running `screenpipe auth token`, cached for the

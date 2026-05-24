@@ -65,7 +65,7 @@ pub fn classify(h: &Health) -> Status {
 /// Fetch + parse /health. Returns Down if unreachable.
 pub async fn fetch() -> Status {
     let url = format!("http://127.0.0.1:{}/health", paths::PORT);
-    match reqwest::Client::new()
+    match crate::screenpipe_api::client()
         .get(&url)
         .timeout(std::time::Duration::from_secs(3))
         .send()
@@ -82,7 +82,7 @@ pub async fn fetch() -> Status {
 /// Full health object for the dashboard; None if unreachable/unparseable.
 pub async fn fetch_full() -> Option<Health> {
     let url = format!("http://127.0.0.1:{}/health", paths::PORT);
-    let resp = reqwest::Client::new()
+    let resp = crate::screenpipe_api::client()
         .get(&url)
         .timeout(std::time::Duration::from_secs(3))
         .send()

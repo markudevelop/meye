@@ -164,7 +164,7 @@ pub async fn chat(question: &str) -> Result<ChatReply, String> {
         ],
         "max_tokens": 1024
     });
-    let mut req = reqwest::Client::new()
+    let mut req = crate::screenpipe_api::client()
         .post(endpoint(&p))
         .timeout(std::time::Duration::from_secs(60))
         .json(&body);
