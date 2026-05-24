@@ -16,3 +16,12 @@ pre { font-size: 11px; max-height: 180px; overflow: auto; background: #8881; pad
 .toast { position: fixed; bottom: 12px; left: 12px; right: 12px; background: #000a; color: #fff;
   padding: 8px; border-radius: 8px; font-size: 12px; text-align: center; }
 .hidden { display: none; }
+.tabbar { display: flex; gap: 4px; padding: 8px 8px 0; position: sticky; top: 0; background: inherit; }
+.tab-btn { flex: 1; padding: 8px; border: none; border-bottom: 2px solid transparent; background: none; cursor: pointer; font-size: 13px; opacity: 0.6; }
+.tab-btn.active { opacity: 1; border-bottom-color: #2ecc71; font-weight: 600; }
+.panel { padding: 4px 0; }
+input, select, textarea { padding: 6px; border-radius: 6px; border: 1px solid #8884; background: transparent; color: inherit; font: inherit; }
+#s-q { flex: 1; }
+#s-results .hit { border: 1px solid #8883; border-radius: 8px; padding: 8px; margin: 6px 0; font-size: 12px; }
+#s-results .hit img { max-width: 100%; border-radius: 6px; margin-top: 6px; }
+#s-results .meta { opacity: 0.6; font-size: 11px; }

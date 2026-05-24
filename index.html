@@ -9,54 +9,71 @@
   </head>
 
   <body>
+  <nav class="tabbar">
+    <button id="tab-btn-status" class="tab-btn">Status</button>
+    <button id="tab-btn-search" class="tab-btn">Search</button>
+    <button id="tab-btn-devices" class="tab-btn">Devices</button>
+    <button id="tab-btn-advanced" class="tab-btn">Advanced</button>
+  </nav>
+
   <main class="container">
-    <header>
-      <span id="dot" class="dot grey"></span>
-      <h1>Screenpipe Keeper</h1>
-      <span id="status-label">…</span>
-    </header>
-
-    <section id="setup" class="hidden">
-      <p class="warn">Not set up yet. This pins a stable copy of screenpipe and installs a
-      LaunchAgent so it always runs. macOS may ask you to re-grant
-      <b>Screen Recording</b> permission for the new binary.</p>
-      <button id="btn-setup">Set up &amp; start</button>
+    <section id="panel-status" class="panel">
+      <header>
+        <span id="dot" class="dot grey"></span>
+        <h1>Meye</h1>
+        <span id="status-label">…</span>
+      </header>
+      <section id="setup" class="hidden">
+        <p class="warn">Not set up yet. This pins a signed copy of screenpipe and installs a LaunchAgent so it always runs. macOS may ask you to grant <b>Screen Recording</b> and <b>Microphone</b> to "Meye Recorder".</p>
+        <button id="btn-setup">Set up &amp; start</button>
+      </section>
+      <section id="controls" class="hidden">
+        <div class="row"><button id="btn-start">Start</button><button id="btn-stop">Stop</button><button id="btn-restart">Restart</button></div>
+        <div class="row"><button id="btn-data">Data folder</button><button id="btn-logs">Logs</button><button id="btn-update">Update screenpipe</button></div>
+      </section>
+      <section id="perms" class="hidden">
+        <p class="warn" id="perms-msg"></p>
+        <div class="row" id="perms-buttons"></div>
+        <div class="row"><button id="btn-recheck">Re-check</button></div>
+      </section>
+      <section id="metrics">
+        <dl>
+          <dt>Version</dt><dd id="m-version">—</dd>
+          <dt>Uptime</dt><dd id="m-uptime">—</dd>
+          <dt>Capture FPS</dt><dd id="m-fps">—</dd>
+          <dt>Audio</dt><dd id="m-audio">—</dd>
+          <dt>Pending transcripts</dt><dd id="m-pending">—</dd>
+          <dt>Monitors</dt><dd id="m-monitors">—</dd>
+        </dl>
+      </section>
+      <details><summary>Recent logs</summary><pre id="logs-pre">—</pre></details>
     </section>
 
-    <section id="controls" class="hidden">
+    <section id="panel-search" class="panel hidden">
       <div class="row">
-        <button id="btn-start">Start</button>
-        <button id="btn-stop">Stop</button>
-        <button id="btn-restart">Restart</button>
+        <input id="s-q" placeholder="search your screen + audio…" />
+        <select id="s-type"><option value="all">all</option><option value="ocr">screen</option><option value="audio">audio</option><option value="ui">ui</option></select>
+        <button id="s-go">Search</button>
       </div>
       <div class="row">
-        <button id="btn-data">Data folder</button>
-        <button id="btn-logs">Logs</button>
-        <button id="btn-update">Update screenpipe</button>
+        <input id="s-app" placeholder="app name (optional)" />
+        <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
       </div>
+      <div id="s-results"></div>
     </section>
 
-    <section id="perms" class="hidden">
-      <p class="warn" id="perms-msg"></p>
-      <div class="row" id="perms-buttons"></div>
-      <div class="row"><button id="btn-recheck">Re-check</button></div>
+    <section id="panel-devices" class="panel hidden">
+      <div class="row"><button id="d-refresh">Refresh</button><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
+      <h3>Monitors</h3><pre id="d-monitors">—</pre>
+      <h3>Audio devices</h3><pre id="d-audio">—</pre>
     </section>
 
-    <section id="metrics">
-      <dl>
-        <dt>Version</dt><dd id="m-version">—</dd>
-        <dt>Uptime</dt><dd id="m-uptime">—</dd>
-        <dt>Capture FPS</dt><dd id="m-fps">—</dd>
-        <dt>Audio</dt><dd id="m-audio">—</dd>
-        <dt>Pending transcripts</dt><dd id="m-pending">—</dd>
-        <dt>Monitors</dt><dd id="m-monitors">—</dd>
-      </dl>
+    <section id="panel-advanced" class="panel hidden">
+      <p class="warn">Power user: run read-only SQL against screenpipe's local DB.</p>
+      <textarea id="a-sql" rows="4" style="width:100%">SELECT * FROM frames ORDER BY timestamp DESC LIMIT 10</textarea>
+      <div class="row"><button id="a-go">Run SQL</button></div>
+      <pre id="a-out">—</pre>
     </section>
-
-    <details>
-      <summary>Recent logs</summary>
-      <pre id="logs-pre">—</pre>
-    </details>
 
     <p id="toast" class="toast hidden"></p>
   </main>
