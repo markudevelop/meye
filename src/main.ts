@@ -7,9 +7,11 @@ import { initTimeline, loadTimelineIfEmpty } from "./timeline";
 import { initDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
+import { initPalette } from "./palette";
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
+initPalette();
 initStatus();
 initSearch();
 initChat();
