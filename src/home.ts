@@ -94,6 +94,11 @@ function feed(): HTMLElement {
   return $("home-feed");
 }
 
+function setEmpty(empty: boolean) {
+  document.getElementById("panel-home")?.classList.toggle("empty", empty);
+  document.getElementById("home-hero")?.classList.toggle("hidden", !empty);
+}
+
 function add(e: any): HTMLElement {
   const node = renderEntry(e);
   feed().appendChild(node);
@@ -116,6 +121,7 @@ async function submit() {
   input.value = "";
   input.style.height = "auto";
   hideSuggest();
+  setEmpty(false);
   const userEntry = { kind: "user", ts: Date.now(), text };
   add(userEntry);
   await persist(userEntry);
@@ -255,11 +261,8 @@ export async function loadHome() {
     .catch(() => {});
   const entries = await api.activityRead().catch(() => [] as any[]);
   feed().innerHTML = "";
-  if (!entries.length) {
-    feed().innerHTML = `<p class="meta home-hello">👋 Ask about your day, or run an action. Type <code>/</code> for commands — try <code>/run obsidian-sync</code>, <code>/search error</code>, or just ask a question.</p>`;
-  } else {
-    for (const e of entries) feed().appendChild(renderEntry(e));
-  }
+  setEmpty(entries.length === 0);
+  for (const e of entries) feed().appendChild(renderEntry(e));
   feed().scrollTop = feed().scrollHeight;
 }
 
@@ -311,4 +314,11 @@ export function initHome() {
     loaded = false;
     void loadHome();
   };
+  document.querySelectorAll<HTMLElement>("#home-hero .chip").forEach((el) => {
+    el.onclick = () => {
+      input.value = el.dataset.cmd ?? "";
+      input.focus();
+      updateSuggest();
+    };
+  });
 }

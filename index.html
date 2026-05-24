@@ -54,6 +54,16 @@
         <div class="content">
           <section id="panel-home" class="panel">
             <header class="panel-head"><h1>Home</h1><button id="home-clear">Clear</button></header>
+            <div id="home-hero" class="home-hero hidden">
+              <svg class="hero-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <h1>What do you want to recall?</h1>
+              <p class="meta">Ask about your screen &amp; audio, or run an action.</p>
+              <div class="hero-chips">
+                <button class="chip" data-cmd="/run ">▶ Run a pipe</button>
+                <button class="chip" data-cmd="/search ">🔍 Search recordings</button>
+                <button class="chip" data-cmd="/profile ">⚙ Power profile</button>
+              </div>
+            </div>
             <div id="home-feed"></div>
             <div class="composer-wrap">
               <div id="home-suggest" class="suggest hidden"></div>

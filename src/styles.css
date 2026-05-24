@@ -172,6 +172,17 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 /* chat */
 #c-log { display: flex; flex-direction: column; gap: 10px; max-height: 56vh; overflow-y: auto; padding: 4px 0 12px; }
 #c-log .hit .meta { text-transform: uppercase; letter-spacing: 0.05em; font-size: 10.5px; margin-bottom: 4px; }
+/* empty (no history) state — centered hero + composer in the middle */
+#panel-home.empty { justify-content: center; }
+#panel-home.empty .panel-head,
+#panel-home.empty #home-feed { display: none; }
+#panel-home.empty .composer-wrap { max-width: 640px; width: 100%; margin: 0 auto; }
+.home-hero { text-align: center; max-width: 640px; margin: 0 auto 22px; }
+.hero-eye { width: 42px; height: 42px; color: var(--accent); }
+.home-hero h1 { font-size: 26px; font-weight: 650; letter-spacing: -0.02em; margin: 12px 0 6px; }
+.hero-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.chip { border-radius: 999px; padding: 7px 14px; font-size: 13px; background: var(--bg-elev); }
+
 .composer-wrap { position: relative; padding-top: 10px; }
 .composer {
   position: static; display: flex; align-items: flex-end; gap: 8px;
