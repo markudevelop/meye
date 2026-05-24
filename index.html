@@ -12,6 +12,7 @@
   <nav class="tabbar">
     <button id="tab-btn-status" class="tab-btn">Status</button>
     <button id="tab-btn-search" class="tab-btn">Search</button>
+    <button id="tab-btn-timeline" class="tab-btn">Timeline</button>
     <button id="tab-btn-devices" class="tab-btn">Devices</button>
     <button id="tab-btn-pipes" class="tab-btn">Pipes</button>
     <button id="tab-btn-settings" class="tab-btn">Settings</button>
@@ -62,6 +63,18 @@
         <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
       </div>
       <div id="s-results"></div>
+    </section>
+
+    <section id="panel-timeline" class="panel hidden">
+      <p class="meta">Scrub through your captured screen — drag the slider to rewind your day.</p>
+      <div class="row">
+        <input id="t-limit" type="number" value="200" min="10" max="2000" style="max-width:7em" />
+        <button id="t-load">Load recent frames</button>
+      </div>
+      <input id="t-slider" type="range" min="0" max="0" value="0" style="width:100%" />
+      <div id="t-meta" class="meta">—</div>
+      <img id="t-img" style="max-width:100%; border-radius:8px" />
+      <details><summary>OCR text</summary><pre id="t-ocr">—</pre></details>
     </section>
 
     <section id="panel-devices" class="panel hidden">

@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { initTabs, type Tab } from "./tabs";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
+import { initTimeline, loadTimelineIfEmpty } from "./timeline";
 import { initDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
@@ -10,6 +11,7 @@ import { api } from "./api";
 
 initStatus();
 initSearch();
+initTimeline();
 initDevices();
 initPipes();
 initSettings();
@@ -21,6 +23,7 @@ $("a-go").onclick = () =>
 
 initTabs((tab: Tab) => {
   if (tab === "status") refreshHealth();
+  if (tab === "timeline") loadTimelineIfEmpty();
   if (tab === "pipes") void refreshPipes();
   if (tab === "settings") void refreshSettings();
 });
