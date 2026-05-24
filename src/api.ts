@@ -57,6 +57,10 @@ export const api = {
   registryInfo: (slug: string) => invoke("api_registry_info", { slug }) as Promise<string>,
   registryInstall: (source: string) => invoke("api_registry_install", { source }) as Promise<string>,
   pipeDelete: (name: string) => invoke("api_pipe_delete", { name }) as Promise<string>,
-  chat: (question: string) => invoke("api_chat", { question }) as Promise<string>,
+  chat: (question: string) =>
+    invoke("api_chat", { question }) as Promise<{
+      answer: string;
+      sources: { ts: string; app: string; text: string; frame_id: number | null }[];
+    }>,
   openPipeDir: (name: string) => invoke("api_open_pipe_dir", { name }),
 };

@@ -170,6 +170,13 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
   box-shadow: var(--shadow); z-index: 50; max-width: 80vw;
 }
 
+/* chat sources */
+.sources { margin-top: 8px; }
+.sources > summary { font-size: 11.5px; color: var(--accent); }
+.sources .src { border-top: 1px solid var(--border); padding: 7px 0; font-size: 12px; line-height: 1.45; }
+.sources .src .meta { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.sources .src img { max-height: 96px; border-radius: 6px; margin-top: 5px; display: block; border: 1px solid var(--border); }
+
 /* timeline filmstrip */
 .filmstrip { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0; scrollbar-width: thin; }
 .filmstrip .tn {

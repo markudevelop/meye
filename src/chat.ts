@@ -24,7 +24,21 @@ async function send() {
   const pending = append("meye", "…searching your recordings + asking the model…");
   const body = pending.querySelector(".c-body") as HTMLElement;
   try {
-    body.textContent = await api.chat(q);
+    const reply = await api.chat(q);
+    body.textContent = reply.answer;
+    if (reply.sources?.length) {
+      const det = document.createElement("details");
+      det.className = "sources";
+      det.innerHTML = `<summary>${reply.sources.length} source${reply.sources.length > 1 ? "s" : ""} from your recordings</summary>`;
+      for (const s of reply.sources) {
+        const src = document.createElement("div");
+        src.className = "src";
+        const thumb = s.frame_id != null ? `<img src="http://127.0.0.1:3030/frames/${s.frame_id}" loading="lazy" />` : "";
+        src.innerHTML = `<div class="meta">${esc(s.ts)} · ${esc(s.app)}</div><div>${esc(s.text)}</div>${thumb}`;
+        det.appendChild(src);
+      }
+      pending.appendChild(det);
+    }
   } catch (e) {
     body.textContent = `Error: ${e}`;
   }

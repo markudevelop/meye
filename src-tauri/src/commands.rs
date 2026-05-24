@@ -298,7 +298,7 @@ pub async fn api_pipe_delete(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn api_chat(question: String) -> Result<String, String> {
+pub async fn api_chat(question: String) -> Result<crate::chat::ChatReply, String> {
     crate::chat::chat(&question).await
 }
 
