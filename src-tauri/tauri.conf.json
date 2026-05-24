@@ -15,8 +15,11 @@
       {
         "label": "main",
         "title": "Meye",
-        "width": 420,
-        "height": 560,
+        "width": 1200,
+        "height": 780,
+        "minWidth": 940,
+        "minHeight": 620,
+        "center": true,
         "visible": false
       }
     ],

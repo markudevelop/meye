@@ -75,7 +75,19 @@ body { background: var(--bg); color: var(--text); overflow: hidden; }
 
 /* ---------- main ---------- */
 .main { flex: 1; overflow-y: auto; }
-.content { max-width: 780px; margin: 0 auto; padding: 28px 32px 60px; }
+.content { max-width: 1040px; margin: 0 auto; padding: 28px 36px 60px; }
+
+/* dashboard stat cards */
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
+.stat { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 5px; }
+.stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-val { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; word-break: break-word; }
+
+/* search results gallery */
+#s-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; margin-top: 12px; }
+#s-results .hit { margin: 0; }
+#r-results { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 8px; }
+#r-results .hit { margin: 0; }
 
 .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .panel-head h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.02em; margin: 0; }
