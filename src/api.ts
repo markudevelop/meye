@@ -69,6 +69,8 @@ export const api = {
   convoAppend: (id: string, entry: any) => invoke("api_convo_append", { id, entry }) as Promise<void>,
   convoDelete: (id: string) => invoke("api_convo_delete", { id }) as Promise<void>,
   convoArchive: (id: string) => invoke("api_convo_archive", { id }) as Promise<void>,
+  convoListArchived: () => invoke("api_convo_list_archived") as Promise<{ id: string; title: string; count: number; updated: number }[]>,
+  convoUnarchive: (id: string) => invoke("api_convo_unarchive", { id }) as Promise<void>,
   getRecordArgs: () => invoke("api_get_record_args") as Promise<string[]>,
   setRecordArgs: (args: string[]) => invoke("api_set_record_args", { args }) as Promise<void>,
 };

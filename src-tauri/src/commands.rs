@@ -366,3 +366,13 @@ pub fn api_convo_delete(id: String) -> Result<(), String> {
 pub fn api_convo_archive(id: String) -> Result<(), String> {
     crate::activity::convo_archive(&id).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn api_convo_list_archived() -> Vec<Value> {
+    crate::activity::convo_list_archived()
+}
+
+#[tauri::command]
+pub fn api_convo_unarchive(id: String) -> Result<(), String> {
+    crate::activity::convo_unarchive(&id).map_err(|e| e.to_string())
+}

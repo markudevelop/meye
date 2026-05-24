@@ -1,5 +1,6 @@
 import { $, wrap } from "./ui";
 import { api } from "./api";
+import { logAction } from "./home";
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
@@ -66,8 +67,16 @@ export async function refreshPipes() {
         try {
           await api.pipeRun(name);
           cardStatus.innerHTML = `<span class="ok">✓ finished</span> — check Logs / output`;
+          void logAction({
+            kind: "action",
+            status: "ok",
+            title: `Ran pipe ${name}`,
+            detail: "from Pipes tab",
+            actions: [{ label: "Open folder", cmd: "open-pipe-dir", arg: name }],
+          });
         } catch (e) {
           cardStatus.innerHTML = `<span class="err">✗ failed:</span> ${esc(String(e))}`;
+          void logAction({ kind: "action", status: "error", title: `Run ${name}`, detail: String(e) });
         }
         runBtn.disabled = false;
         runBtn.textContent = orig;

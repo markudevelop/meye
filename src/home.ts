@@ -124,8 +124,8 @@ function relTime(ms: number): string {
 
 async function renderConvoList() {
   const box = $("convo-items");
-  const list = await api.convoList().catch(() => [] as { id: string; title: string; count: number; updated: number }[]);
   box.innerHTML = "";
+  const list = await api.convoList().catch(() => [] as any[]);
   for (const c of list) {
     const item = document.createElement("div");
     item.className = "convo-item" + (c.id === activeId ? " active" : "");
@@ -142,6 +142,42 @@ async function renderConvoList() {
     item.appendChild(arch);
     box.appendChild(item);
   }
+
+  const archived = await api.convoListArchived().catch(() => [] as any[]);
+  if (archived.length) {
+    const head = document.createElement("div");
+    head.className = "convo-head archived-head";
+    head.textContent = "Archived";
+    box.appendChild(head);
+    for (const c of archived) {
+      const item = document.createElement("div");
+      item.className = "convo-item archived";
+      item.innerHTML = `<div class="convo-main"><span class="convo-title">${esc(c.title || "")}</span><span class="convo-time">${relTime(c.updated)}</span></div>`;
+      const restore = document.createElement("button");
+      restore.className = "convo-arch";
+      restore.title = "Restore";
+      restore.textContent = "↩";
+      restore.onclick = async (ev) => {
+        ev.stopPropagation();
+        await api.convoUnarchive(c.id).catch(() => {});
+        await openConvo(c.id);
+      };
+      item.appendChild(restore);
+      box.appendChild(item);
+    }
+  }
+}
+
+/** Append an action card to the active conversation (used by other tabs, e.g. Pipes). */
+export async function logAction(entry: any) {
+  if (!activeId) activeId = genId();
+  const e = { ts: Date.now(), ...entry };
+  await api.convoAppend(activeId, e).catch(() => {});
+  if (!$("panel-home").classList.contains("hidden")) {
+    setEmpty(false);
+    add(e);
+  }
+  void renderConvoList();
 }
 
 async function openConvo(id: string) {

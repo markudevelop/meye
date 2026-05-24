@@ -69,11 +69,33 @@ fn migrate_legacy() {
     }
 }
 
-/// List conversations as `{ id, title, count }`, newest first.
-pub fn convo_list() -> Vec<Value> {
-    migrate_legacy();
+/// Derive a readable title from the first user message (humanising slash-commands).
+fn nice_title(entries: &[Value]) -> String {
+    let first = entries
+        .iter()
+        .find(|en| en.get("kind").and_then(|k| k.as_str()) == Some("user"))
+        .and_then(|en| en.get("text").and_then(|t| t.as_str()))
+        .unwrap_or("")
+        .trim();
+    if first.is_empty() {
+        return "New chat".into();
+    }
+    let derived = if let Some(r) = first.strip_prefix("/run ") {
+        format!("Ran {}", r.trim())
+    } else if let Some(r) = first.strip_prefix("/search ") {
+        format!("Search: {}", r.trim())
+    } else if let Some(r) = first.strip_prefix("/profile ") {
+        format!("{} profile", r.trim())
+    } else {
+        first.to_string()
+    };
+    derived.chars().take(48).collect()
+}
+
+/// Summarise every `<id>.jsonl` in `dir` into `{ id, title, count, updated }`, newest first.
+fn summarize_dir(dir: &std::path::Path) -> Vec<Value> {
     let mut out: Vec<(std::time::SystemTime, Value)> = Vec::new();
-    if let Ok(rd) = std::fs::read_dir(paths::convos_dir()) {
+    if let Ok(rd) = std::fs::read_dir(dir) {
         for e in rd.flatten() {
             let p = e.path();
             if !p.extension().is_some_and(|x| x == "jsonl") {
@@ -86,12 +108,6 @@ pub fn convo_list() -> Vec<Value> {
                 .filter(|l| !l.trim().is_empty())
                 .filter_map(|l| serde_json::from_str::<Value>(l).ok())
                 .collect();
-            let title = entries
-                .iter()
-                .find(|en| en.get("kind").and_then(|k| k.as_str()) == Some("user"))
-                .and_then(|en| en.get("text").and_then(|t| t.as_str()))
-                .map(|t| t.chars().take(48).collect::<String>())
-                .unwrap_or_else(|| "New chat".into());
             let updated = e.metadata().and_then(|m| m.modified()).unwrap_or(std::time::UNIX_EPOCH);
             let updated_ms = updated
                 .duration_since(std::time::UNIX_EPOCH)
@@ -99,12 +115,36 @@ pub fn convo_list() -> Vec<Value> {
                 .unwrap_or(0);
             out.push((
                 updated,
-                serde_json::json!({ "id": id, "title": title, "count": entries.len(), "updated": updated_ms }),
+                serde_json::json!({ "id": id, "title": nice_title(&entries), "count": entries.len(), "updated": updated_ms }),
             ));
         }
     }
     out.sort_by_key(|(t, _)| std::cmp::Reverse(*t));
     out.into_iter().map(|(_, v)| v).collect()
+}
+
+/// List active conversations, newest first.
+pub fn convo_list() -> Vec<Value> {
+    migrate_legacy();
+    summarize_dir(&paths::convos_dir())
+}
+
+/// List archived conversations, newest first.
+pub fn convo_list_archived() -> Vec<Value> {
+    summarize_dir(&paths::convos_dir().join("archived"))
+}
+
+/// Move an archived conversation back to the active list.
+pub fn convo_unarchive(id: &str) -> std::io::Result<()> {
+    if !valid_id(id) {
+        return Err(std::io::Error::other("invalid conversation id"));
+    }
+    let src = paths::convos_dir().join("archived").join(format!("{id}.jsonl"));
+    let dest = paths::convos_dir().join(format!("{id}.jsonl"));
+    if src.exists() {
+        std::fs::rename(src, dest)?;
+    }
+    Ok(())
 }
 
 pub fn convo_read(id: &str) -> Vec<Value> {
