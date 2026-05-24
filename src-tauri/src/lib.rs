@@ -76,6 +76,11 @@ pub fn run() {
             commands::api_activity_read,
             commands::api_activity_append,
             commands::api_activity_clear,
+            commands::api_convo_list,
+            commands::api_convo_read,
+            commands::api_convo_append,
+            commands::api_convo_delete,
+            commands::api_convo_archive,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;

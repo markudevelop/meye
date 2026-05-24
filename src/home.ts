@@ -95,7 +95,7 @@ function feed(): HTMLElement {
 }
 
 function setEmpty(empty: boolean) {
-  document.getElementById("panel-home")?.classList.toggle("empty", empty);
+  document.querySelector(".home-main")?.classList.toggle("empty", empty);
   document.getElementById("home-hero")?.classList.toggle("hidden", !empty);
 }
 
@@ -106,9 +106,84 @@ function add(e: any): HTMLElement {
   return node;
 }
 
+// ---------- conversations ----------
+let activeId: string | null = null;
+
+function genId(): string {
+  return String(Date.now());
+}
+
+function relTime(ms: number): string {
+  if (!ms) return "";
+  const s = (Date.now() - ms) / 1000;
+  if (s < 60) return "now";
+  if (s < 3600) return `${Math.floor(s / 60)}m`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}
+
+async function renderConvoList() {
+  const box = $("convo-items");
+  const list = await api.convoList().catch(() => [] as { id: string; title: string; count: number; updated: number }[]);
+  box.innerHTML = "";
+  for (const c of list) {
+    const item = document.createElement("div");
+    item.className = "convo-item" + (c.id === activeId ? " active" : "");
+    item.innerHTML = `<div class="convo-main"><span class="convo-title">${esc(c.title || "New chat")}</span><span class="convo-time">${relTime(c.updated)}</span></div>`;
+    item.onclick = () => void openConvo(c.id);
+    const arch = document.createElement("button");
+    arch.className = "convo-arch";
+    arch.title = "Archive";
+    arch.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11h14V8M10 12h4"/></svg>`;
+    arch.onclick = (ev) => {
+      ev.stopPropagation();
+      void archiveConvo(c.id);
+    };
+    item.appendChild(arch);
+    box.appendChild(item);
+  }
+}
+
+async function openConvo(id: string) {
+  activeId = id;
+  const entries = await api.convoRead(id).catch(() => [] as any[]);
+  feed().innerHTML = "";
+  setEmpty(entries.length === 0);
+  for (const e of entries) feed().appendChild(renderEntry(e));
+  feed().scrollTop = feed().scrollHeight;
+  void renderConvoList();
+}
+
+function newConvo() {
+  activeId = genId();
+  feed().innerHTML = "";
+  setEmpty(true);
+  void renderConvoList();
+  ($("home-input") as HTMLTextAreaElement).focus();
+}
+
+/** New chat from the sidebar nav. */
+export function startNewChat() {
+  newConvo();
+  goTab("home");
+}
+
+async function archiveConvo(id: string) {
+  await api.convoArchive(id).catch(() => {});
+  if (id === activeId) {
+    activeId = null;
+    const list = await api.convoList().catch(() => []);
+    if (list.length) await openConvo(list[0].id);
+    else newConvo();
+  } else {
+    void renderConvoList();
+  }
+}
+
 async function persist(e: any) {
+  if (!activeId) return;
   try {
-    await api.activityAppend(e);
+    await api.convoAppend(activeId, e);
   } catch {
     /* non-fatal */
   }
@@ -122,9 +197,11 @@ async function submit() {
   input.style.height = "auto";
   hideSuggest();
   setEmpty(false);
+  if (activeId == null) activeId = genId();
   const userEntry = { kind: "user", ts: Date.now(), text };
   add(userEntry);
   await persist(userEntry);
+  void renderConvoList();
 
   if (text.startsWith("/run ")) return doAction("run", text.slice(5).trim());
   if (text.startsWith("/search ")) return doAction("search", text.slice(8).trim());
@@ -247,11 +324,7 @@ function acceptSuggest(i: number) {
   updateSuggest();
 }
 
-let loaded = false;
-
 export async function loadHome() {
-  if (loaded) return;
-  loaded = true;
   api
     .pipeList()
     .then((res: any) => {
@@ -259,11 +332,12 @@ export async function loadHome() {
       pipeNames = arr.map((p) => (p.config ?? p).name ?? p.name).filter(Boolean);
     })
     .catch(() => {});
-  const entries = await api.activityRead().catch(() => [] as any[]);
-  feed().innerHTML = "";
-  setEmpty(entries.length === 0);
-  for (const e of entries) feed().appendChild(renderEntry(e));
-  feed().scrollTop = feed().scrollHeight;
+  await renderConvoList();
+  if (activeId == null) {
+    const list = await api.convoList().catch(() => []);
+    if (list.length) await openConvo(list[0].id);
+    else newConvo();
+  }
 }
 
 export function initHome() {

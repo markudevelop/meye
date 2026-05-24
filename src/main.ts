@@ -1,6 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { initTabs, type Tab } from "./tabs";
-import { initHome, loadHome } from "./home";
+import { initHome, loadHome, startNewChat } from "./home";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
 import { initTimeline, loadTimelineIfEmpty } from "./timeline";
@@ -35,6 +35,9 @@ initTabs((tab: Tab) => {
   if (tab === "settings") void refreshSettings();
   if (tab === "performance") void refreshPerf();
 });
+
+// The "New Chat" nav item starts a fresh conversation (not just navigate).
+$("tab-btn-home").onclick = () => startNewChat();
 
 listen("status", (e) => (window as any).__meyeApplyStatus?.(e.payload));
 

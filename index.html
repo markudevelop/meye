@@ -17,7 +17,7 @@
         </div>
         <nav class="nav">
           <button id="tab-btn-home" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><span>Home</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span>New Chat</span>
           </button>
           <button id="tab-btn-status" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg><span>Status</span>
@@ -53,24 +53,32 @@
       <main class="main">
         <div class="content">
           <section id="panel-home" class="panel">
-            <div id="home-hero" class="home-hero hidden">
-              <svg class="hero-eye" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.6 5.4 4.6 9.4 10 10-5.4.6-9.4 4.6-10 10-.6-5.4-4.6-9.4-10-10 5.4-.6 9.4-4.6 10-10Z"/></svg>
-              <h1>My mind, searchable</h1>
-              <p class="meta">Ask anything I've seen, said &amp; heard — or run an action.</p>
-              <div class="hero-chips">
-                <button class="chip" data-cmd="/run ">▶ Run a pipe</button>
-                <button class="chip" data-cmd="/search ">🔍 Search recordings</button>
-                <button class="chip" data-cmd="/profile ">⚙ Power profile</button>
-              </div>
-            </div>
-            <div id="home-feed"></div>
-            <div class="composer-wrap">
-              <div id="home-suggest" class="suggest hidden"></div>
-              <div class="composer">
-                <textarea id="home-input" rows="1" placeholder="Ask my mind…   (type / for commands)"></textarea>
-                <button id="home-send" class="send-btn" aria-label="Send">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
-                </button>
+            <div class="home-layout">
+              <aside class="convo-list">
+                <div class="convo-head">Chats</div>
+                <div id="convo-items"></div>
+              </aside>
+              <div class="home-main">
+                <div id="home-hero" class="home-hero hidden">
+                  <svg class="hero-eye" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.6 5.4 4.6 9.4 10 10-5.4.6-9.4 4.6-10 10-.6-5.4-4.6-9.4-10-10 5.4-.6 9.4-4.6 10-10Z"/></svg>
+                  <h1>My mind, searchable</h1>
+                  <p class="meta">Ask anything I've seen, said &amp; heard — or run an action.</p>
+                  <div class="hero-chips">
+                    <button class="chip" data-cmd="/run ">▶ Run a pipe</button>
+                    <button class="chip" data-cmd="/search ">🔍 Search recordings</button>
+                    <button class="chip" data-cmd="/profile ">⚙ Power profile</button>
+                  </div>
+                </div>
+                <div id="home-feed"></div>
+                <div class="composer-wrap">
+                  <div id="home-suggest" class="suggest hidden"></div>
+                  <div class="composer">
+                    <textarea id="home-input" rows="1" placeholder="Ask my mind…   (type / for commands)"></textarea>
+                    <button id="home-send" class="send-btn" aria-label="Send">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>

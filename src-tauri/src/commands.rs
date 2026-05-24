@@ -341,3 +341,28 @@ pub fn api_activity_append(entry: Value) -> Result<(), String> {
 pub fn api_activity_clear() -> Result<(), String> {
     crate::activity::clear().map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn api_convo_list() -> Vec<Value> {
+    crate::activity::convo_list()
+}
+
+#[tauri::command]
+pub fn api_convo_read(id: String) -> Vec<Value> {
+    crate::activity::convo_read(&id)
+}
+
+#[tauri::command]
+pub fn api_convo_append(id: String, entry: Value) -> Result<(), String> {
+    crate::activity::convo_append(&id, &entry).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn api_convo_delete(id: String) -> Result<(), String> {
+    crate::activity::convo_delete(&id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn api_convo_archive(id: String) -> Result<(), String> {
+    crate::activity::convo_archive(&id).map_err(|e| e.to_string())
+}

@@ -57,9 +57,14 @@ pub fn record_config() -> PathBuf {
     app_support().join("record-config.json")
 }
 
-/// Persistent Home activity/chat thread (JSONL, one entry per line).
+/// Legacy single Home thread (migrated into a conversation on first run).
 pub fn activity_log() -> PathBuf {
     app_support().join("activity.jsonl")
+}
+
+/// Directory of conversation threads (one `<id>.jsonl` per conversation).
+pub fn convos_dir() -> PathBuf {
+    app_support().join("conversations")
 }
 
 // --- legacy keeper paths, used only for one-time migration ---
