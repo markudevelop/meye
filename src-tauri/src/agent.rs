@@ -5,9 +5,23 @@ use std::process::Command;
 /// Build the `<array>` of ProgramArguments: the pinned binary + `record`.
 pub fn program_arguments() -> Vec<String> {
     vec![
-        paths::pinned_binary().to_string_lossy().into_owned(),
+        paths::recorder_binary().to_string_lossy().into_owned(),
         "record".to_string(),
     ]
+}
+
+/// One-time migration off the old `com.screenpipe.keeper` agent: bootout the old
+/// service (if loaded), delete its plist and its old pinned dir. Best-effort.
+pub fn migrate_from_keeper() {
+    if paths::legacy_plist_path().exists() {
+        let uid = current_uid();
+        let _ = run_launchctl(&[
+            "bootout".into(),
+            format!("gui/{uid}/{}", paths::LEGACY_LABEL),
+        ]);
+        let _ = std::fs::remove_file(paths::legacy_plist_path());
+        let _ = std::fs::remove_dir_all(paths::legacy_pinned_dir());
+    }
 }
 
 /// Pure: generate the LaunchAgent plist XML.
@@ -113,6 +127,7 @@ pub fn write_plist() -> io::Result<()> {
 
 /// Write plist (if missing) and bootstrap the agent.
 pub fn install() -> io::Result<()> {
+    migrate_from_keeper();
     write_plist()?;
     start()
 }
@@ -202,7 +217,7 @@ mod tests {
     fn plist_contains_required_keys() {
         let xml = generate_plist(&["/bin/sp".into(), "record".into()], "/tmp/o.log", "/tmp/e.log");
         assert!(xml.contains("<key>Label</key>"));
-        assert!(xml.contains("com.screenpipe.keeper"));
+        assert!(xml.contains("com.meye.recorder.agent"));
         assert!(xml.contains("<key>KeepAlive</key>"));
         assert!(xml.contains("<key>RunAtLoad</key>"));
         assert!(xml.contains("<string>/bin/sp</string>"));
@@ -214,9 +229,9 @@ mod tests {
     #[test]
     fn launchctl_args_are_well_formed() {
         assert_eq!(bootstrap_args(501, "/p.plist"), vec!["bootstrap", "gui/501", "/p.plist"]);
-        assert_eq!(bootout_args(501), vec!["bootout", "gui/501/com.screenpipe.keeper"]);
-        assert_eq!(kickstart_args(501), vec!["kickstart", "-k", "gui/501/com.screenpipe.keeper"]);
-        assert_eq!(print_args(501), vec!["print", "gui/501/com.screenpipe.keeper"]);
+        assert_eq!(bootout_args(501), vec!["bootout", "gui/501/com.meye.recorder.agent"]);
+        assert_eq!(kickstart_args(501), vec!["kickstart", "-k", "gui/501/com.meye.recorder.agent"]);
+        assert_eq!(print_args(501), vec!["print", "gui/501/com.meye.recorder.agent"]);
     }
 
     #[test]
