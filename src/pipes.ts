@@ -73,6 +73,11 @@ export async function refreshPipes() {
       };
       controls.appendChild(logsBtn);
 
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.onclick = () => wrap(`Delete ${name}`, () => api.pipeDelete(name)).then(refreshPipes);
+      controls.appendChild(delBtn);
+
       card.appendChild(controls);
 
       // Per-pipe AI preset assignment (space-separated ids = fallback chain).
@@ -98,8 +103,43 @@ export async function refreshPipes() {
   }
 }
 
+async function renderRegistry(query: string) {
+  if (!query) return;
+  const out = $("r-results");
+  out.textContent = "Searching registry…";
+  try {
+    const res = await api.registrySearch(query);
+    const rows: any[] = Array.isArray(res) ? res : (res.data ?? []);
+    if (!rows.length) {
+      out.innerHTML = "<p class='meta'>No matches in the registry.</p>";
+      return;
+    }
+    out.innerHTML = "";
+    for (const r of rows) {
+      const slug = String(r.slug ?? "");
+      const card = document.createElement("div");
+      card.className = "hit";
+      card.innerHTML = `<b>${esc(slug)}</b> <span class="meta">${esc(String(r.category ?? ""))} · ${esc(String(r.installs ?? ""))} installs</span><div>${esc(String(r.description ?? ""))}</div>`;
+      const row = document.createElement("div");
+      row.className = "row";
+      const inst = document.createElement("button");
+      inst.textContent = "Install";
+      inst.onclick = () => wrap(`Install ${slug}`, () => api.registryInstall(slug)).then(refreshPipes);
+      row.appendChild(inst);
+      card.appendChild(row);
+      out.appendChild(card);
+    }
+  } catch (e) {
+    out.innerHTML = `<p class="warn">Registry search failed: ${esc(String(e))}</p>`;
+  }
+}
+
 export function initPipes() {
   $("p-refresh").onclick = () => void refreshPipes();
+  $("r-go").onclick = () => void renderRegistry(($("r-q") as HTMLInputElement).value.trim());
+  ($("r-q") as HTMLInputElement).addEventListener("keydown", (e) => {
+    if ((e as KeyboardEvent).key === "Enter") void renderRegistry(($("r-q") as HTMLInputElement).value.trim());
+  });
   $("p-config-cancel").onclick = () => {
     editing = null;
     $("p-editor").classList.add("hidden");

@@ -53,4 +53,8 @@ export const api = {
   pipeSetPreset: (name: string, presets: string[]) => invoke("api_pipe_set_preset", { name, presets }) as Promise<string>,
   pipeConfigRead: (name: string) => invoke("api_pipe_config_read", { name }) as Promise<string>,
   pipeConfigWrite: (name: string, content: string) => invoke("api_pipe_config_write", { name, content }) as Promise<void>,
+  registrySearch: (query: string) => invoke("api_registry_search", { query }) as Promise<any>,
+  registryInfo: (slug: string) => invoke("api_registry_info", { slug }) as Promise<string>,
+  registryInstall: (source: string) => invoke("api_registry_install", { source }) as Promise<string>,
+  pipeDelete: (name: string) => invoke("api_pipe_delete", { name }) as Promise<string>,
 };
