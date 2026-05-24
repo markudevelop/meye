@@ -81,6 +81,12 @@ pub fn models_delete(id: &str) -> Result<String, String> {
     run_pipe(&["models", "delete", id, "--force"])
 }
 
+/// Full preset config incl. raw api key (`pipe models show <id> --json`).
+pub fn models_show(id: &str) -> Result<Value, String> {
+    let stdout = run_pipe(&["models", "show", id, "--json"])?;
+    serde_json::from_str(&stdout).map_err(|e| format!("could not parse models show JSON: {e}"))
+}
+
 pub fn set_preset(name: &str, presets: &[String]) -> Result<String, String> {
     let mut args: Vec<&str> = vec!["set-preset", name];
     for p in presets {

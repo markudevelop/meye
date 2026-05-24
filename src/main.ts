@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { initTabs, type Tab } from "./tabs";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
+import { initChat } from "./chat";
 import { initTimeline, loadTimelineIfEmpty } from "./timeline";
 import { initDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
@@ -11,6 +12,7 @@ import { api } from "./api";
 
 initStatus();
 initSearch();
+initChat();
 initTimeline();
 initDevices();
 initPipes();

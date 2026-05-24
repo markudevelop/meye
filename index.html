@@ -12,6 +12,7 @@
   <nav class="tabbar">
     <button id="tab-btn-status" class="tab-btn">Status</button>
     <button id="tab-btn-search" class="tab-btn">Search</button>
+    <button id="tab-btn-chat" class="tab-btn">Chat</button>
     <button id="tab-btn-timeline" class="tab-btn">Timeline</button>
     <button id="tab-btn-devices" class="tab-btn">Devices</button>
     <button id="tab-btn-pipes" class="tab-btn">Pipes</button>
@@ -63,6 +64,15 @@
         <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
       </div>
       <div id="s-results"></div>
+    </section>
+
+    <section id="panel-chat" class="panel hidden">
+      <p class="meta">Ask about your recorded day — Meye searches your screen+audio and answers via your default model preset (DeepSeek).</p>
+      <div id="c-log" style="max-height:340px; overflow:auto"></div>
+      <div class="row">
+        <textarea id="c-input" rows="2" placeholder="e.g. what did I work on this morning?  (⌘/Ctrl+Enter to send)" style="flex:1"></textarea>
+        <button id="c-send">Send</button>
+      </div>
     </section>
 
     <section id="panel-timeline" class="panel hidden">
