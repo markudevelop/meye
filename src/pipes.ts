@@ -5,6 +5,20 @@ function esc(s: string): string {
   return s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
 }
 
+let editing: string | null = null;
+
+async function openEditor(name: string) {
+  editing = name;
+  $("p-editing").textContent = name;
+  ($("p-config") as HTMLTextAreaElement).value = "Loading…";
+  $("p-editor").classList.remove("hidden");
+  try {
+    ($("p-config") as HTMLTextAreaElement).value = await api.pipeConfigRead(name);
+  } catch (e) {
+    ($("p-config") as HTMLTextAreaElement).value = `# failed to read config: ${e}`;
+  }
+}
+
 export async function refreshPipes() {
   const out = $("p-list");
   out.textContent = "Loading…";
@@ -42,6 +56,11 @@ export async function refreshPipes() {
         wrap(`${enabled ? "Disable" : "Enable"} ${name}`, () => (enabled ? api.pipeDisable(name) : api.pipeEnable(name))).then(refreshPipes);
       controls.appendChild(toggleBtn);
 
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit config";
+      editBtn.onclick = () => void openEditor(name);
+      controls.appendChild(editBtn);
+
       const logsBtn = document.createElement("button");
       logsBtn.textContent = "Logs";
       logsBtn.onclick = async () => {
@@ -55,6 +74,23 @@ export async function refreshPipes() {
       controls.appendChild(logsBtn);
 
       card.appendChild(controls);
+
+      // Per-pipe AI preset assignment (space-separated ids = fallback chain).
+      const presetRow = document.createElement("div");
+      presetRow.className = "row";
+      const presetInput = document.createElement("input");
+      presetInput.placeholder = "preset id(s) for this pipe";
+      const presetBtn = document.createElement("button");
+      presetBtn.textContent = "Set preset";
+      presetBtn.onclick = () => {
+        const ids = presetInput.value.trim().split(/\s+/).filter(Boolean);
+        if (!ids.length) return;
+        void wrap(`Preset ${name}`, () => api.pipeSetPreset(name, ids));
+      };
+      presetRow.appendChild(presetInput);
+      presetRow.appendChild(presetBtn);
+      card.appendChild(presetRow);
+
       out.appendChild(card);
     }
   } catch (e) {
@@ -64,4 +100,17 @@ export async function refreshPipes() {
 
 export function initPipes() {
   $("p-refresh").onclick = () => void refreshPipes();
+  $("p-config-cancel").onclick = () => {
+    editing = null;
+    $("p-editor").classList.add("hidden");
+  };
+  $("p-config-save").onclick = () => {
+    if (!editing) return;
+    const name = editing;
+    void wrap(`Save ${name}`, () => api.pipeConfigWrite(name, ($("p-config") as HTMLTextAreaElement).value)).then(() => {
+      $("p-editor").classList.add("hidden");
+      editing = null;
+      refreshPipes();
+    });
+  };
 }

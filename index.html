@@ -74,6 +74,11 @@
       <p class="meta">Pipes are scheduled agents that turn your screen+audio into outputs (notes, summaries). "Run now" runs one immediately.</p>
       <div class="row"><button id="p-refresh">Refresh</button></div>
       <div id="p-list">—</div>
+      <div id="p-editor" class="hidden">
+        <h3>Edit config: <span id="p-editing"></span></h3>
+        <textarea id="p-config" rows="12" style="width:100%"></textarea>
+        <div class="row"><button id="p-config-save">Save</button><button id="p-config-cancel">Cancel</button></div>
+      </div>
       <h3>Logs</h3><pre id="p-logs">—</pre>
     </section>
 
