@@ -1,6 +1,7 @@
 use crate::paths;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::sync::OnceLock;
 
 fn base() -> String {
     format!("http://127.0.0.1:{}", paths::PORT)
@@ -42,9 +43,39 @@ fn client() -> reqwest::Client {
     reqwest::Client::new()
 }
 
+/// Fetch screenpipe's local API token by running `screenpipe auth token`, cached for the
+/// process lifetime. Returns None if the binary isn't pinned yet or the call fails.
+fn auth_token() -> Option<String> {
+    static TOKEN: OnceLock<Option<String>> = OnceLock::new();
+    TOKEN
+        .get_or_init(|| {
+            let out = std::process::Command::new(paths::recorder_binary())
+                .args(["auth", "token"])
+                .output()
+                .ok()?;
+            if !out.status.success() {
+                return None;
+            }
+            let t = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if t.is_empty() {
+                None
+            } else {
+                Some(t)
+            }
+        })
+        .clone()
+}
+
+/// Attach the bearer token to a request if we have one.
+fn auth(rb: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+    match auth_token() {
+        Some(t) => rb.bearer_auth(t),
+        None => rb,
+    }
+}
+
 async fn get_json(path: &str, query: &[(String, String)]) -> Result<Value, String> {
-    client()
-        .get(format!("{}{}", base(), path))
+    auth(client().get(format!("{}{}", base(), path)))
         .query(query)
         .timeout(std::time::Duration::from_secs(15))
         .send()
@@ -76,8 +107,7 @@ pub async fn frame_ocr(id: i64) -> Result<Value, String> {
 }
 
 async fn post(path: &str, body: Value) -> Result<Value, String> {
-    client()
-        .post(format!("{}{}", base(), path))
+    auth(client().post(format!("{}{}", base(), path)))
         .json(&body)
         .timeout(std::time::Duration::from_secs(15))
         .send()
@@ -105,8 +135,7 @@ pub async fn add_tags(kind: &str, id: i64, tags: Vec<String>) -> Result<Value, S
 }
 
 pub async fn remove_tags(kind: &str, id: i64, tags: Vec<String>) -> Result<Value, String> {
-    client()
-        .delete(format!("{}{}", base(), tag_path(kind, id)))
+    auth(client().delete(format!("{}{}", base(), tag_path(kind, id))))
         .json(&serde_json::json!({ "tags": tags }))
         .timeout(std::time::Duration::from_secs(15))
         .send()
