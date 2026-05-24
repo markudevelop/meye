@@ -6,6 +6,8 @@ mod agent;
 mod health;
 #[allow(dead_code)]
 mod binary;
+#[allow(dead_code)]
+mod commands;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
