@@ -34,6 +34,9 @@
           <button id="tab-btn-pipes" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v5M15 2v5M7 7h10v3a5 5 0 0 1-10 0V7ZM12 15v7"/></svg><span>Pipes</span>
           </button>
+          <button id="tab-btn-performance" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a7 7 0 1 1 14 0"/><path d="M12 19l4.2-6"/></svg><span>Performance</span>
+          </button>
           <button id="tab-btn-settings" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span>Settings</span>
           </button>
@@ -104,19 +107,11 @@
 
           <section id="panel-timeline" class="panel hidden">
             <header class="panel-head"><h1>Timeline</h1></header>
-            <p class="meta">Rewind your screen — scrub the slider, use ◀ ▶ (or arrow keys), or press Play.</p>
-            <div class="row">
-              <input id="t-limit" type="number" value="150" min="10" max="3000" style="max-width:6.5em" />
-              <button id="t-load" class="primary">Load frames</button>
-              <button id="t-prev">◀</button>
-              <button id="t-play">▶ Play</button>
-              <button id="t-next">▶</button>
-            </div>
-            <div id="t-strip" class="filmstrip"></div>
-            <input id="t-slider" type="range" min="0" max="0" value="0" style="width:100%" />
-            <div id="t-meta" class="meta">—</div>
-            <img id="t-img" />
-            <details><summary>OCR text</summary><pre id="t-ocr">—</pre></details>
+            <p class="meta">Your recent screen, newest first — scroll down to load more.</p>
+            <div class="row"><button id="t-refresh" class="primary">Refresh</button></div>
+            <div id="t-feed"></div>
+            <div id="t-sentinel" style="height:1px"></div>
+            <p id="t-end" class="meta hidden">— end of recordings —</p>
           </section>
 
           <section id="panel-devices" class="panel hidden">
@@ -141,6 +136,22 @@
               <div class="row"><button id="p-config-save" class="primary">Save</button><button id="p-config-cancel">Cancel</button></div>
             </div>
             <h3>Logs</h3><pre id="p-logs">—</pre>
+          </section>
+
+          <section id="panel-performance" class="panel hidden">
+            <header class="panel-head"><h1>Performance</h1></header>
+            <p class="meta">Recording costs CPU/RAM (whisper + OCR). Pick a power profile, or pause screen capture to save battery (also drops the macOS recording indicator).</p>
+            <div id="perf-stats" class="stats"></div>
+            <div class="row"><button id="perf-refresh">Refresh stats</button></div>
+            <h3>Power profile</h3>
+            <div class="row">
+              <button id="perf-saver" class="primary">Battery Saver</button>
+              <button id="perf-balanced">Balanced</button>
+              <button id="perf-performance">Performance</button>
+            </div>
+            <div class="row"><button id="perf-pause">⏸ Pause screen capture</button></div>
+            <h3>Active record flags</h3>
+            <pre id="perf-flags">—</pre>
           </section>
 
           <section id="panel-settings" class="panel hidden">

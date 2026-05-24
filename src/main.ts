@@ -7,6 +7,7 @@ import { initTimeline, loadTimelineIfEmpty } from "./timeline";
 import { initDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
+import { initPerformance, refreshPerf } from "./performance";
 import { initPalette } from "./palette";
 import { $, wrap } from "./ui";
 import { api } from "./api";
@@ -19,6 +20,7 @@ initTimeline();
 initDevices();
 initPipes();
 initSettings();
+initPerformance();
 
 $("a-go").onclick = () =>
   wrap("SQL", async () => {
@@ -30,6 +32,7 @@ initTabs((tab: Tab) => {
   if (tab === "timeline") loadTimelineIfEmpty();
   if (tab === "pipes") void refreshPipes();
   if (tab === "settings") void refreshSettings();
+  if (tab === "performance") void refreshPerf();
 });
 
 listen("status", (e) => (window as any).__meyeApplyStatus?.(e.payload));

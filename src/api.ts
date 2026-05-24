@@ -63,4 +63,7 @@ export const api = {
       sources: { ts: string; app: string; text: string; frame_id: number | null }[];
     }>,
   openPipeDir: (name: string) => invoke("api_open_pipe_dir", { name }),
+  perfStats: () => invoke("api_perf_stats") as Promise<any>,
+  getRecordArgs: () => invoke("api_get_record_args") as Promise<string[]>,
+  setRecordArgs: (args: string[]) => invoke("api_set_record_args", { args }) as Promise<void>,
 };

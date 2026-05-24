@@ -319,3 +319,10 @@ pub async fn api_set_record_args(args: Vec<String>) -> Result<(), String> {
         .await
         .map_err(|e| e.to_string())?
 }
+
+#[tauri::command]
+pub async fn api_perf_stats() -> Value {
+    tauri::async_runtime::spawn_blocking(crate::perf::stats)
+        .await
+        .unwrap_or_else(|_| serde_json::json!({}))
+}

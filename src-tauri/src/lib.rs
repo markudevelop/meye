@@ -14,6 +14,8 @@ mod commands;
 mod pipes;
 #[allow(dead_code)]
 mod chat;
+#[allow(dead_code)]
+mod perf;
 
 use tauri::{
     menu::{Menu, MenuItem},
@@ -68,6 +70,7 @@ pub fn run() {
             commands::api_open_pipe_dir,
             commands::api_get_record_args,
             commands::api_set_record_args,
+            commands::api_perf_stats,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
