@@ -229,5 +229,33 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 .bubble .who { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 .msg-time { opacity: 0.5; font-weight: 400; font-size: 10px; margin-left: 4px; }
 .bubble.action-card { background: var(--accent-soft); border-color: transparent; }
+.bubble.user { white-space: pre-wrap; }
+
+/* markdown rendering inside messages */
+.md p { margin: 7px 0; }
+.md p:first-child { margin-top: 0; }
+.md p:last-child { margin-bottom: 0; }
+.md h1, .md h2, .md h3, .md h4 { margin: 13px 0 6px; line-height: 1.25; font-weight: 650; }
+.md h1 { font-size: 18px; }
+.md h2 { font-size: 15.5px; }
+.md h3 { font-size: 14px; }
+.md h4 { font-size: 12.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.md ul, .md ol { margin: 6px 0; padding-left: 20px; }
+.md li { margin: 3px 0; }
+.md code { background: var(--hover); padding: 1px 5px; border-radius: 5px; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; }
+.md pre.md-code { margin: 8px 0; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+.md pre.md-code code { background: none; padding: 0; }
+.md blockquote { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--border); color: var(--muted); }
+.md hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+.md strong { font-weight: 650; }
+.md em { font-style: italic; }
+.md a, .md-link { color: var(--accent); }
+.wikilink { color: var(--accent); background: var(--accent-soft); padding: 0 5px; border-radius: 5px; font-size: 0.95em; }
+
+/* slash-command autocomplete */
+.composer-wrap { position: relative; }
+.suggest { position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 6px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 20; max-height: 220px; overflow-y: auto; }
+.sg-item { padding: 8px 12px; font-size: 13px; cursor: pointer; }
+.sg-item.active { background: var(--accent-soft); color: var(--accent); }
 
 .hidden { display: none !important; }

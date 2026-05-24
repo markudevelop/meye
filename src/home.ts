@@ -1,6 +1,7 @@
 import { $ } from "./ui";
 import { api } from "./api";
 import { goTab } from "./tabs";
+import { renderMarkdown } from "./md";
 
 const PRESETS: Record<string, string[]> = {
   saver: [
@@ -14,6 +15,12 @@ const PRESETS: Record<string, string[]> = {
   balanced: ["--disable-clipboard-capture", "--idle-capture-interval-ms", "60000"],
   performance: [],
 };
+
+const COMMANDS = [
+  { trigger: "/run ", label: "/run", desc: "run a pipe now" },
+  { trigger: "/search ", label: "/search", desc: "search your recordings" },
+  { trigger: "/profile ", label: "/profile", desc: "set power profile" },
+];
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
@@ -50,7 +57,7 @@ function renderEntry(e: any): HTMLElement {
     return wrap;
   }
   if (e.kind === "assistant") {
-    wrap.innerHTML = `<div class="bubble meye"><div class="who">Meye ${time}</div><div class="body">${esc(e.text ?? "")}</div></div>`;
+    wrap.innerHTML = `<div class="bubble meye"><div class="who">Meye ${time}</div><div class="body md">${renderMarkdown(e.text ?? "")}</div></div>`;
     if (e.sources?.length) {
       const det = document.createElement("details");
       det.className = "sources";
@@ -68,7 +75,6 @@ function renderEntry(e: any): HTMLElement {
     }
     return wrap;
   }
-  // action card
   const icon =
     e.status === "ok"
       ? `<span class="ok">✓</span>`
@@ -108,6 +114,7 @@ async function submit() {
   const text = input.value.trim();
   if (!text) return;
   input.value = "";
+  hideSuggest();
   const userEntry = { kind: "user", ts: Date.now(), text };
   add(userEntry);
   await persist(userEntry);
@@ -164,7 +171,7 @@ async function doAction(kind: "run" | "search" | "profile", arg: string) {
       };
     } else {
       const preset = PRESETS[arg] ?? null;
-      if (!preset) throw new Error("unknown profile (saver|balanced|performance)");
+      if (!preset) throw new Error("unknown profile (saver | balanced | performance)");
       await api.setRecordArgs(preset);
       entry = { kind: "action", ts: Date.now(), status: "ok", title: `Applied ${arg} profile`, detail: "recorder restarted" };
     }
@@ -176,15 +183,79 @@ async function doAction(kind: "run" | "search" | "profile", arg: string) {
   feed().scrollTop = feed().scrollHeight;
 }
 
+// ---------- slash-command autocomplete ----------
+let sugg: { label: string; insert: string }[] = [];
+let suggSel = 0;
+let pipeNames: string[] = [];
+
+function renderSuggest() {
+  const box = $("home-suggest");
+  if (!sugg.length) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  box.classList.remove("hidden");
+  box.innerHTML = sugg
+    .map((s, i) => `<div class="sg-item${i === suggSel ? " active" : ""}" data-i="${i}">${esc(s.label)}</div>`)
+    .join("");
+  box.querySelectorAll<HTMLElement>(".sg-item").forEach((el) => {
+    el.onmouseenter = () => {
+      suggSel = Number(el.dataset.i);
+      renderSuggest();
+    };
+    el.onclick = () => acceptSuggest(Number(el.dataset.i));
+  });
+}
+
+function hideSuggest() {
+  sugg = [];
+  renderSuggest();
+}
+
+function updateSuggest() {
+  const v = ($("home-input") as HTMLTextAreaElement).value;
+  let items: { label: string; insert: string }[] = [];
+  let m: RegExpMatchArray | null;
+  if (/^\/\w*$/.test(v)) {
+    const q = v.slice(1).toLowerCase();
+    items = COMMANDS.filter((c) => c.label.slice(1).startsWith(q)).map((c) => ({ label: `${c.label} — ${c.desc}`, insert: c.trigger }));
+  } else if ((m = v.match(/^\/run\s+(\S*)$/))) {
+    const q = m[1].toLowerCase();
+    items = pipeNames.filter((n) => n.toLowerCase().includes(q)).map((n) => ({ label: n, insert: `/run ${n} ` }));
+  } else if ((m = v.match(/^\/profile\s+(\S*)$/))) {
+    const q = m[1].toLowerCase();
+    items = ["saver", "balanced", "performance"].filter((n) => n.startsWith(q)).map((n) => ({ label: n, insert: `/profile ${n} ` }));
+  }
+  sugg = items;
+  suggSel = 0;
+  renderSuggest();
+}
+
+function acceptSuggest(i: number) {
+  if (!sugg[i]) return;
+  const input = $("home-input") as HTMLTextAreaElement;
+  input.value = sugg[i].insert;
+  input.focus();
+  updateSuggest();
+}
+
 let loaded = false;
 
 export async function loadHome() {
   if (loaded) return;
   loaded = true;
+  api
+    .pipeList()
+    .then((res: any) => {
+      const arr: any[] = Array.isArray(res) ? res : (res.data ?? res.pipes ?? []);
+      pipeNames = arr.map((p) => (p.config ?? p).name ?? p.name).filter(Boolean);
+    })
+    .catch(() => {});
   const entries = await api.activityRead().catch(() => [] as any[]);
   feed().innerHTML = "";
   if (!entries.length) {
-    feed().innerHTML = `<p class="meta home-hello">👋 Ask about your day, or run an action. Try <code>/run obsidian-sync</code>, <code>/search error</code>, or just type a question.</p>`;
+    feed().innerHTML = `<p class="meta home-hello">👋 Ask about your day, or run an action. Type <code>/</code> for commands — try <code>/run obsidian-sync</code>, <code>/search error</code>, or just ask a question.</p>`;
   } else {
     for (const e of entries) feed().appendChild(renderEntry(e));
   }
@@ -193,10 +264,37 @@ export async function loadHome() {
 
 export function initHome() {
   $("home-send").onclick = () => void submit();
-  ($("home-input") as HTMLTextAreaElement).addEventListener("keydown", (e) => {
+  const input = $("home-input") as HTMLTextAreaElement;
+  input.addEventListener("input", updateSuggest);
+  input.addEventListener("blur", () => setTimeout(hideSuggest, 120));
+  input.addEventListener("keydown", (e) => {
     const ke = e as KeyboardEvent;
+    if (sugg.length) {
+      if (ke.key === "ArrowDown") {
+        e.preventDefault();
+        suggSel = Math.min(sugg.length - 1, suggSel + 1);
+        renderSuggest();
+        return;
+      }
+      if (ke.key === "ArrowUp") {
+        e.preventDefault();
+        suggSel = Math.max(0, suggSel - 1);
+        renderSuggest();
+        return;
+      }
+      if (ke.key === "Tab") {
+        e.preventDefault();
+        acceptSuggest(suggSel);
+        return;
+      }
+      if (ke.key === "Escape") {
+        hideSuggest();
+        return;
+      }
+    }
     if (ke.key === "Enter" && !ke.shiftKey) {
       e.preventDefault();
+      hideSuggest();
       void submit();
     }
   });

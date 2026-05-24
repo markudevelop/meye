@@ -58,9 +58,12 @@
           <section id="panel-home" class="panel">
             <header class="panel-head"><h1>Home</h1><button id="home-clear">Clear</button></header>
             <div id="home-feed"></div>
-            <div class="row composer">
-              <textarea id="home-input" rows="2" placeholder="Ask about your day…   or   /run <pipe>   ·   /search <text>   ·   /profile saver|balanced|performance" style="flex:1"></textarea>
-              <button id="home-send" class="primary">Send</button>
+            <div class="composer-wrap">
+              <div id="home-suggest" class="suggest hidden"></div>
+              <div class="row composer">
+                <textarea id="home-input" rows="2" placeholder="Ask about your day…   or type /  for commands" style="flex:1"></textarea>
+                <button id="home-send" class="primary">Send</button>
+              </div>
             </div>
           </section>
 

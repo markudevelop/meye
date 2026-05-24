@@ -1,5 +1,6 @@
 import { $ } from "./ui";
 import { api } from "./api";
+import { renderMarkdown } from "./md";
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
@@ -25,7 +26,7 @@ async function send() {
   const body = pending.querySelector(".c-body") as HTMLElement;
   try {
     const reply = await api.chat(q);
-    body.textContent = reply.answer;
+    body.innerHTML = renderMarkdown(reply.answer);
     if (reply.sources?.length) {
       const det = document.createElement("details");
       det.className = "sources";
