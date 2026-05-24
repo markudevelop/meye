@@ -1,7 +1,8 @@
-# Screenpipe Keeper
+# Meye
 
-macOS menu-bar app that keeps [screenpipe](https://github.com/mediar-ai/screenpipe) running
-via a launchd LaunchAgent — no terminal required. Built with Tauri v2.
+**Meye** ("Me" + "Eye") is a local, private personal-memory app on
+[screenpipe](https://github.com/mediar-ai/screenpipe): it keeps screenpipe recording 24/7, surfaces
+screenpipe's full API in a usable UI, and grows AI recall + Obsidian organization on top.
 
 ## What it does
 - **Keeps screenpipe alive** with a launchd agent (`KeepAlive` + `RunAtLoad`): auto-restarts on

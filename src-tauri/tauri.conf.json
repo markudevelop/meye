@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Screenpipe Keeper",
+  "productName": "Meye",
   "version": "0.1.0",
-  "identifier": "com.screenpipe.keeper",
+  "identifier": "com.meye.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -14,7 +14,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Screenpipe Keeper",
+        "title": "Meye",
         "width": 420,
         "height": 560,
         "visible": false
@@ -33,6 +33,7 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": { "signingIdentity": "-" }
   }
 }
