@@ -207,3 +207,64 @@ pub async fn api_pipe_logs(name: String) -> Result<String, String> {
         .await
         .map_err(|e| e.to_string())?
 }
+
+#[tauri::command]
+pub async fn api_models_list() -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(crate::pipes::models_list)
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_models_create(
+    id: String,
+    provider: String,
+    model: String,
+    url: Option<String>,
+    api_key: Option<String>,
+    set_default: bool,
+) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::pipes::models_create(
+            &id,
+            &provider,
+            &model,
+            url.as_deref(),
+            api_key.as_deref(),
+            set_default,
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_models_set_default(id: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::models_set_default(&id))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_models_delete(id: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::models_delete(&id))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_pipe_set_preset(name: String, presets: Vec<String>) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::set_preset(&name, &presets))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub fn api_pipe_config_read(name: String) -> Result<String, String> {
+    crate::pipes::config_read(&name)
+}
+
+#[tauri::command]
+pub fn api_pipe_config_write(name: String, content: String) -> Result<(), String> {
+    crate::pipes::config_write(&name, &content)
+}
