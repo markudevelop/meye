@@ -57,6 +57,11 @@ pub fn record_config() -> PathBuf {
     app_support().join("record-config.json")
 }
 
+/// Persistent Home activity/chat thread (JSONL, one entry per line).
+pub fn activity_log() -> PathBuf {
+    app_support().join("activity.jsonl")
+}
+
 // --- legacy keeper paths, used only for one-time migration ---
 pub fn legacy_plist_path() -> PathBuf {
     home().join("Library/LaunchAgents/com.screenpipe.keeper.plist")

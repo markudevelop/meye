@@ -326,3 +326,18 @@ pub async fn api_perf_stats() -> Value {
         .await
         .unwrap_or_else(|_| serde_json::json!({}))
 }
+
+#[tauri::command]
+pub fn api_activity_read() -> Vec<Value> {
+    crate::activity::read()
+}
+
+#[tauri::command]
+pub fn api_activity_append(entry: Value) -> Result<(), String> {
+    crate::activity::append(&entry).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn api_activity_clear() -> Result<(), String> {
+    crate::activity::clear().map_err(|e| e.to_string())
+}

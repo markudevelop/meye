@@ -64,6 +64,9 @@ export const api = {
     }>,
   openPipeDir: (name: string) => invoke("api_open_pipe_dir", { name }),
   perfStats: () => invoke("api_perf_stats") as Promise<any>,
+  activityRead: () => invoke("api_activity_read") as Promise<any[]>,
+  activityAppend: (entry: any) => invoke("api_activity_append", { entry }) as Promise<void>,
+  activityClear: () => invoke("api_activity_clear") as Promise<void>,
   getRecordArgs: () => invoke("api_get_record_args") as Promise<string[]>,
   setRecordArgs: (args: string[]) => invoke("api_set_record_args", { args }) as Promise<void>,
 };

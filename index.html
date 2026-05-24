@@ -16,6 +16,9 @@
           <span>Meye</span>
         </div>
         <nav class="nav">
+          <button id="tab-btn-home" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg><span>Home</span>
+          </button>
           <button id="tab-btn-status" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg><span>Status</span>
           </button>
@@ -52,7 +55,16 @@
 
       <main class="main">
         <div class="content">
-          <section id="panel-status" class="panel">
+          <section id="panel-home" class="panel">
+            <header class="panel-head"><h1>Home</h1><button id="home-clear">Clear</button></header>
+            <div id="home-feed"></div>
+            <div class="row composer">
+              <textarea id="home-input" rows="2" placeholder="Ask about your day…   or   /run <pipe>   ·   /search <text>   ·   /profile saver|balanced|performance" style="flex:1"></textarea>
+              <button id="home-send" class="primary">Send</button>
+            </div>
+          </section>
+
+          <section id="panel-status" class="panel hidden">
             <header class="panel-head">
               <h1>Status</h1>
               <span id="status-label" class="badge"><span id="dot" class="dot grey"></span><span id="status-text">…</span></span>

@@ -1,5 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { initTabs, type Tab } from "./tabs";
+import { initHome, loadHome } from "./home";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
 import { initChat } from "./chat";
@@ -13,6 +14,7 @@ import { $, wrap } from "./ui";
 import { api } from "./api";
 
 initPalette();
+initHome();
 initStatus();
 initSearch();
 initChat();
@@ -28,6 +30,7 @@ $("a-go").onclick = () =>
   });
 
 initTabs((tab: Tab) => {
+  if (tab === "home") void loadHome();
   if (tab === "status") refreshHealth();
   if (tab === "timeline") loadTimelineIfEmpty();
   if (tab === "pipes") void refreshPipes();
