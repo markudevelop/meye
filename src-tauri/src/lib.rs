@@ -34,6 +34,16 @@ pub fn run() {
             commands::get_permissions,
             commands::open_settings,
             commands::recheck,
+            commands::api_search,
+            commands::api_keyword,
+            commands::api_audio_devices,
+            commands::api_monitors,
+            commands::api_frame_ocr,
+            commands::api_audio_start,
+            commands::api_audio_stop,
+            commands::api_raw_sql,
+            commands::api_add_tags,
+            commands::api_remove_tags,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;

@@ -119,3 +119,56 @@ pub fn open_settings(pane: String) -> Result<(), String> {
 pub fn recheck() -> Result<(), String> {
     agent::restart().map_err(|e| e.to_string())
 }
+
+use crate::screenpipe_api::{self, SearchParams};
+use serde_json::Value;
+
+#[tauri::command]
+pub async fn api_search(params: SearchParams) -> Result<Value, String> {
+    screenpipe_api::search(&params).await
+}
+
+#[tauri::command]
+pub async fn api_keyword(query: String, limit: u32) -> Result<Value, String> {
+    screenpipe_api::keyword(&query, limit).await
+}
+
+#[tauri::command]
+pub async fn api_audio_devices() -> Result<Value, String> {
+    screenpipe_api::audio_devices().await
+}
+
+#[tauri::command]
+pub async fn api_monitors() -> Result<Value, String> {
+    screenpipe_api::monitors().await
+}
+
+#[tauri::command]
+pub async fn api_frame_ocr(id: i64) -> Result<Value, String> {
+    screenpipe_api::frame_ocr(id).await
+}
+
+#[tauri::command]
+pub async fn api_audio_start() -> Result<Value, String> {
+    screenpipe_api::audio_start().await
+}
+
+#[tauri::command]
+pub async fn api_audio_stop() -> Result<Value, String> {
+    screenpipe_api::audio_stop().await
+}
+
+#[tauri::command]
+pub async fn api_raw_sql(query: String) -> Result<Value, String> {
+    screenpipe_api::raw_sql(&query).await
+}
+
+#[tauri::command]
+pub async fn api_add_tags(kind: String, id: i64, tags: Vec<String>) -> Result<Value, String> {
+    screenpipe_api::add_tags(&kind, id, tags).await
+}
+
+#[tauri::command]
+pub async fn api_remove_tags(kind: String, id: i64, tags: Vec<String>) -> Result<Value, String> {
+    screenpipe_api::remove_tags(&kind, id, tags).await
+}
