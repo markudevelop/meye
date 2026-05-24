@@ -309,11 +309,6 @@ export function initHome() {
       void submit();
     }
   });
-  $("home-clear").onclick = async () => {
-    await api.activityClear();
-    loaded = false;
-    void loadHome();
-  };
   document.querySelectorAll<HTMLElement>("#home-hero .chip").forEach((el) => {
     el.onclick = () => {
       input.value = el.dataset.cmd ?? "";

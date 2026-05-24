@@ -64,50 +64,84 @@ fn endpoint(p: &Preset) -> String {
     }
 }
 
-/// Pull recent relevant screen+audio activity. Returns (prompt context, sources for display).
+/// Collect hits from a /search response into the prompt + sources, de-duplicating.
+fn collect(
+    res: &Value,
+    prompt: &mut String,
+    sources: &mut Vec<Source>,
+    seen: &mut std::collections::HashSet<String>,
+) {
+    let Some(arr) = res.get("data").and_then(|d| d.as_array()) else {
+        return;
+    };
+    for hit in arr {
+        if sources.len() >= 30 {
+            break;
+        }
+        let c = hit.get("content").unwrap_or(hit);
+        let text = c
+            .get("text")
+            .or_else(|| c.get("transcription"))
+            .or_else(|| c.get("ocr_text"))
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        if text.is_empty() {
+            continue;
+        }
+        let app = c.get("app_name").and_then(|v| v.as_str()).unwrap_or("");
+        let ts = c.get("timestamp").and_then(|v| v.as_str()).unwrap_or("");
+        let key: String = format!("{ts}|{}", text.chars().take(40).collect::<String>());
+        if !seen.insert(key) {
+            continue;
+        }
+        let frame_id = c
+            .get("frame_id")
+            .or_else(|| c.get("frameId"))
+            .or_else(|| c.get("id"))
+            .and_then(|v| v.as_i64());
+        let snippet: String = text.chars().take(300).collect();
+        prompt.push_str(&format!("[{ts} {app}] {snippet}\n"));
+        sources.push(Source {
+            ts: ts.to_string(),
+            app: app.to_string(),
+            text: snippet,
+            frame_id,
+        });
+    }
+}
+
+/// Grounding context: most-recent activity (so "today"-style questions work) plus
+/// keyword hits for the question. Returns (prompt context, sources for display).
 async fn build_context(question: &str) -> (String, Vec<Source>) {
-    let params = screenpipe_api::SearchParams {
-        q: Some(question.to_string()),
-        content_type: Some("all".into()),
-        limit: Some(15),
-        ..Default::default()
-    };
-    let Ok(res) = screenpipe_api::search(&params).await else {
-        return ("(could not search recordings)".into(), Vec::new());
-    };
     let mut prompt = String::new();
     let mut sources: Vec<Source> = Vec::new();
-    if let Some(arr) = res.get("data").and_then(|d| d.as_array()) {
-        for hit in arr.iter().take(15) {
-            let c = hit.get("content").unwrap_or(hit);
-            let text = c
-                .get("text")
-                .or_else(|| c.get("transcription"))
-                .or_else(|| c.get("ocr_text"))
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            if text.is_empty() {
-                continue;
-            }
-            let app = c.get("app_name").and_then(|v| v.as_str()).unwrap_or("");
-            let ts = c.get("timestamp").and_then(|v| v.as_str()).unwrap_or("");
-            let frame_id = c
-                .get("frame_id")
-                .or_else(|| c.get("frameId"))
-                .or_else(|| c.get("id"))
-                .and_then(|v| v.as_i64());
-            let snippet: String = text.chars().take(300).collect();
-            prompt.push_str(&format!("[{ts} {app}] {snippet}\n"));
-            sources.push(Source {
-                ts: ts.to_string(),
-                app: app.to_string(),
-                text: snippet,
-                frame_id,
-            });
-        }
+    let mut seen = std::collections::HashSet::new();
+
+    // Keyword-relevant hits first (good for "find the X I saw" questions).
+    if let Ok(res) = screenpipe_api::search(&screenpipe_api::SearchParams {
+        q: Some(question.to_string()),
+        content_type: Some("all".into()),
+        limit: Some(12),
+        ..Default::default()
+    })
+    .await
+    {
+        collect(&res, &mut prompt, &mut sources, &mut seen);
     }
+
+    // Then most-recent activity regardless of query (grounds summary questions).
+    if let Ok(res) = screenpipe_api::search(&screenpipe_api::SearchParams {
+        content_type: Some("all".into()),
+        limit: Some(25),
+        ..Default::default()
+    })
+    .await
+    {
+        collect(&res, &mut prompt, &mut sources, &mut seen);
+    }
+
     if prompt.is_empty() {
-        prompt = "(no relevant recordings found)".into();
+        prompt = "(no recordings found — the recorder may not be running)".into();
     }
     (prompt, sources)
 }
