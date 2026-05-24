@@ -266,15 +266,22 @@ async function doAction(kind: "run" | "search" | "profile", arg: string) {
   let entry: any;
   try {
     if (kind === "run") {
-      await api.pipeRun(arg);
+      let target = arg;
+      if (pipeNames.length && !pipeNames.includes(arg)) {
+        const matches = pipeNames.filter((n) => n.toLowerCase().includes(arg.toLowerCase()));
+        if (matches.length === 1) target = matches[0];
+        else if (matches.length === 0) throw new Error(`No pipe named "${arg}". Available: ${pipeNames.join(", ") || "none"}`);
+        else throw new Error(`"${arg}" matches ${matches.join(", ")} — be more specific`);
+      }
+      await api.pipeRun(target);
       entry = {
         kind: "action",
         ts: Date.now(),
         status: "ok",
-        title: `Ran pipe ${arg}`,
+        title: `Ran pipe ${target}`,
         detail: "finished",
         actions: [
-          { label: "Open folder", cmd: "open-pipe-dir", arg },
+          { label: "Open folder", cmd: "open-pipe-dir", arg: target },
           { label: "Pipes tab", cmd: "go-tab", arg: "pipes" },
         ],
       };
