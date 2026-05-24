@@ -9,17 +9,104 @@ mod binary;
 #[allow(dead_code)]
 mod commands;
 
-// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    Emitter, Manager,
+};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .invoke_handler(tauri::generate_handler![
+            commands::get_state,
+            commands::get_health,
+            commands::setup,
+            commands::start,
+            commands::stop,
+            commands::restart,
+            commands::update_screenpipe,
+            commands::open_data_dir,
+            commands::open_logs,
+            commands::tail_logs,
+        ])
+        .setup(|app| {
+            let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
+            let start_i = MenuItem::with_id(app, "start", "Start", true, None::<&str>)?;
+            let stop_i = MenuItem::with_id(app, "stop", "Stop", true, None::<&str>)?;
+            let restart_i = MenuItem::with_id(app, "restart", "Restart", true, None::<&str>)?;
+            let data_i = MenuItem::with_id(app, "data", "Open Data Folder", true, None::<&str>)?;
+            let logs_i = MenuItem::with_id(app, "logs", "Open Logs", true, None::<&str>)?;
+            let update_i = MenuItem::with_id(app, "update", "Update screenpipe", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(
+                app,
+                &[&open_i, &start_i, &stop_i, &restart_i, &data_i, &logs_i, &update_i, &quit_i],
+            )?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "open" => {
+                        if let Some(w) = app.get_webview_window("main") {
+                            let _ = w.show();
+                            let _ = w.set_focus();
+                        }
+                    }
+                    "start" => {
+                        let _ = agent::start();
+                    }
+                    "stop" => {
+                        let _ = agent::stop();
+                    }
+                    "restart" => {
+                        let _ = agent::restart();
+                    }
+                    "data" => {
+                        let _ = commands::open_data_dir();
+                    }
+                    "logs" => {
+                        let _ = commands::open_logs();
+                    }
+                    "update" => {
+                        let _ = binary::update();
+                    }
+                    "quit" => app.exit(0),
+                    _ => {}
+                })
+                .build(app)?;
+
+            // Health poll loop: emit status to the frontend every 5s.
+            let handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    let status = if !agent::is_installed() {
+                        health::Status::NotInstalled
+                    } else {
+                        health::fetch().await
+                    };
+                    let _ = handle.emit("status", &status);
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                }
+            });
+
+            Ok(())
+        })
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // Menu-bar behavior: closing the window hides it; the app stays in the tray.
+            if let tauri::RunEvent::WindowEvent {
+                event: tauri::WindowEvent::CloseRequested { api, .. },
+                ..
+            } = event
+            {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.hide();
+                }
+                api.prevent_close();
+            }
+        });
 }
