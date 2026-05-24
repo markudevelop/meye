@@ -14,6 +14,7 @@
     <button id="tab-btn-search" class="tab-btn">Search</button>
     <button id="tab-btn-devices" class="tab-btn">Devices</button>
     <button id="tab-btn-pipes" class="tab-btn">Pipes</button>
+    <button id="tab-btn-settings" class="tab-btn">Settings</button>
     <button id="tab-btn-advanced" class="tab-btn">Advanced</button>
   </nav>
 
@@ -74,6 +75,27 @@
       <div class="row"><button id="p-refresh">Refresh</button></div>
       <div id="p-list">—</div>
       <h3>Logs</h3><pre id="p-logs">—</pre>
+    </section>
+
+    <section id="panel-settings" class="panel hidden">
+      <h3>AI model presets</h3>
+      <p class="meta">Pipes need a default preset to run. Subscriptions can't be used here — pipes call a raw API or a local model.</p>
+      <div id="set-list">—</div>
+      <h3>Add preset</h3>
+      <div class="row">
+        <input id="set-id" placeholder="preset id (e.g. deepseek, ollama-local)" />
+        <select id="set-provider">
+          <option value="anthropic">anthropic</option>
+          <option value="openai">openai</option>
+          <option value="native-ollama">native-ollama (local)</option>
+          <option value="custom">custom (OpenAI-compatible, e.g. DeepSeek)</option>
+          <option value="screenpipe-cloud">screenpipe-cloud</option>
+        </select>
+      </div>
+      <div class="row"><input id="set-model" placeholder="model (e.g. claude-sonnet-4-6, deepseek-chat, llama3.2)" /></div>
+      <div class="row" id="set-url-wrap"><input id="set-url" placeholder="base url (ollama/custom, e.g. https://api.deepseek.com)" /></div>
+      <div class="row" id="set-key-wrap"><input id="set-key" type="password" placeholder="api key (openai/anthropic/custom)" /></div>
+      <div class="row"><label><input id="set-default" type="checkbox" checked /> set as default</label><button id="set-create">Create preset</button></div>
     </section>
 
     <section id="panel-advanced" class="panel hidden">

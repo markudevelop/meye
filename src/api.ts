@@ -38,4 +38,19 @@ export const api = {
   pipeEnable: (name: string) => invoke("api_pipe_enable", { name }) as Promise<string>,
   pipeDisable: (name: string) => invoke("api_pipe_disable", { name }) as Promise<string>,
   pipeLogs: (name: string) => invoke("api_pipe_logs", { name }) as Promise<string>,
+  modelsList: () => invoke("api_models_list") as Promise<any>,
+  modelsCreate: (a: { id: string; provider: string; model: string; url?: string; apiKey?: string; setDefault: boolean }) =>
+    invoke("api_models_create", {
+      id: a.id,
+      provider: a.provider,
+      model: a.model,
+      url: a.url,
+      apiKey: a.apiKey,
+      setDefault: a.setDefault,
+    }) as Promise<string>,
+  modelsSetDefault: (id: string) => invoke("api_models_set_default", { id }) as Promise<string>,
+  modelsDelete: (id: string) => invoke("api_models_delete", { id }) as Promise<string>,
+  pipeSetPreset: (name: string, presets: string[]) => invoke("api_pipe_set_preset", { name, presets }) as Promise<string>,
+  pipeConfigRead: (name: string) => invoke("api_pipe_config_read", { name }) as Promise<string>,
+  pipeConfigWrite: (name: string, content: string) => invoke("api_pipe_config_write", { name, content }) as Promise<void>,
 };

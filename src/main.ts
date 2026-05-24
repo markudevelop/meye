@@ -4,6 +4,7 @@ import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
 import { initDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
+import { initSettings, refreshSettings } from "./settings";
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
@@ -11,6 +12,7 @@ initStatus();
 initSearch();
 initDevices();
 initPipes();
+initSettings();
 
 $("a-go").onclick = () =>
   wrap("SQL", async () => {
@@ -20,6 +22,7 @@ $("a-go").onclick = () =>
 initTabs((tab: Tab) => {
   if (tab === "status") refreshHealth();
   if (tab === "pipes") void refreshPipes();
+  if (tab === "settings") void refreshSettings();
 });
 
 listen("status", (e) => (window as any).__meyeApplyStatus?.(e.payload));
