@@ -93,3 +93,29 @@ fn open_path(path: &str) -> Result<(), String> {
         .map_err(|e| e.to_string())
         .and_then(|s| if s.success() { Ok(()) } else { Err("open failed".into()) })
 }
+
+#[derive(serde::Serialize)]
+pub struct Permissions {
+    pub waiting: Vec<String>,
+}
+
+#[tauri::command]
+pub fn get_permissions() -> Permissions {
+    Permissions { waiting: agent::missing_permissions() }
+}
+
+#[tauri::command]
+pub fn open_settings(pane: String) -> Result<(), String> {
+    let url = match pane.as_str() {
+        "screen" => "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+        "microphone" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
+        "accessibility" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+        _ => "x-apple.systempreferences:com.apple.preference.security?Privacy",
+    };
+    open_path(url)
+}
+
+#[tauri::command]
+pub fn recheck() -> Result<(), String> {
+    agent::restart().map_err(|e| e.to_string())
+}

@@ -7,6 +7,7 @@ pub enum Status {
     Degraded,
     Down,
     NotInstalled,
+    WaitingPermissions,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
-type Status = "Healthy" | "Degraded" | "Down" | "NotInstalled";
+type Status = "Healthy" | "Degraded" | "Down" | "NotInstalled" | "WaitingPermissions";
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -24,12 +24,36 @@ async function wrap(label: string, fn: () => Promise<unknown>) {
 
 function applyStatus(s: Status) {
   const dot = $("dot");
-  dot.className =
-    "dot " +
-    ({ Healthy: "green", Degraded: "yellow", Down: "red", NotInstalled: "grey" }[s] ?? "grey");
-  $("status-label").textContent = s;
+  const cls =
+    ({ Healthy: "green", Degraded: "yellow", Down: "red", NotInstalled: "grey", WaitingPermissions: "orange" } as Record<Status, string>)[s] ?? "grey";
+  dot.className = "dot " + cls;
+  $("status-label").textContent = s === "WaitingPermissions" ? "Waiting for permissions" : s;
   $("setup").classList.toggle("hidden", s !== "NotInstalled");
   $("controls").classList.toggle("hidden", s === "NotInstalled");
+  const showPerms = s === "WaitingPermissions";
+  $("perms").classList.toggle("hidden", !showPerms);
+  if (showPerms) void renderPerms();
+}
+
+const PANE: Record<string, string> = {
+  "Screen Recording": "screen",
+  Microphone: "microphone",
+  Accessibility: "accessibility",
+};
+
+async function renderPerms() {
+  const p = (await invoke("get_permissions")) as { waiting: string[] };
+  $("perms-msg").textContent = p.waiting.length
+    ? `Waiting for permissions: ${p.waiting.join(", ")}. Grant in System Settings, then Re-check.`
+    : "Starting…";
+  const box = $("perms-buttons");
+  box.innerHTML = "";
+  for (const name of p.waiting) {
+    const b = document.createElement("button");
+    b.textContent = `Open ${name}`;
+    b.onclick = () => wrap(`Open ${name}`, () => invoke("open_settings", { pane: PANE[name] ?? "" }));
+    box.appendChild(b);
+  }
 }
 
 async function refreshState() {
@@ -62,6 +86,7 @@ function wire() {
   $("btn-data").onclick = () => wrap("Open data", () => invoke("open_data_dir"));
   $("btn-logs").onclick = () => wrap("Open logs", () => invoke("open_logs"));
   $("btn-update").onclick = () => wrap("Update", () => invoke("update_screenpipe"));
+  $("btn-recheck").onclick = () => wrap("Re-check", () => invoke("recheck"));
 }
 
 listen<Status>("status", (e) => applyStatus(e.payload));

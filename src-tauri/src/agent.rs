@@ -77,6 +77,22 @@ fn run_launchctl(args: &[String]) -> io::Result<std::process::Output> {
     Command::new("launchctl").args(args).output()
 }
 
+/// Turn raw launchctl stderr into a friendly message.
+fn humanize_launchctl(stderr: &str) -> String {
+    let s = stderr.trim();
+    if s.contains("Input/output error") || s.contains("already") {
+        "Service is already loaded.".into()
+    } else if s.contains("No such process") || s.contains("Could not find") {
+        "Service is not loaded.".into()
+    } else if s.contains("Operation not permitted") {
+        "Operation not permitted — check the LaunchAgent plist.".into()
+    } else if s.is_empty() {
+        "launchctl failed with no message.".into()
+    } else {
+        format!("launchctl: {s}")
+    }
+}
+
 pub fn is_installed() -> bool {
     paths::plist_path().exists()
 }
@@ -102,31 +118,45 @@ pub fn install() -> io::Result<()> {
 }
 
 pub fn start() -> io::Result<()> {
+    if is_loaded() {
+        return Ok(()); // already running — Start is a no-op
+    }
     let plist = paths::plist_path().to_string_lossy().into_owned();
     let out = run_launchctl(&bootstrap_args(current_uid(), &plist))?;
-    // bootstrap returns non-zero if already loaded; treat "already bootstrapped" as ok.
-    if out.status.success() || String::from_utf8_lossy(&out.stderr).contains("already") {
+    if out.status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(String::from_utf8_lossy(&out.stderr).into_owned()))
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        // Error 5 "Input/output error" / "already" => already bootstrapped, treat as success.
+        if stderr.contains("Input/output error") || stderr.contains("already") {
+            Ok(())
+        } else {
+            Err(io::Error::other(humanize_launchctl(&stderr)))
+        }
     }
 }
 
 pub fn stop() -> io::Result<()> {
+    if !is_loaded() {
+        return Ok(()); // already stopped
+    }
     let out = run_launchctl(&bootout_args(current_uid()))?;
     if out.status.success() || String::from_utf8_lossy(&out.stderr).contains("No such process") {
         Ok(())
     } else {
-        Err(io::Error::other(String::from_utf8_lossy(&out.stderr).into_owned()))
+        Err(io::Error::other(humanize_launchctl(&String::from_utf8_lossy(&out.stderr))))
     }
 }
 
 pub fn restart() -> io::Result<()> {
+    if !is_loaded() {
+        return start(); // can't kickstart an unloaded service; load it instead
+    }
     let out = run_launchctl(&kickstart_args(current_uid()))?;
     if out.status.success() {
         Ok(())
     } else {
-        Err(io::Error::other(String::from_utf8_lossy(&out.stderr).into_owned()))
+        Err(io::Error::other(humanize_launchctl(&String::from_utf8_lossy(&out.stderr))))
     }
 }
 
@@ -135,6 +165,33 @@ pub fn is_loaded() -> bool {
     run_launchctl(&print_args(current_uid()))
         .map(|o| o.status.success())
         .unwrap_or(false)
+}
+
+/// Pure: from the agent's err.log content, return the permissions screenpipe is
+/// still waiting on. Only the LATEST "checking permissions" block is considered,
+/// so stale lines from earlier launches are ignored.
+pub fn parse_missing_permissions(log: &str) -> Vec<String> {
+    let tail = match log.rfind("checking permissions") {
+        Some(idx) => &log[idx..],
+        None => log,
+    };
+    let mut out = Vec::new();
+    if tail.contains("screen recording: waiting") {
+        out.push("Screen Recording".to_string());
+    }
+    if tail.contains("microphone: waiting") {
+        out.push("Microphone".to_string());
+    }
+    if tail.contains("accessibility: waiting") {
+        out.push("Accessibility".to_string());
+    }
+    out
+}
+
+/// Read the agent err.log and report which permissions screenpipe is waiting on.
+pub fn missing_permissions() -> Vec<String> {
+    let log = std::fs::read_to_string(paths::err_log()).unwrap_or_default();
+    parse_missing_permissions(&log)
 }
 
 #[cfg(test)]
@@ -160,5 +217,23 @@ mod tests {
         assert_eq!(bootout_args(501), vec!["bootout", "gui/501/com.screenpipe.keeper"]);
         assert_eq!(kickstart_args(501), vec!["kickstart", "-k", "gui/501/com.screenpipe.keeper"]);
         assert_eq!(print_args(501), vec!["print", "gui/501/com.screenpipe.keeper"]);
+    }
+
+    #[test]
+    fn missing_permissions_uses_latest_block_only() {
+        // Earlier block: both waiting. Latest block: only microphone still waiting.
+        let log = "\
+checking permissions...
+  screen recording: waiting — grant access
+  microphone: waiting — grant access
+
+[some other log lines]
+checking permissions...
+  microphone: waiting — grant access
+";
+        let missing = parse_missing_permissions(log);
+        assert_eq!(missing, vec!["Microphone".to_string()]);
+
+        assert!(parse_missing_permissions("no markers here").is_empty());
     }
 }

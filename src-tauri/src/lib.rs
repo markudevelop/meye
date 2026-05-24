@@ -29,6 +29,9 @@ pub fn run() {
             commands::open_data_dir,
             commands::open_logs,
             commands::tail_logs,
+            commands::get_permissions,
+            commands::open_settings,
+            commands::recheck,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
@@ -86,7 +89,16 @@ pub fn run() {
                     let status = if !agent::is_installed() {
                         health::Status::NotInstalled
                     } else {
-                        health::fetch().await
+                        match health::fetch_full().await {
+                            Some(h) => health::classify(&h),
+                            None => {
+                                if agent::is_loaded() && !agent::missing_permissions().is_empty() {
+                                    health::Status::WaitingPermissions
+                                } else {
+                                    health::Status::Down
+                                }
+                            }
+                        }
                     };
                     let _ = handle.emit("status", &status);
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
