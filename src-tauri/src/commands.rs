@@ -301,3 +301,9 @@ pub async fn api_pipe_delete(name: String) -> Result<String, String> {
 pub async fn api_chat(question: String) -> Result<String, String> {
     crate::chat::chat(&question).await
 }
+
+#[tauri::command]
+pub fn api_open_pipe_dir(name: String) -> Result<(), String> {
+    let dir = crate::pipes::pipe_dir(&name)?;
+    open_path(&dir.to_string_lossy())
+}

@@ -170,4 +170,16 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
   box-shadow: var(--shadow); z-index: 50; max-width: 80vw;
 }
 
+/* timeline filmstrip */
+.filmstrip { display: flex; gap: 6px; overflow-x: auto; padding: 8px 0; scrollbar-width: thin; }
+.filmstrip .tn {
+  height: 56px; width: auto; border-radius: 6px; border: 2px solid transparent;
+  cursor: pointer; flex-shrink: 0; opacity: 0.6; transition: opacity 0.12s, border-color 0.12s;
+}
+.filmstrip .tn:hover { opacity: 1; }
+.filmstrip .tn.active { border-color: var(--accent); opacity: 1; }
+
+.ok { color: #34c759; font-weight: 600; }
+.err { color: #ff453a; font-weight: 600; }
+
 .hidden { display: none !important; }

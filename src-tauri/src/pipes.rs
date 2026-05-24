@@ -95,12 +95,16 @@ pub fn set_preset(name: &str, presets: &[String]) -> Result<String, String> {
     run_pipe(&args)
 }
 
-/// Resolve `~/.screenpipe/pipes/<name>/pipe.md`, rejecting names that could escape the dir.
-fn pipe_md_path(name: &str) -> Result<PathBuf, String> {
+/// Resolve `~/.screenpipe/pipes/<name>`, rejecting names that could escape the dir.
+pub fn pipe_dir(name: &str) -> Result<PathBuf, String> {
     if name.is_empty() || !name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_') {
         return Err("invalid pipe name".into());
     }
-    Ok(paths::data_dir().join("pipes").join(name).join("pipe.md"))
+    Ok(paths::data_dir().join("pipes").join(name))
+}
+
+fn pipe_md_path(name: &str) -> Result<PathBuf, String> {
+    Ok(pipe_dir(name)?.join("pipe.md"))
 }
 
 pub fn config_read(name: &str) -> Result<String, String> {

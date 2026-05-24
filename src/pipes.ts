@@ -37,10 +37,17 @@ export async function refreshPipes() {
       const schedule: string = cfg.schedule ?? p.schedule ?? "manual";
       const lastRun: string = p.last_run ?? cfg.last_run ?? "never";
       const running = p.is_running ? " · running" : "";
+      const lastError = p.last_error ?? cfg.last_error;
+      const lastSuccess = p.last_success ?? cfg.last_success;
+      const statusBit = lastError
+        ? ` · <span class="err">✗ ${esc(String(lastError)).slice(0, 90)}</span>`
+        : lastSuccess === true
+          ? ` · <span class="ok">✓ ok</span>`
+          : "";
 
       const card = document.createElement("div");
       card.className = "hit";
-      card.innerHTML = `<b>${esc(name)}</b> <span class="meta">${enabled ? "enabled" : "disabled"} · ${esc(schedule)} · last: ${esc(String(lastRun))}${running}</span>`;
+      card.innerHTML = `<b>${esc(name)}</b> <span class="meta">${enabled ? "enabled" : "disabled"} · ${esc(schedule)} · last: ${esc(String(lastRun))}${running}${statusBit}</span>`;
 
       const controls = document.createElement("div");
       controls.className = "row";
@@ -72,6 +79,11 @@ export async function refreshPipes() {
         }
       };
       controls.appendChild(logsBtn);
+
+      const openBtn = document.createElement("button");
+      openBtn.textContent = "Open folder";
+      openBtn.onclick = () => void api.openPipeDir(name);
+      controls.appendChild(openBtn);
 
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";

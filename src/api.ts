@@ -58,4 +58,5 @@ export const api = {
   registryInstall: (source: string) => invoke("api_registry_install", { source }) as Promise<string>,
   pipeDelete: (name: string) => invoke("api_pipe_delete", { name }) as Promise<string>,
   chat: (question: string) => invoke("api_chat", { question }) as Promise<string>,
+  openPipeDir: (name: string) => invoke("api_open_pipe_dir", { name }),
 };

@@ -65,6 +65,7 @@ pub fn run() {
             commands::api_registry_install,
             commands::api_pipe_delete,
             commands::api_chat,
+            commands::api_open_pipe_dir,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;

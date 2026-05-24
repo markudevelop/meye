@@ -106,11 +106,15 @@
 
           <section id="panel-timeline" class="panel hidden">
             <header class="panel-head"><h1>Timeline</h1></header>
-            <p class="meta">Scrub through your captured screen — drag the slider to rewind your day.</p>
+            <p class="meta">Rewind your screen — scrub the slider, use ◀ ▶ (or arrow keys), or press Play.</p>
             <div class="row">
-              <input id="t-limit" type="number" value="200" min="10" max="2000" style="max-width:7em" />
-              <button id="t-load" class="primary">Load recent frames</button>
+              <input id="t-limit" type="number" value="150" min="10" max="3000" style="max-width:6.5em" />
+              <button id="t-load" class="primary">Load frames</button>
+              <button id="t-prev">◀</button>
+              <button id="t-play">▶ Play</button>
+              <button id="t-next">▶</button>
             </div>
+            <div id="t-strip" class="filmstrip"></div>
             <input id="t-slider" type="range" min="0" max="0" value="0" style="width:100%" />
             <div id="t-meta" class="meta">—</div>
             <img id="t-img" />
