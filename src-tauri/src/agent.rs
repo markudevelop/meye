@@ -2,12 +2,59 @@ use crate::paths;
 use std::io;
 use std::process::Command;
 
-/// Build the `<array>` of ProgramArguments: the pinned binary + `record`.
+/// Build the `<array>` of ProgramArguments: the pinned binary + `record` + perf flags.
 pub fn program_arguments() -> Vec<String> {
-    vec![
+    let mut v = vec![
         paths::recorder_binary().to_string_lossy().into_owned(),
         "record".to_string(),
-    ]
+    ];
+    v.extend(extra_args());
+    v
+}
+
+/// Read the persisted extra `record` flags (performance profile).
+fn extra_args() -> Vec<String> {
+    let txt = std::fs::read_to_string(paths::record_config()).unwrap_or_default();
+    serde_json::from_str::<serde_json::Value>(&txt)
+        .ok()
+        .and_then(|v| {
+            v.get("args").and_then(|a| a.as_array()).map(|a| {
+                a.iter()
+                    .filter_map(|x| x.as_str().map(String::from))
+                    .collect::<Vec<String>>()
+            })
+        })
+        .unwrap_or_default()
+}
+
+pub fn get_record_args() -> Vec<String> {
+    extra_args()
+}
+
+/// Persist new extra `record` flags, regenerate the plist, and restart the agent.
+pub fn set_record_args(args: &[String]) -> io::Result<()> {
+    if let Some(parent) = paths::record_config().parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let json = serde_json::json!({ "args": args });
+    std::fs::write(
+        paths::record_config(),
+        serde_json::to_string_pretty(&json).unwrap_or_default(),
+    )?;
+    write_plist()?;
+    if is_loaded() {
+        reload()?;
+    }
+    Ok(())
+}
+
+/// Reload the plist (bootout + bootstrap). Required after changing ProgramArguments —
+/// `kickstart` restarts the process but does NOT re-read the plist from disk.
+pub fn reload() -> io::Result<()> {
+    if is_loaded() {
+        let _ = run_launchctl(&bootout_args(current_uid()));
+    }
+    start()
 }
 
 /// One-time migration off the old `com.screenpipe.keeper` agent: bootout the old

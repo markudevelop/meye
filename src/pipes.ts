@@ -49,12 +49,31 @@ export async function refreshPipes() {
       card.className = "hit";
       card.innerHTML = `<b>${esc(name)}</b> <span class="meta">${enabled ? "enabled" : "disabled"} · ${esc(schedule)} · last: ${esc(String(lastRun))}${running}${statusBit}</span>`;
 
+      const cardStatus = document.createElement("div");
+      cardStatus.className = "pipe-status meta";
+
       const controls = document.createElement("div");
       controls.className = "row";
 
       const runBtn = document.createElement("button");
       runBtn.textContent = "Run now";
-      runBtn.onclick = () => wrap(`Run ${name}`, () => api.pipeRun(name)).then(refreshPipes);
+      runBtn.className = "primary";
+      runBtn.onclick = async () => {
+        const orig = runBtn.textContent;
+        runBtn.disabled = true;
+        runBtn.textContent = "Running…";
+        cardStatus.innerHTML = `<span class="run-spin"></span> running — summarising via the model, can take 1–2 min…`;
+        try {
+          await api.pipeRun(name);
+          cardStatus.innerHTML = `<span class="ok">✓ finished</span> — check Logs / output`;
+        } catch (e) {
+          cardStatus.innerHTML = `<span class="err">✗ failed:</span> ${esc(String(e))}`;
+        }
+        runBtn.disabled = false;
+        runBtn.textContent = orig;
+        // refresh the list metadata after a short beat (keeps the result visible briefly)
+        setTimeout(() => void refreshPipes(), 2500);
+      };
       controls.appendChild(runBtn);
 
       const toggleBtn = document.createElement("button");
@@ -107,6 +126,7 @@ export async function refreshPipes() {
       presetRow.appendChild(presetInput);
       presetRow.appendChild(presetBtn);
       card.appendChild(presetRow);
+      card.appendChild(cardStatus);
 
       out.appendChild(card);
     }

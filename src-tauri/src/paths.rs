@@ -52,6 +52,11 @@ pub fn data_dir() -> PathBuf {
     home().join(".screenpipe")
 }
 
+/// Persisted extra `record` flags (performance profile) the agent launches with.
+pub fn record_config() -> PathBuf {
+    app_support().join("record-config.json")
+}
+
 // --- legacy keeper paths, used only for one-time migration ---
 pub fn legacy_plist_path() -> PathBuf {
     home().join("Library/LaunchAgents/com.screenpipe.keeper.plist")

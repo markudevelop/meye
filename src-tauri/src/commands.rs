@@ -307,3 +307,15 @@ pub fn api_open_pipe_dir(name: String) -> Result<(), String> {
     let dir = crate::pipes::pipe_dir(&name)?;
     open_path(&dir.to_string_lossy())
 }
+
+#[tauri::command]
+pub fn api_get_record_args() -> Vec<String> {
+    crate::agent::get_record_args()
+}
+
+#[tauri::command]
+pub async fn api_set_record_args(args: Vec<String>) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || crate::agent::set_record_args(&args).map_err(|e| e.to_string()))
+        .await
+        .map_err(|e| e.to_string())?
+}
