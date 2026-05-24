@@ -42,13 +42,44 @@ fn npx_root() -> PathBuf {
     PathBuf::from(std::env::var("HOME").unwrap_or_default()).join(".npm/_npx")
 }
 
+/// Ad-hoc signing identity now; swap to a Developer ID string later.
+const SIGNING_IDENTITY: &str = "-";
+
+/// Pure: the recorder bundle's Info.plist XML.
+pub fn build_info_plist(bundle_id: &str, exec_name: &str) -> String {
+    format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>Meye Recorder</string>
+  <key>CFBundleIdentifier</key>
+  <string>{bundle_id}</string>
+  <key>CFBundleExecutable</key>
+  <string>{exec_name}</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>LSUIElement</key>
+  <true/>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Meye records audio so you can search and recall what you heard.</string>
+</dict>
+</plist>
+"#
+    )
+}
+
 pub fn is_pinned() -> bool {
-    paths::pinned_binary().is_file()
+    paths::recorder_binary().is_file()
 }
 
 /// Populate the npx cache with the latest screenpipe, then return its bin dir.
 fn ensure_npx_cached() -> io::Result<PathBuf> {
-    // `--help` is enough to download+extract the package into the npx cache.
     let status = std::process::Command::new("npx")
         .args(["--yes", "screenpipe@latest", "record", "--help"])
         .output()?;
@@ -61,10 +92,33 @@ fn ensure_npx_cached() -> io::Result<PathBuf> {
         .ok_or_else(|| io::Error::other("screenpipe bin dir not found in npx cache"))
 }
 
-/// First-time pin: copy current screenpipe (binary + metallib) into the pinned dir.
+/// ad-hoc (or Developer ID) sign the recorder app bundle.
+fn codesign(app: &Path) -> io::Result<()> {
+    let out = std::process::Command::new("codesign")
+        .args(["--force", "--deep", "--sign", SIGNING_IDENTITY])
+        .arg(app)
+        .output()?;
+    if out.status.success() {
+        Ok(())
+    } else {
+        Err(io::Error::other(
+            String::from_utf8_lossy(&out.stderr).into_owned(),
+        ))
+    }
+}
+
+/// Pin screenpipe as a signed `.app` bundle so it gets a TCC identity (mic permission).
+/// Copies the screenpipe binary + mlx.metallib into Contents/MacOS, writes Info.plist, signs.
 pub fn pin() -> io::Result<usize> {
     let src = ensure_npx_cached()?;
-    copy_dir_files(&src, &paths::pinned_bin_dir())
+    let macos = paths::recorder_macos_dir();
+    let n = copy_dir_files(&src, &macos)?;
+    std::fs::write(
+        paths::recorder_info_plist(),
+        build_info_plist(paths::RECORDER_BUNDLE_ID, "screenpipe"),
+    )?;
+    codesign(&paths::recorder_app())?;
+    Ok(n)
 }
 
 /// Update: re-pin the latest, then restart the agent if loaded.
@@ -108,5 +162,16 @@ mod tests {
         assert!(dest.join("screenpipe").is_file());
         assert!(dest.join("mlx.metallib").is_file());
         fs::remove_dir_all(&tmp).ok();
+    }
+
+    #[test]
+    fn info_plist_declares_identity_and_mic() {
+        let xml = build_info_plist("com.meye.recorder", "screenpipe");
+        assert!(xml.contains("<key>CFBundleIdentifier</key>"));
+        assert!(xml.contains("<string>com.meye.recorder</string>"));
+        assert!(xml.contains("<key>CFBundleExecutable</key>"));
+        assert!(xml.contains("<string>screenpipe</string>"));
+        assert!(xml.contains("<key>NSMicrophoneUsageDescription</key>"));
+        assert!(xml.contains("<key>LSUIElement</key>"));
     }
 }
