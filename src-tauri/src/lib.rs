@@ -58,6 +58,10 @@ pub fn run() {
             commands::api_pipe_set_preset,
             commands::api_pipe_config_read,
             commands::api_pipe_config_write,
+            commands::api_registry_search,
+            commands::api_registry_info,
+            commands::api_registry_install,
+            commands::api_pipe_delete,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;

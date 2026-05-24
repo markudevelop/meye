@@ -268,3 +268,31 @@ pub fn api_pipe_config_read(name: String) -> Result<String, String> {
 pub fn api_pipe_config_write(name: String, content: String) -> Result<(), String> {
     crate::pipes::config_write(&name, &content)
 }
+
+#[tauri::command]
+pub async fn api_registry_search(query: String) -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::registry_search(&query))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_registry_info(slug: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::registry_info(&slug))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_registry_install(source: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::install(&source))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_pipe_delete(name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::delete(&name))
+        .await
+        .map_err(|e| e.to_string())?
+}

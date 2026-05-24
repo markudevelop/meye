@@ -105,6 +105,58 @@ pub fn config_write(name: &str, content: &str) -> Result<(), String> {
     std::fs::write(pipe_md_path(name)?, content).map_err(|e| e.to_string())
 }
 
+/// Pure: parse `screenpipe pipe search` text table (cols separated by 2+ spaces)
+/// into `[{slug, category, installs, description}]`.
+pub fn parse_search_table(stdout: &str) -> Value {
+    let mut rows: Vec<Value> = Vec::new();
+    for line in stdout.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty()
+            || trimmed.starts_with("SLUG")
+            || trimmed.starts_with("---")
+            || trimmed.ends_with("found")
+        {
+            continue;
+        }
+        let cols: Vec<&str> = trimmed
+            .split("  ")
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect();
+        if cols.len() < 2 {
+            continue;
+        }
+        rows.push(serde_json::json!({
+            "slug": cols.first().copied().unwrap_or(""),
+            "category": cols.get(1).copied().unwrap_or(""),
+            "installs": cols.get(2).copied().unwrap_or(""),
+            "description": cols.get(3..).map(|r| r.join(" ")).unwrap_or_default(),
+        }));
+    }
+    Value::Array(rows)
+}
+
+/// Search the pipe registry (`pipe search <query>`), returned as parsed JSON.
+pub fn registry_search(query: &str) -> Result<Value, String> {
+    let stdout = run_pipe(&["search", query])?;
+    Ok(parse_search_table(&stdout))
+}
+
+/// Registry detail for a slug (`pipe info <slug>`), raw text.
+pub fn registry_info(slug: &str) -> Result<String, String> {
+    run_pipe(&["info", slug])
+}
+
+/// Install a pipe from a slug, local path, or URL (`pipe install <source>`).
+pub fn install(source: &str) -> Result<String, String> {
+    run_pipe(&["install", source])
+}
+
+/// Delete an installed pipe (`pipe delete <name>`).
+pub fn delete(name: &str) -> Result<String, String> {
+    run_pipe(&["delete", name])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -118,5 +170,22 @@ mod tests {
         assert!(pipe_md_path("").is_err());
         let p = pipe_md_path("obsidian-sync").unwrap();
         assert!(p.ends_with("pipes/obsidian-sync/pipe.md"));
+    }
+
+    #[test]
+    fn parse_search_table_extracts_rows() {
+        let sample = "SLUG                           CATEGORY        INSTALLS   DESCRIPTION\n\
+-----------------------------------------------------------------\n\
+wisprflow-sync                 productivity    45         Synchronize Wisprflow notes, record...\n\
+notion-crm-sync                productivity    25         Auto-detect business calls and sync...\n\
+\n\
+2 pipe(s) found\n";
+        let v = parse_search_table(sample);
+        let arr = v.as_array().unwrap();
+        assert_eq!(arr.len(), 2);
+        assert_eq!(arr[0]["slug"], "wisprflow-sync");
+        assert_eq!(arr[0]["category"], "productivity");
+        assert_eq!(arr[0]["installs"], "45");
+        assert!(arr[0]["description"].as_str().unwrap().contains("Synchronize"));
     }
 }
