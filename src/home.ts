@@ -114,6 +114,7 @@ async function submit() {
   const text = input.value.trim();
   if (!text) return;
   input.value = "";
+  input.style.height = "auto";
   hideSuggest();
   const userEntry = { kind: "user", ts: Date.now(), text };
   add(userEntry);
@@ -265,7 +266,14 @@ export async function loadHome() {
 export function initHome() {
   $("home-send").onclick = () => void submit();
   const input = $("home-input") as HTMLTextAreaElement;
-  input.addEventListener("input", updateSuggest);
+  const grow = () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(180, input.scrollHeight) + "px";
+  };
+  input.addEventListener("input", () => {
+    updateSuggest();
+    grow();
+  });
   input.addEventListener("blur", () => setTimeout(hideSuggest, 120));
   input.addEventListener("keydown", (e) => {
     const ke = e as KeyboardEvent;

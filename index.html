@@ -25,9 +25,6 @@
           <button id="tab-btn-search" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><span>Search</span>
           </button>
-          <button id="tab-btn-chat" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.6L3 21l1.9-5.6A8.5 8.5 0 1 1 21 11.5Z"/></svg><span>Chat</span>
-          </button>
           <button id="tab-btn-timeline" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Timeline</span>
           </button>
@@ -60,9 +57,11 @@
             <div id="home-feed"></div>
             <div class="composer-wrap">
               <div id="home-suggest" class="suggest hidden"></div>
-              <div class="row composer">
-                <textarea id="home-input" rows="2" placeholder="Ask about your day…   or type /  for commands" style="flex:1"></textarea>
-                <button id="home-send" class="primary">Send</button>
+              <div class="composer">
+                <textarea id="home-input" rows="1" placeholder="Message Meye…   (type / for commands)"></textarea>
+                <button id="home-send" class="send-btn" aria-label="Send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+                </button>
               </div>
             </div>
           </section>
@@ -108,16 +107,6 @@
               <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
             </div>
             <div id="s-results"></div>
-          </section>
-
-          <section id="panel-chat" class="panel hidden">
-            <header class="panel-head"><h1>Chat</h1></header>
-            <p class="meta">Ask about your recorded day — Meye searches your screen+audio and answers via your default model preset.</p>
-            <div id="c-log"></div>
-            <div class="row composer">
-              <textarea id="c-input" rows="2" placeholder="e.g. what did I work on this morning?  (⌘/Ctrl+Enter to send)" style="flex:1"></textarea>
-              <button id="c-send" class="primary">Send</button>
-            </div>
           </section>
 
           <section id="panel-timeline" class="panel hidden">

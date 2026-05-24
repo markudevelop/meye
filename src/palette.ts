@@ -4,9 +4,9 @@ import { goTab, type Tab } from "./tabs";
 type Action = { label: string; run: () => void };
 
 const TAB_ACTIONS: { tab: Tab; label: string }[] = [
+  { tab: "home", label: "Go to Home" },
   { tab: "status", label: "Go to Status" },
   { tab: "search", label: "Go to Search" },
-  { tab: "chat", label: "Go to Chat" },
   { tab: "timeline", label: "Go to Timeline" },
   { tab: "devices", label: "Go to Devices" },
   { tab: "pipes", label: "Go to Pipes" },
@@ -46,9 +46,9 @@ function build(q: string) {
           label: `Ask Meye: “${query}”`,
           run: () => {
             close();
-            goTab("chat");
-            ($("c-input") as HTMLTextAreaElement).value = query;
-            ($("c-send") as HTMLButtonElement).click();
+            goTab("home");
+            ($("home-input") as HTMLTextAreaElement).value = query;
+            ($("home-send") as HTMLButtonElement).click();
           },
         },
       ]

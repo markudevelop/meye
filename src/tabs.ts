@@ -1,6 +1,6 @@
 import { $ } from "./ui";
 
-const TABS = ["home", "status", "search", "chat", "timeline", "devices", "pipes", "performance", "settings", "advanced"] as const;
+const TABS = ["home", "status", "search", "timeline", "devices", "pipes", "performance", "settings", "advanced"] as const;
 export type Tab = (typeof TABS)[number];
 
 let onShowCb: (tab: Tab) => void = () => {};

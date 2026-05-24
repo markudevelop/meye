@@ -75,7 +75,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; }
 
 /* ---------- main ---------- */
 .main { flex: 1; overflow-y: auto; }
-.content { max-width: 1040px; margin: 0 auto; padding: 28px 36px 60px; }
+.content { max-width: 1040px; margin: 0 auto; padding: 24px 36px; }
 
 /* dashboard stat cards */
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
@@ -172,7 +172,25 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 /* chat */
 #c-log { display: flex; flex-direction: column; gap: 10px; max-height: 56vh; overflow-y: auto; padding: 4px 0 12px; }
 #c-log .hit .meta { text-transform: uppercase; letter-spacing: 0.05em; font-size: 10.5px; margin-bottom: 4px; }
-.composer { position: sticky; bottom: 0; background: var(--bg); padding-top: 8px; }
+.composer-wrap { position: relative; padding-top: 10px; }
+.composer {
+  position: static; display: flex; align-items: flex-end; gap: 8px;
+  border: 1px solid var(--border); border-radius: 18px; padding: 7px 7px 7px 16px;
+  background: var(--bg-elev); transition: border-color 0.12s, box-shadow 0.12s;
+}
+.composer:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.composer textarea {
+  flex: 1; border: none; background: none; resize: none; outline: none;
+  padding: 8px 0; font: inherit; font-size: 14px; line-height: 1.45; max-height: 180px;
+}
+.composer textarea:focus { box-shadow: none; border: none; }
+.send-btn {
+  width: 36px; height: 36px; min-width: 36px; padding: 0; flex-shrink: 0;
+  border-radius: 50%; display: grid; place-items: center;
+  background: var(--accent); border: none; color: #fff; cursor: pointer; transition: filter 0.12s, opacity 0.12s;
+}
+.send-btn svg { width: 18px; height: 18px; }
+.send-btn:hover { filter: brightness(1.1); }
 
 /* toast */
 .toast {
@@ -218,7 +236,8 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* home thread (chat + actions) */
-#home-feed { display: flex; flex-direction: column; gap: 12px; min-height: 200px; max-height: calc(100vh - 230px); overflow-y: auto; padding: 8px 2px 14px; }
+#panel-home { display: flex; flex-direction: column; height: calc(100vh - 48px); }
+#home-feed { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; overflow-y: auto; padding: 8px 2px 14px; }
 .home-hello { padding: 28px 4px; }
 .home-hello code { background: var(--hover); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
 .msg { display: flex; }
