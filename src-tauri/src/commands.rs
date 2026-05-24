@@ -172,3 +172,38 @@ pub async fn api_add_tags(kind: String, id: i64, tags: Vec<String>) -> Result<Va
 pub async fn api_remove_tags(kind: String, id: i64, tags: Vec<String>) -> Result<Value, String> {
     screenpipe_api::remove_tags(&kind, id, tags).await
 }
+
+#[tauri::command]
+pub async fn api_pipe_list() -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(crate::pipes::list)
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_pipe_run(name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::run_once(&name))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_pipe_enable(name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::enable(&name))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_pipe_disable(name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::disable(&name))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn api_pipe_logs(name: String) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::logs(&name))
+        .await
+        .map_err(|e| e.to_string())?
+}

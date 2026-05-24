@@ -10,6 +10,8 @@ mod health;
 mod binary;
 #[allow(dead_code)]
 mod commands;
+#[allow(dead_code)]
+mod pipes;
 
 use tauri::{
     menu::{Menu, MenuItem},
@@ -44,6 +46,11 @@ pub fn run() {
             commands::api_raw_sql,
             commands::api_add_tags,
             commands::api_remove_tags,
+            commands::api_pipe_list,
+            commands::api_pipe_run,
+            commands::api_pipe_enable,
+            commands::api_pipe_disable,
+            commands::api_pipe_logs,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
