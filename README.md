@@ -1,7 +1,47 @@
-# Tauri + Vanilla TS
+# Screenpipe Keeper
 
-This template should help get you started developing with Tauri in vanilla HTML, CSS and Typescript.
+macOS menu-bar app that keeps [screenpipe](https://github.com/mediar-ai/screenpipe) running
+via a launchd LaunchAgent — no terminal required. Built with Tauri v2.
 
-## Recommended IDE Setup
+## What it does
+- **Keeps screenpipe alive** with a launchd agent (`KeepAlive` + `RunAtLoad`): auto-restarts on
+  crash, starts at login, survives logout/reboot and the app being closed.
+- **Pins a stable copy** of the screenpipe binary (+ `mlx.metallib`) so npx updates don't break
+  the agent's path. "Update screenpipe" re-pins the latest and restarts.
+- **Control panel:** tray status dot, Start/Stop/Restart, health dashboard, log tail, data folder.
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+## Architecture
+launchd owns the process; the app controls launchd and reads `http://127.0.0.1:3030/health`.
+See `docs/superpowers/specs/2026-05-24-screenpipe-keeper-design.md`.
+
+| Module | Role |
+|--------|------|
+| `paths.rs` | paths + constants |
+| `agent.rs` | plist + launchctl |
+| `health.rs` | /health parse + classify |
+| `binary.rs` | pin/update binary |
+| `commands.rs` | Tauri commands |
+| `lib.rs` | tray + window + poll loop (entry: `run()`) |
+
+## Develop
+```bash
+# one-time: Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && source "$HOME/.cargo/env"
+
+npm install
+npm run tauri dev      # run in dev
+npm run tauri build    # produce a .app bundle
+cd src-tauri && cargo test   # unit tests
+```
+
+## First run
+Open the dashboard (tray → Open Dashboard) → **Set up & start**. Grant **Screen Recording**
+permission when macOS prompts (the pinned binary is a new path, so the grant is re-requested once),
+then click **Restart** in the app.
+
+## Manage manually
+```bash
+launchctl print gui/$(id -u)/com.screenpipe.keeper      # status
+launchctl bootout gui/$(id -u)/com.screenpipe.keeper    # stop
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.screenpipe.keeper.plist  # start
+```
