@@ -34,7 +34,12 @@ function applyStatus(s: Status) {
 
 async function refreshState() {
   const st = (await invoke("get_state")) as { installed: boolean; pinned: boolean; loaded: boolean };
-  if (!st.installed) applyStatus("NotInstalled");
+  if (!st.installed) {
+    applyStatus("NotInstalled");
+  } else {
+    $("setup").classList.add("hidden");
+    $("controls").classList.remove("hidden");
+  }
 }
 
 async function refreshHealth() {

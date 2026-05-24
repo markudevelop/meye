@@ -22,9 +22,13 @@ pub async fn get_health() -> Option<health::Health> {
 }
 
 #[tauri::command]
-pub fn setup() -> Result<(), String> {
-    binary::pin().map_err(|e| e.to_string())?;
-    agent::install().map_err(|e| e.to_string())
+pub async fn setup() -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(|| {
+        binary::pin().map_err(|e| e.to_string())?;
+        agent::install().map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -43,8 +47,10 @@ pub fn restart() -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn update_screenpipe() -> Result<usize, String> {
-    binary::update().map_err(|e| e.to_string())
+pub async fn update_screenpipe() -> Result<usize, String> {
+    tauri::async_runtime::spawn_blocking(|| binary::update().map_err(|e| e.to_string()))
+        .await
+        .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
