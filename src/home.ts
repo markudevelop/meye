@@ -6,14 +6,21 @@ import { renderMarkdown } from "./md";
 const PRESETS: Record<string, string[]> = {
   saver: [
     "--audio-transcription-engine",
-    "whisper-large-v3-turbo-quantized",
+    "whisper-tiny-quantized",
     "--disable-meeting-detector",
     "--disable-clipboard-capture",
     "--idle-capture-interval-ms",
     "120000",
   ],
-  balanced: ["--disable-clipboard-capture", "--idle-capture-interval-ms", "60000"],
-  performance: [],
+  balanced: [
+    "--audio-transcription-engine",
+    "whisper-large-v3-turbo-quantized",
+    "--disable-meeting-detector",
+    "--disable-clipboard-capture",
+    "--idle-capture-interval-ms",
+    "60000",
+  ],
+  performance: ["--audio-transcription-engine", "whisper-large-v3-turbo"],
 };
 
 const COMMANDS = [

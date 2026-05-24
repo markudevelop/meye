@@ -170,6 +170,15 @@
               <button id="perf-balanced">Balanced</button>
               <button id="perf-performance">Performance</button>
             </div>
+            <h3>Transcription model (memory ↔ accuracy)</h3>
+            <div class="row">
+              <select id="perf-audio">
+                <option value="off">Off — lowest RAM, no audio</option>
+                <option value="tiny">Tiny — lightest (~250 MB), basic</option>
+                <option value="balanced">Balanced — turbo quantized (~430 MB)</option>
+                <option value="best">Best — full turbo, top accuracy (most RAM)</option>
+              </select>
+            </div>
             <div class="row"><button id="perf-pause">⏸ Pause screen capture</button></div>
             <h3>Active record flags</h3>
             <pre id="perf-flags">—</pre>
