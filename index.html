@@ -13,6 +13,7 @@
     <button id="tab-btn-status" class="tab-btn">Status</button>
     <button id="tab-btn-search" class="tab-btn">Search</button>
     <button id="tab-btn-devices" class="tab-btn">Devices</button>
+    <button id="tab-btn-pipes" class="tab-btn">Pipes</button>
     <button id="tab-btn-advanced" class="tab-btn">Advanced</button>
   </nav>
 
@@ -66,6 +67,13 @@
       <div class="row"><button id="d-refresh">Refresh</button><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
       <h3>Monitors</h3><pre id="d-monitors">—</pre>
       <h3>Audio devices</h3><pre id="d-audio">—</pre>
+    </section>
+
+    <section id="panel-pipes" class="panel hidden">
+      <p class="meta">Pipes are scheduled agents that turn your screen+audio into outputs (notes, summaries). "Run now" runs one immediately.</p>
+      <div class="row"><button id="p-refresh">Refresh</button></div>
+      <div id="p-list">—</div>
+      <h3>Logs</h3><pre id="p-logs">—</pre>
     </section>
 
     <section id="panel-advanced" class="panel hidden">

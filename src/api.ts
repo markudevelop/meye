@@ -33,4 +33,9 @@ export const api = {
   audioStop: () => invoke("api_audio_stop"),
   rawSql: (query: string) => invoke("api_raw_sql", { query }) as Promise<any>,
   addTags: (kind: string, id: number, tags: string[]) => invoke("api_add_tags", { kind, id, tags }),
+  pipeList: () => invoke("api_pipe_list") as Promise<any>,
+  pipeRun: (name: string) => invoke("api_pipe_run", { name }) as Promise<string>,
+  pipeEnable: (name: string) => invoke("api_pipe_enable", { name }) as Promise<string>,
+  pipeDisable: (name: string) => invoke("api_pipe_disable", { name }) as Promise<string>,
+  pipeLogs: (name: string) => invoke("api_pipe_logs", { name }) as Promise<string>,
 };

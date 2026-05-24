@@ -1,6 +1,6 @@
 import { $ } from "./ui";
 
-const TABS = ["status", "search", "devices", "advanced"] as const;
+const TABS = ["status", "search", "devices", "pipes", "advanced"] as const;
 export type Tab = (typeof TABS)[number];
 
 export function initTabs(onShow: (tab: Tab) => void) {
