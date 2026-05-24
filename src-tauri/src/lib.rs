@@ -1,6 +1,8 @@
 #[allow(dead_code)]
 mod paths;
 #[allow(dead_code)]
+mod screenpipe_api;
+#[allow(dead_code)]
 mod agent;
 #[allow(dead_code)]
 mod health;
