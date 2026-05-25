@@ -164,11 +164,13 @@ export async function refreshPipes() {
 
       const editBtn = document.createElement("button");
       editBtn.textContent = "Edit config";
+      editBtn.className = "dev-only";
       editBtn.onclick = () => void openEditor(name);
       controls.appendChild(editBtn);
 
       const logsBtn = document.createElement("button");
       logsBtn.textContent = "Logs";
+      logsBtn.className = "dev-only";
       logsBtn.onclick = async () => {
         $("p-logs").textContent = "Loading…";
         try {

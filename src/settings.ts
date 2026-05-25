@@ -1,4 +1,4 @@
-import { $, wrap } from "./ui";
+import { $, wrap, toast } from "./ui";
 import { api } from "./api";
 
 function esc(s: string): string {
@@ -55,6 +55,14 @@ function syncFields() {
 export function initSettings() {
   ($("set-provider") as HTMLSelectElement).onchange = syncFields;
   syncFields();
+  const dev = $("set-dev") as HTMLInputElement;
+  dev.checked = localStorage.getItem("meye.dev") === "1";
+  dev.onchange = () => {
+    const on = dev.checked;
+    localStorage.setItem("meye.dev", on ? "1" : "0");
+    document.body.classList.toggle("dev", on);
+    toast(on ? "Developer mode on — technical extras shown" : "Developer mode off");
+  };
   $("set-create").onclick = () =>
     wrap("Create preset", () =>
       api.modelsCreate({

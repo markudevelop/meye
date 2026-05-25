@@ -40,7 +40,7 @@
           <button id="tab-btn-settings" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span>Settings</span>
           </button>
-          <button id="tab-btn-advanced" class="nav-item">
+          <button id="tab-btn-advanced" class="nav-item dev-only">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m8 9-3 3 3 3M16 9l3 3-3 3M13 6l-2 12"/></svg><span>Advanced</span>
           </button>
         </nav>
@@ -92,141 +92,207 @@
               <h1>Status</h1>
               <span id="status-label" class="badge"><span id="dot" class="dot grey"></span><span id="status-text">…</span></span>
             </header>
+            <p class="page-intro">Meye records your screen and audio privately on this Mac, so you can search and chat with everything you've seen. Here's how it's doing.</p>
             <section id="setup" class="hidden card">
-              <p class="warn">Not set up yet. This pins a signed copy of screenpipe and installs a LaunchAgent so it always runs. macOS may ask you to grant <b>Screen Recording</b> and <b>Microphone</b> to "Meye Recorder".</p>
+              <p class="warn">Meye isn't set up yet. This installs the recorder and keeps it running in the background. macOS will ask you to allow <b>Screen Recording</b> and <b>Microphone</b> — that's how Meye sees and hears.</p>
               <button id="btn-setup" class="primary">Set up &amp; start</button>
-            </section>
-            <section id="controls" class="hidden">
-              <div class="row"><button id="btn-start">Start</button><button id="btn-stop">Stop</button><button id="btn-restart">Restart</button></div>
-              <div class="row"><button id="btn-data">Data folder</button><button id="btn-logs">Logs</button><button id="btn-update">Update screenpipe</button></div>
             </section>
             <section id="perms" class="hidden card">
               <p class="warn" id="perms-msg"></p>
               <div class="row" id="perms-buttons"></div>
               <div class="row"><button id="btn-recheck" class="primary">Re-check</button></div>
             </section>
-            <p id="health-reason" class="meta hidden"></p>
-            <section id="metrics" class="stats">
-              <div class="stat"><span class="stat-label">Version</span><span class="stat-val" id="m-version">—</span></div>
-              <div class="stat"><span class="stat-label">Uptime</span><span class="stat-val" id="m-uptime">—</span></div>
-              <div class="stat"><span class="stat-label">Capture FPS</span><span class="stat-val" id="m-fps">—</span></div>
-              <div class="stat"><span class="stat-label">Audio</span><span class="stat-val" id="m-audio">—</span></div>
-              <div class="stat"><span class="stat-label">Pending transcripts</span><span class="stat-val" id="m-pending">—</span></div>
-              <div class="stat"><span class="stat-label">Monitors</span><span class="stat-val" id="m-monitors">—</span></div>
-            </section>
-            <details><summary>Recent logs</summary><pre id="logs-pre">—</pre></details>
+            <div id="controls" class="hidden">
+              <p id="health-reason" class="meta hidden"></p>
+              <div class="section">
+                <div class="section-title">Recording</div>
+                <div class="section-desc">Start, stop, or restart the background recorder.</div>
+                <div class="row"><button id="btn-start" class="primary">Start</button><button id="btn-stop">Stop</button><button id="btn-restart">Restart</button><button id="btn-update">Check for updates</button></div>
+              </div>
+              <section id="metrics" class="stats">
+                <div class="stat"><span class="stat-label">Audio</span><span class="stat-val" id="m-audio">—</span></div>
+                <div class="stat"><span class="stat-label">Running for</span><span class="stat-val" id="m-uptime">—</span></div>
+                <div class="stat"><span class="stat-label">Screens</span><span class="stat-val" id="m-monitors">—</span></div>
+                <div class="stat dev-only"><span class="stat-label">Version</span><span class="stat-val" id="m-version">—</span></div>
+                <div class="stat dev-only"><span class="stat-label">Capture FPS</span><span class="stat-val" id="m-fps">—</span></div>
+                <div class="stat dev-only"><span class="stat-label">Audio in queue</span><span class="stat-val" id="m-pending">—</span></div>
+              </section>
+              <div class="row dev-only"><button id="btn-data">Data folder</button><button id="btn-logs">Open logs</button></div>
+              <details class="dev-only"><summary>Recent logs</summary><pre id="logs-pre">—</pre></details>
+            </div>
           </section>
 
           <section id="panel-search" class="panel hidden">
             <header class="panel-head"><h1>Search</h1></header>
-            <div class="row">
-              <input id="s-q" placeholder="search your screen + audio…" />
-              <select id="s-type"><option value="all">all</option><option value="ocr">screen</option><option value="audio">audio</option><option value="ui">ui</option></select>
-              <button id="s-go" class="primary">Search</button>
-            </div>
-            <div class="row">
-              <input id="s-app" placeholder="app name (optional)" />
-              <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" />
+            <p class="page-intro">Find anything you've seen or heard — text from your screen, words from your mic. Type a few keywords.</p>
+            <div class="section">
+              <div class="row">
+                <input id="s-q" placeholder="Search your screen &amp; audio…" />
+                <select id="s-type"><option value="all">Everything</option><option value="ocr">Screen text</option><option value="audio">Audio</option><option value="ui">App UI</option></select>
+                <button id="s-go" class="primary">Search</button>
+              </div>
+              <div class="row">
+                <input id="s-app" placeholder="Filter by app (optional, e.g. Chrome)" />
+                <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" title="Max results" />
+              </div>
             </div>
             <div id="s-results"></div>
           </section>
 
           <section id="panel-timeline" class="panel hidden">
-            <header class="panel-head"><h1>Timeline</h1></header>
-            <p class="meta">Your recent screen, newest first — scroll down to load more.</p>
-            <div class="row"><button id="t-refresh" class="primary">Refresh</button></div>
+            <header class="panel-head">
+              <h1>Timeline</h1>
+              <button id="t-refresh">↻ Refresh</button>
+            </header>
+            <p class="page-intro">A scrollable feed of everything Meye has seen, newest first. Keep scrolling to go back in time.</p>
             <div id="t-feed"></div>
             <div id="t-sentinel" style="height:1px"></div>
-            <p id="t-end" class="meta hidden">— end of recordings —</p>
+            <p id="t-end" class="meta hidden">— that's the beginning of your recordings —</p>
           </section>
 
           <section id="panel-devices" class="panel hidden">
-            <header class="panel-head"><h1>Devices</h1></header>
-            <div class="row"><button id="d-refresh" class="primary">Refresh</button><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
-            <h3>Monitors</h3><div id="d-monitors">—</div>
-            <h3>Audio devices</h3><div id="d-audio">—</div>
+            <header class="panel-head">
+              <h1>Devices</h1>
+              <button id="d-refresh">↻ Refresh</button>
+            </header>
+            <p class="page-intro">The screens and microphones Meye is capturing from.</p>
+            <div class="section">
+              <div class="section-title">Screens</div>
+              <div id="d-monitors">—</div>
+            </div>
+            <div class="section">
+              <div class="section-title">Microphones &amp; audio</div>
+              <div id="d-audio">—</div>
+              <div class="row dev-only"><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
+            </div>
           </section>
 
           <section id="panel-pipes" class="panel hidden">
-            <header class="panel-head"><h1>Pipes</h1></header>
-            <p class="meta">Pipes are scheduled agents that turn your screen+audio into outputs (notes, summaries). "Run now" runs one immediately; "Runs:" sets how often it auto-runs (each run calls the AI model).</p>
-            <h3>Pipe store</h3>
-            <div class="row"><input id="r-q" placeholder="search the registry (e.g. notes, slack, notion)" /><button id="r-go" class="primary">Search</button></div>
-            <div id="r-results"></div>
-            <h3>Installed pipes</h3>
-            <div class="row"><button id="p-refresh">Refresh</button></div>
-            <div id="p-list">—</div>
-            <div id="p-editor" class="hidden card">
-              <h3>Edit config: <span id="p-editing"></span></h3>
+            <header class="panel-head">
+              <h1>Automations</h1>
+              <button id="p-refresh">↻ Refresh</button>
+            </header>
+            <p class="page-intro">Automations (“pipes”) turn your recordings into useful things — daily notes, summaries, reminders. <b>Run now</b> runs one once; <b>Runs:</b> sets how often it runs on its own. Each run uses your AI model.</p>
+            <div class="section">
+              <div class="section-title">Your automations</div>
+              <div class="section-desc">Toggle on/off, set a schedule, or run one right now.</div>
+              <div id="p-list">—</div>
+            </div>
+            <div id="p-editor" class="hidden section dev-only">
+              <div class="section-title">Edit config: <span id="p-editing"></span></div>
               <textarea id="p-config" rows="12" style="width:100%"></textarea>
               <div class="row"><button id="p-config-save" class="primary">Save</button><button id="p-config-cancel">Cancel</button></div>
             </div>
-            <h3>Logs</h3><pre id="p-logs">—</pre>
+            <div class="section">
+              <div class="section-title">Add from the store</div>
+              <div class="section-desc">Search a library of ready-made automations and install with one click.</div>
+              <div class="row"><input id="r-q" placeholder="Search the store (e.g. notes, slack, notion)" /><button id="r-go" class="primary">Search</button></div>
+              <div id="r-results"></div>
+            </div>
+            <div class="section dev-only">
+              <div class="section-title">Logs</div>
+              <pre id="p-logs">—</pre>
+            </div>
           </section>
 
           <section id="panel-performance" class="panel hidden">
-            <header class="panel-head"><h1>Performance</h1></header>
-            <p class="meta">Recording costs CPU/RAM (whisper + OCR). Pick a power profile, or pause screen capture to save battery (also drops the macOS recording indicator).</p>
+            <header class="panel-head">
+              <h1>Performance &amp; privacy</h1>
+              <button id="perf-refresh">↻ Refresh</button>
+            </header>
+            <p class="page-intro">Balance battery life against detail, control your privacy, and turn on voice commands.</p>
             <div id="perf-stats" class="stats"></div>
-            <div class="row"><button id="perf-refresh">Refresh stats</button></div>
-            <h3>Power profile</h3>
-            <div class="row">
-              <button id="perf-saver" class="primary">Battery Saver</button>
-              <button id="perf-balanced">Balanced</button>
-              <button id="perf-performance">Performance</button>
+
+            <div class="section">
+              <div class="section-title">Power profile</div>
+              <div class="section-desc">Lower = lighter on battery and memory. Higher = more detail captured.</div>
+              <div class="row">
+                <button id="perf-saver">🔋 Battery Saver</button>
+                <button id="perf-balanced" class="primary">⚖️ Balanced</button>
+                <button id="perf-performance">⚡ Performance</button>
+              </div>
             </div>
-            <h3>Transcription model (memory ↔ accuracy)</h3>
-            <div class="row">
-              <select id="perf-audio">
-                <option value="off">Off — lowest RAM, no audio</option>
-                <option value="tiny">Tiny — lightest (~250 MB), basic</option>
-                <option value="balanced">Balanced — turbo quantized (~430 MB)</option>
-                <option value="best">Best — full turbo, top accuracy (most RAM)</option>
-              </select>
+
+            <div class="section">
+              <div class="section-title">Audio accuracy</div>
+              <div class="section-desc">Better transcription uses more memory. Off disables audio entirely.</div>
+              <div class="row">
+                <select id="perf-audio">
+                  <option value="off">Off — no audio, lowest memory</option>
+                  <option value="tiny">Light — ~250 MB, basic accuracy</option>
+                  <option value="balanced">Balanced — ~430 MB</option>
+                  <option value="best">Best — top accuracy, most memory</option>
+                </select>
+                <button id="perf-pause">⏸ Pause screen capture</button>
+              </div>
             </div>
-            <div class="row"><button id="perf-pause">⏸ Pause screen capture</button></div>
 
-            <h3>Discreet mode</h3>
-            <label class="check"><input type="checkbox" id="perf-discreet" /> Hide Meye's dock &amp; tray icons</label>
-            <p class="meta">Makes Meye itself invisible during screen shares — no dock icon, no menu-bar icon. While on, closing the window fully quits Meye (recording keeps running; reopen from Applications). <b>The macOS recording indicator stays</b> — anyone you share with is still told recording is active.</p>
+            <div class="section">
+              <div class="toggle-row">
+                <div class="tr-text">
+                  <div class="tr-title">Discreet mode</div>
+                  <div class="tr-desc">Hides Meye's dock &amp; tray icons during screen shares. Closing the window fully quits Meye (recording keeps running — reopen from Applications). The macOS recording dot stays, so people you share with are still informed.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="perf-discreet" /><span class="slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="tr-text">
+                  <div class="tr-title">Voice commands</div>
+                  <div class="tr-desc">Say <b>"Hey Meye …"</b> then <b>pause</b>, <b>resume</b>, <b>new chat</b>, <b>open timeline</b>, or <b>search for …</b>. Runs fully on-device off your mic; needs Audio on (not Off). ~1–3s lag.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="perf-voice" /><span class="slider"></span></label>
+              </div>
+            </div>
 
-            <h3>Voice commands</h3>
-            <label class="check"><input type="checkbox" id="perf-voice" /> Enable voice commands (say "Hey Meye …")</label>
-            <p class="meta">Local only — rides the mic transcription already running, nothing sent to the cloud. Try: <b>"Hey Meye, pause"</b> · <b>"…resume"</b> · <b>"…new chat"</b> · <b>"…open timeline"</b> · <b>"…search for invoices"</b>. Needs audio transcription on (not "Off"); ~1–3s lag. Only your mic is acted on, never other people on a call.</p>
-
-            <h3>Active record flags</h3>
-            <pre id="perf-flags">—</pre>
+            <div class="section dev-only">
+              <div class="section-title">Active record flags</div>
+              <pre id="perf-flags">—</pre>
+            </div>
           </section>
 
           <section id="panel-settings" class="panel hidden">
             <header class="panel-head"><h1>Settings</h1></header>
-            <h3>AI model presets</h3>
-            <p class="meta">Pipes need a default preset to run. Subscriptions can't be used here — pipes call a raw API or a local model.</p>
-            <div id="set-list">—</div>
-            <h3>Add preset</h3>
-            <div class="card">
+            <p class="page-intro">Connect an AI model so chat and automations can think. Everything runs through your own key or a local model.</p>
+            <div class="section">
+              <div class="section-title">AI models</div>
+              <div class="section-desc">Chat and automations use your default model. A paid subscription (e.g. ChatGPT Plus) won't work here — you need an API key, or a local model like Ollama.</div>
+              <div id="set-list">—</div>
+            </div>
+            <div class="section">
+              <div class="section-title">Add a model</div>
               <div class="row">
-                <input id="set-id" placeholder="preset id (e.g. deepseek, ollama-local)" />
+                <input id="set-id" placeholder="A name (e.g. deepseek, ollama-local)" />
                 <select id="set-provider">
-                  <option value="anthropic">anthropic</option>
-                  <option value="openai">openai</option>
-                  <option value="native-ollama">native-ollama (local)</option>
-                  <option value="custom">custom (OpenAI-compatible, e.g. DeepSeek)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="openai">OpenAI (GPT)</option>
+                  <option value="native-ollama">Ollama (local, free)</option>
+                  <option value="custom">Custom / OpenAI-compatible (e.g. DeepSeek)</option>
                   <option value="screenpipe-cloud">screenpipe-cloud</option>
                 </select>
               </div>
-              <div class="row"><input id="set-model" placeholder="model (e.g. claude-sonnet-4-6, deepseek-chat, llama3.2)" /></div>
-              <div class="row" id="set-url-wrap"><input id="set-url" placeholder="base url (ollama/custom, e.g. https://api.deepseek.com)" /></div>
-              <div class="row" id="set-key-wrap"><input id="set-key" type="password" placeholder="api key (openai/anthropic/custom)" /></div>
-              <div class="row"><label class="check"><input id="set-default" type="checkbox" checked /> set as default</label><button id="set-create" class="primary">Create preset</button></div>
+              <div class="row"><input id="set-model" placeholder="Model name (e.g. claude-sonnet-4-6, deepseek-chat, llama3.2)" /></div>
+              <div class="row" id="set-url-wrap"><input id="set-url" placeholder="Base URL (for Ollama/custom, e.g. https://api.deepseek.com)" /></div>
+              <div class="row" id="set-key-wrap"><input id="set-key" type="password" placeholder="API key" /></div>
+              <div class="row"><label class="check"><input id="set-default" type="checkbox" checked /> Set as default</label><button id="set-create" class="primary">Add model</button></div>
+            </div>
+            <div class="section">
+              <div class="toggle-row">
+                <div class="tr-text">
+                  <div class="tr-title">Developer mode</div>
+                  <div class="tr-desc">Shows the technical extras — raw logs, record flags, automation config editor, the SQL console, and raw device JSON. Leave off for a cleaner app.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="set-dev" /><span class="slider"></span></label>
+              </div>
             </div>
           </section>
 
           <section id="panel-advanced" class="panel hidden">
             <header class="panel-head"><h1>Advanced</h1></header>
-            <p class="warn">Power user: run read-only SQL against screenpipe's local DB.</p>
-            <textarea id="a-sql" rows="4" style="width:100%">SELECT * FROM frames ORDER BY timestamp DESC LIMIT 10</textarea>
-            <div class="row"><button id="a-go" class="primary">Run SQL</button></div>
+            <p class="page-intro">Developer console. Run read-only SQL against the local recordings database.</p>
+            <div class="section">
+              <textarea id="a-sql" rows="4" style="width:100%">SELECT * FROM frames ORDER BY timestamp DESC LIMIT 10</textarea>
+              <div class="row"><button id="a-go" class="primary">Run SQL</button></div>
+            </div>
             <pre id="a-out">—</pre>
           </section>
 

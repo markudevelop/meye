@@ -13,6 +13,9 @@ import { initVoice } from "./voice";
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
+// Restore developer-mode visibility before anything renders.
+if (localStorage.getItem("meye.dev") === "1") document.body.classList.add("dev");
+
 initPalette();
 initHome();
 initStatus();

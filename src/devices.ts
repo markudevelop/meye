@@ -32,7 +32,7 @@ function render(el: HTMLElement, res: any, label: string) {
       }</div>`;
     })
     .join("");
-  el.innerHTML = rows + `<details class="raw"><summary>Raw JSON</summary><pre>${esc(JSON.stringify(res, null, 2))}</pre></details>`;
+  el.innerHTML = rows + `<details class="raw dev-only"><summary>Raw JSON</summary><pre>${esc(JSON.stringify(res, null, 2))}</pre></details>`;
 }
 
 export async function refreshDevices() {

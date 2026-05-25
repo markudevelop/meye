@@ -55,7 +55,11 @@ export async function refreshHealth() {
   const h = await api.getHealth();
   if (!h) return;
   $("m-version").textContent = h.version || "—";
-  $("m-uptime").textContent = `${Math.round(h.pipeline?.uptime_secs ?? 0)} s`;
+  const secs = Math.round(h.pipeline?.uptime_secs ?? 0);
+  const d = Math.floor(secs / 86400);
+  const hh = Math.floor((secs % 86400) / 3600);
+  const mm = Math.floor((secs % 3600) / 60);
+  $("m-uptime").textContent = secs <= 0 ? "—" : d ? `${d}d ${hh}h` : hh ? `${hh}h ${mm}m` : `${mm}m`;
   $("m-fps").textContent = (h.pipeline?.capture_fps_actual ?? 0).toFixed(3);
   $("m-audio").textContent = h.audio_status || "—";
   const pending = h.audio_pipeline?.pending_transcription_segments ?? 0;
