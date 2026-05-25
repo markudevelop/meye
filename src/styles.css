@@ -162,6 +162,8 @@ button:hover { background: var(--hover); border-color: var(--muted); }
 button:active { transform: translateY(0.5px); }
 button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 button.primary:hover { filter: brightness(1.07); }
+button:disabled { opacity: 0.4; cursor: default; }
+button:disabled:hover { background: var(--bg-elev); border-color: var(--border); filter: none; }
 
 input, select, textarea {
   padding: 8px 11px; border-radius: 8px;

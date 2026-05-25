@@ -11,7 +11,13 @@ const PANE: Record<string, string> = {
 
 function applyStatus(s: Status) {
   const cls = ({ Healthy: "green", Degraded: "yellow", Down: "red", NotInstalled: "grey", WaitingPermissions: "orange" } as Record<Status, string>)[s] ?? "grey";
-  const label = s === "WaitingPermissions" ? "Waiting for permissions" : s;
+  const label = ({
+    Healthy: "Recording",
+    Degraded: "Degraded",
+    Down: "Stopped",
+    NotInstalled: "Not set up",
+    WaitingPermissions: "Waiting for permissions",
+  } as Record<Status, string>)[s] ?? s;
   for (const id of ["dot", "side-dot"]) {
     const el = document.getElementById(id);
     if (el) el.className = "dot " + cls;
@@ -25,6 +31,26 @@ function applyStatus(s: Status) {
   const showPerms = s === "WaitingPermissions";
   $("perms").classList.toggle("hidden", !showPerms);
   if (showPerms) void renderPerms();
+
+  // Reflect the live state in the buttons: highlight the action you'd actually take, and
+  // disable the ones that don't apply (can't Start when already recording, etc).
+  const running = s === "Healthy" || s === "Degraded";
+  const stopped = s === "Down";
+  const start = $("btn-start") as HTMLButtonElement;
+  const stop = $("btn-stop") as HTMLButtonElement;
+  const restart = $("btn-restart") as HTMLButtonElement;
+  start.disabled = running;
+  stop.disabled = !running;
+  restart.disabled = !running;
+  start.classList.toggle("primary", !running); // primary (highlighted) when stopped/idle
+  stop.classList.remove("primary");
+
+  // A plain-language hint when stopped (no /health to drive the reason line otherwise).
+  const reason = $("health-reason");
+  if (stopped) {
+    reason.textContent = "⏹ Recording is stopped. Press Start to begin capturing again.";
+    reason.classList.remove("hidden");
+  }
 }
 
 async function renderPerms() {
