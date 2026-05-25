@@ -395,3 +395,8 @@ pub fn api_set_discreet(app: tauri::AppHandle, on: bool) -> Result<(), String> {
     crate::apply_discreet(&app, on);
     Ok(())
 }
+
+#[tauri::command]
+pub fn api_parse_voice_command(transcript: String) -> Option<crate::voice::VoiceCommand> {
+    crate::voice::parse_voice_command(&transcript)
+}

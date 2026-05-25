@@ -20,6 +20,8 @@ mod perf;
 mod activity;
 #[allow(dead_code)]
 mod prefs;
+#[allow(dead_code)]
+mod voice;
 
 use tauri::{
     menu::{Menu, MenuItem},
@@ -108,6 +110,7 @@ pub fn run() {
             commands::api_convo_unarchive,
             commands::api_get_discreet,
             commands::api_set_discreet,
+            commands::api_parse_voice_command,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;

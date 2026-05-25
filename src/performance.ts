@@ -1,5 +1,6 @@
-import { $, wrap } from "./ui";
+import { $, wrap, toast } from "./ui";
 import { api } from "./api";
+import { isVoiceEnabled, setVoiceEnabled } from "./voice";
 
 const PRESETS: Record<string, string[]> = {
   saver: [
@@ -75,6 +76,7 @@ export async function refreshPerf() {
     .getDiscreet()
     .then((on) => (($("perf-discreet") as HTMLInputElement).checked = on))
     .catch(() => {});
+  ($("perf-voice") as HTMLInputElement).checked = isVoiceEnabled();
   ($("perf-pause") as HTMLButtonElement).textContent = args.includes("--disable-vision")
     ? "▶ Resume screen capture"
     : "⏸ Pause screen capture";
@@ -83,6 +85,16 @@ export async function refreshPerf() {
 async function applyArgs(args: string[]) {
   await wrap("Apply (restarting recorder)", () => api.setRecordArgs(args));
   setTimeout(() => void refreshPerf(), 3000);
+}
+
+/** Pause/resume screen (vision) capture by toggling --disable-vision. Exported so voice
+ * commands can drive it too. Audio stays on so voice control keeps working while paused. */
+export async function setVisionPaused(paused: boolean) {
+  const args = await api.getRecordArgs().catch(() => [] as string[]);
+  const has = args.includes("--disable-vision");
+  if (paused === has) return; // already in the desired state
+  const next = paused ? [...args, "--disable-vision"] : args.filter((a) => a !== "--disable-vision");
+  await applyArgs(next);
 }
 
 /** Swap just the transcription engine, keeping the other flags. */
@@ -100,6 +112,11 @@ export function initPerformance() {
   ($("perf-discreet") as HTMLInputElement).onchange = (e) => {
     const on = (e.target as HTMLInputElement).checked;
     void wrap(on ? "Discreet mode on" : "Discreet mode off", () => api.setDiscreet(on));
+  };
+  ($("perf-voice") as HTMLInputElement).onchange = (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    setVoiceEnabled(on);
+    toast(on ? "🎙 Voice commands on — say 'Hey Meye …'" : "Voice commands off");
   };
   $("perf-pause").onclick = async () => {
     const args = await api.getRecordArgs();

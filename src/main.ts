@@ -9,6 +9,7 @@ import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
 import { initPerformance, refreshPerf } from "./performance";
 import { initPalette } from "./palette";
+import { initVoice } from "./voice";
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
@@ -21,6 +22,7 @@ initDevices();
 initPipes();
 initSettings();
 initPerformance();
+initVoice();
 
 $("a-go").onclick = () =>
   wrap("SQL", async () => {

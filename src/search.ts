@@ -39,6 +39,13 @@ async function runSearch() {
   }
 }
 
+/** Run a search with a given query (used by voice commands). */
+export function runSearchWith(query: string) {
+  ($("s-q") as HTMLInputElement).value = query;
+  ($("s-type") as HTMLSelectElement).value = "all";
+  void runSearch();
+}
+
 export function initSearch() {
   $("s-go").onclick = () => void runSearch();
   ($("s-q") as HTMLInputElement).addEventListener("keydown", (e) => {

@@ -77,4 +77,6 @@ export const api = {
   setRecordArgs: (args: string[]) => invoke("api_set_record_args", { args }) as Promise<void>,
   getDiscreet: () => invoke("api_get_discreet") as Promise<boolean>,
   setDiscreet: (on: boolean) => invoke("api_set_discreet", { on }) as Promise<void>,
+  parseVoiceCommand: (transcript: string) =>
+    invoke("api_parse_voice_command", { transcript }) as Promise<{ action: string; arg: string } | null>,
 };
