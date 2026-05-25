@@ -75,4 +75,6 @@ export const api = {
   convoUnarchive: (id: string) => invoke("api_convo_unarchive", { id }) as Promise<void>,
   getRecordArgs: () => invoke("api_get_record_args") as Promise<string[]>,
   setRecordArgs: (args: string[]) => invoke("api_set_record_args", { args }) as Promise<void>,
+  getDiscreet: () => invoke("api_get_discreet") as Promise<boolean>,
+  setDiscreet: (on: boolean) => invoke("api_set_discreet", { on }) as Promise<void>,
 };

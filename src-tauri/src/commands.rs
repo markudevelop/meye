@@ -383,3 +383,15 @@ pub fn api_convo_list_archived() -> Vec<Value> {
 pub fn api_convo_unarchive(id: String) -> Result<(), String> {
     crate::activity::convo_unarchive(&id).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub fn api_get_discreet() -> bool {
+    crate::prefs::get_discreet()
+}
+
+#[tauri::command]
+pub fn api_set_discreet(app: tauri::AppHandle, on: bool) -> Result<(), String> {
+    crate::prefs::set_discreet(on)?;
+    crate::apply_discreet(&app, on);
+    Ok(())
+}

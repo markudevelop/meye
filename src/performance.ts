@@ -71,6 +71,10 @@ export async function refreshPerf() {
     stat("Pending transcripts", String(h?.audio_pipeline?.pending_transcription_segments ?? 0));
   $("perf-flags").textContent = args.length ? args.join(" ") : "(defaults — no tuning applied)";
   ($("perf-audio") as HTMLSelectElement).value = currentAudioKey(args);
+  api
+    .getDiscreet()
+    .then((on) => (($("perf-discreet") as HTMLInputElement).checked = on))
+    .catch(() => {});
   ($("perf-pause") as HTMLButtonElement).textContent = args.includes("--disable-vision")
     ? "▶ Resume screen capture"
     : "⏸ Pause screen capture";
@@ -93,6 +97,10 @@ export function initPerformance() {
   $("perf-balanced").onclick = () => void applyArgs(PRESETS.balanced);
   $("perf-performance").onclick = () => void applyArgs(PRESETS.performance);
   ($("perf-audio") as HTMLSelectElement).onchange = (e) => void applyAudio((e.target as HTMLSelectElement).value);
+  ($("perf-discreet") as HTMLInputElement).onchange = (e) => {
+    const on = (e.target as HTMLInputElement).checked;
+    void wrap(on ? "Discreet mode on" : "Discreet mode off", () => api.setDiscreet(on));
+  };
   $("perf-pause").onclick = async () => {
     const args = await api.getRecordArgs();
     const has = args.includes("--disable-vision");

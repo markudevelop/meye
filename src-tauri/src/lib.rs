@@ -18,12 +18,34 @@ mod chat;
 mod perf;
 #[allow(dead_code)]
 mod activity;
+#[allow(dead_code)]
+mod prefs;
 
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
     Emitter, Manager,
 };
+
+/// Managed handle to the tray icon so commands can show/hide it (discreet mode).
+pub struct AppTray(pub tauri::tray::TrayIcon);
+
+/// Apply discreet mode: hide/show Meye's own dock icon + tray icon. Never touches the
+/// macOS recording indicator.
+pub fn apply_discreet(app: &tauri::AppHandle, on: bool) {
+    #[cfg(target_os = "macos")]
+    {
+        let policy = if on {
+            tauri::ActivationPolicy::Accessory
+        } else {
+            tauri::ActivationPolicy::Regular
+        };
+        let _ = app.set_activation_policy(policy);
+    }
+    if let Some(tray) = app.try_state::<AppTray>() {
+        let _ = tray.0.set_visible(!on);
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -84,6 +106,8 @@ pub fn run() {
             commands::api_convo_archive,
             commands::api_convo_list_archived,
             commands::api_convo_unarchive,
+            commands::api_get_discreet,
+            commands::api_set_discreet,
         ])
         .setup(|app| {
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
@@ -99,7 +123,7 @@ pub fn run() {
                 &[&open_i, &start_i, &stop_i, &restart_i, &data_i, &logs_i, &update_i, &quit_i],
             )?;
 
-            let _tray = TrayIconBuilder::new()
+            let tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
@@ -133,6 +157,10 @@ pub fn run() {
                     _ => {}
                 })
                 .build(app)?;
+            app.manage(AppTray(tray));
+
+            // Restore discreet mode from the saved preference at launch.
+            apply_discreet(&app.handle().clone(), prefs::get_discreet());
 
             // Health poll loop: emit status to the frontend every 5s.
             let handle = app.handle().clone();
@@ -168,10 +196,16 @@ pub fn run() {
                 ..
             } = event
             {
-                if let Some(w) = app.get_webview_window("main") {
-                    let _ = w.hide();
+                if prefs::get_discreet() {
+                    // No tray to restore from in discreet mode — closing fully quits the GUI.
+                    // Recording is a separate LaunchAgent, so it keeps running. Reopen from Applications.
+                    app.exit(0);
+                } else {
+                    if let Some(w) = app.get_webview_window("main") {
+                        let _ = w.hide();
+                    }
+                    api.prevent_close();
                 }
-                api.prevent_close();
             }
         });
 }

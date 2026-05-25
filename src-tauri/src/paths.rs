@@ -57,6 +57,11 @@ pub fn record_config() -> PathBuf {
     app_support().join("record-config.json")
 }
 
+/// Persisted GUI preferences (e.g. discreet mode).
+pub fn ui_prefs() -> PathBuf {
+    app_support().join("ui-prefs.json")
+}
+
 /// Legacy single Home thread (migrated into a conversation on first run).
 pub fn activity_log() -> PathBuf {
     app_support().join("activity.jsonl")
