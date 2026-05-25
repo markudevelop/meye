@@ -401,6 +401,7 @@ export async function loadHome() {
 
 export function initHome() {
   $("home-send").onclick = () => void submit();
+  $("convo-new").onclick = () => startNewChat();
   const input = $("home-input") as HTMLTextAreaElement;
   const grow = () => {
     input.style.height = "auto";

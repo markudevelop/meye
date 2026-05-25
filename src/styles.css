@@ -256,6 +256,8 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 #panel-home { height: calc(100vh - 56px); }
 .home-layout { display: flex; height: 100%; }
 .convo-list { width: 210px; flex-shrink: 0; border-right: 1px solid var(--border); overflow-y: auto; margin-right: 16px; padding-right: 8px; display: flex; flex-direction: column; gap: 2px; }
+.convo-new { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin: 0 0 10px; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--accent); color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; }
+.convo-new:hover { filter: brightness(1.08); border-color: var(--accent); background: var(--accent); }
 .convo-head { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding: 2px 8px 8px; }
 .convo-item { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
 .convo-item:hover { background: var(--hover); }

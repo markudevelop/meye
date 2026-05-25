@@ -129,10 +129,11 @@ async fn build_context(question: &str) -> (String, Vec<Source>) {
         collect(&res, &mut prompt, &mut sources, &mut seen);
     }
 
-    // Then most-recent activity regardless of query (grounds summary questions).
+    // Then a little most-recent activity (so "what did I do today" style questions still
+    // ground), but kept modest so it doesn't dominate general questions.
     if let Ok(res) = screenpipe_api::search(&screenpipe_api::SearchParams {
         content_type: Some("all".into()),
-        limit: Some(25),
+        limit: Some(12),
         ..Default::default()
     })
     .await
@@ -140,9 +141,7 @@ async fn build_context(question: &str) -> (String, Vec<Source>) {
         collect(&res, &mut prompt, &mut sources, &mut seen);
     }
 
-    if prompt.is_empty() {
-        prompt = "(no recordings found — the recorder may not be running)".into();
-    }
+    // Empty => the caller sends no context at all (plain general-assistant chat).
     (prompt, sources)
 }
 
@@ -155,11 +154,30 @@ pub async fn chat(question: &str) -> Result<ChatReply, String> {
     if p.provider == "anthropic" {
         return Err("Chat via the Anthropic provider isn't wired yet — use a custom/openai/ollama preset (DeepSeek works).".into());
     }
-    let (context, sources) = build_context(question).await;
+    let (context, mut sources) = build_context(question).await;
+    let system = if context.trim().is_empty() {
+        "You are Meye, a helpful, knowledgeable personal assistant. Answer naturally and \
+         conversationally like a capable general-purpose AI."
+            .to_string()
+    } else {
+        format!(
+            "You are Meye, a helpful, knowledgeable personal assistant. Answer naturally and \
+             conversationally like a capable general-purpose AI.\n\n\
+             You ALSO have access to snippets of the user's recent screen/audio recordings, shown \
+             below as OPTIONAL background. Use them only when the question is actually about what \
+             the user did, saw, heard, or worked on — or when they're clearly relevant. For general \
+             questions, ignore the recordings and just answer well. Never force an answer to be \
+             about the user's activity.\n\n--- Recent recordings (optional context) ---\n{context}"
+        )
+    };
+    // Don't advertise "sources" for a general chat where the recordings weren't the point.
+    if context.trim().is_empty() {
+        sources.clear();
+    }
     let body = json!({
         "model": p.model,
         "messages": [
-            {"role": "system", "content": format!("You are Meye, a local assistant that answers questions about the user's recorded screen and audio. Use this captured context when relevant:\n\n{context}")},
+            {"role": "system", "content": system},
             {"role": "user", "content": question}
         ],
         "max_tokens": 1024

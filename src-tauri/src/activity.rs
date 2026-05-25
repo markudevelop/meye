@@ -48,15 +48,24 @@ fn convo_path(id: &str) -> Option<std::path::PathBuf> {
 }
 
 /// One-time: if there are no conversations yet but a legacy single thread exists, import it.
+/// Must be idempotent: it runs on every `convo_list()`, so it has to import at most once.
+/// Earlier it only checked the active dir — after archiving the last chat that dir is empty,
+/// so it re-imported the legacy log as a fresh conversation on every refresh (ghost chats /
+/// "many archives"). Now it also counts archived conversations and, on a successful import,
+/// renames the legacy file so it can never be re-imported.
 fn migrate_legacy() {
     let dir = paths::convos_dir();
-    let has_any = std::fs::read_dir(&dir)
-        .map(|rd| rd.flatten().any(|e| e.path().extension().is_some_and(|x| x == "jsonl")))
-        .unwrap_or(false);
-    if has_any {
+    let any_jsonl = |d: &std::path::Path| {
+        std::fs::read_dir(d)
+            .map(|rd| rd.flatten().any(|e| e.path().extension().is_some_and(|x| x == "jsonl")))
+            .unwrap_or(false)
+    };
+    // If any conversation exists (active OR archived), migration already happened.
+    if any_jsonl(&dir) || any_jsonl(&dir.join("archived")) {
         return;
     }
-    if let Ok(txt) = std::fs::read_to_string(paths::activity_log()) {
+    let legacy = paths::activity_log();
+    if let Ok(txt) = std::fs::read_to_string(&legacy) {
         if !txt.trim().is_empty() {
             let _ = std::fs::create_dir_all(&dir);
             let id = std::time::SystemTime::now()
@@ -64,7 +73,10 @@ fn migrate_legacy() {
                 .map(|d| d.as_millis())
                 .unwrap_or(0)
                 .to_string();
-            let _ = std::fs::write(dir.join(format!("{id}.jsonl")), txt);
+            if std::fs::write(dir.join(format!("{id}.jsonl")), txt).is_ok() {
+                // Prevent any future re-import even if all conversations get archived/deleted.
+                let _ = std::fs::rename(&legacy, legacy.with_extension("imported"));
+            }
         }
     }
 }
