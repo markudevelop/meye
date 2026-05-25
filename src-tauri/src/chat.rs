@@ -201,3 +201,29 @@ pub async fn chat(question: &str) -> Result<ChatReply, String> {
         .ok_or_else(|| format!("unexpected model response: {v}"))?;
     Ok(ChatReply { answer, sources })
 }
+
+#[cfg(test)]
+mod probe {
+    //! Live probes (ignored by default — hit real screenpipe + the DeepSeek API).
+    //! Run with: cargo test --lib chat:: -- --ignored --nocapture
+    use super::*;
+
+    fn run(q: &str) -> ChatReply {
+        let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap();
+        rt.block_on(chat(q)).expect("chat() failed")
+    }
+
+    #[test]
+    #[ignore]
+    fn generic_question_not_forced_to_activity() {
+        let r = run("In one sentence, what is a monad in functional programming?");
+        println!("\n[GENERIC] sources={}\n{}\n", r.sources.len(), r.answer);
+    }
+
+    #[test]
+    #[ignore]
+    fn activity_question_uses_recordings() {
+        let r = run("In one short sentence, what app was I most recently using on my screen?");
+        println!("\n[ACTIVITY] sources={}\n{}\n", r.sources.len(), r.answer);
+    }
+}
