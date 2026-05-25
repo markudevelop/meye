@@ -4,7 +4,7 @@ import { initHome, loadHome } from "./home";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
 import { initTimeline, loadTimelineIfEmpty } from "./timeline";
-import { initDevices } from "./devices";
+import { initDevices, refreshDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
 import { initPerformance, refreshPerf } from "./performance";
@@ -31,6 +31,7 @@ initTabs((tab: Tab) => {
   if (tab === "home") void loadHome();
   if (tab === "status") refreshHealth();
   if (tab === "timeline") loadTimelineIfEmpty();
+  if (tab === "devices") void refreshDevices();
   if (tab === "pipes") void refreshPipes();
   if (tab === "settings") void refreshSettings();
   if (tab === "performance") void refreshPerf();
