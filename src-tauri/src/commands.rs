@@ -209,6 +209,13 @@ pub async fn api_pipe_logs(name: String) -> Result<String, String> {
 }
 
 #[tauri::command]
+pub async fn api_pipe_set_schedule(name: String, schedule: String) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || crate::pipes::set_schedule(&name, &schedule))
+        .await
+        .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
 pub async fn api_models_list() -> Result<Value, String> {
     tauri::async_runtime::spawn_blocking(crate::pipes::models_list)
         .await

@@ -38,6 +38,8 @@ export const api = {
   pipeEnable: (name: string) => invoke("api_pipe_enable", { name }) as Promise<string>,
   pipeDisable: (name: string) => invoke("api_pipe_disable", { name }) as Promise<string>,
   pipeLogs: (name: string) => invoke("api_pipe_logs", { name }) as Promise<string>,
+  pipeSetSchedule: (name: string, schedule: string) =>
+    invoke("api_pipe_set_schedule", { name, schedule }) as Promise<void>,
   modelsList: () => invoke("api_models_list") as Promise<any>,
   modelsCreate: (a: { id: string; provider: string; model: string; url?: string; apiKey?: string; setDefault: boolean }) =>
     invoke("api_models_create", {

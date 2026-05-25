@@ -115,6 +115,85 @@ pub fn config_write(name: &str, content: &str) -> Result<(), String> {
     std::fs::write(pipe_md_path(name)?, content).map_err(|e| e.to_string())
 }
 
+/// Pure: rewrite the `schedule:` value inside a pipe.md's YAML frontmatter,
+/// preserving everything else (other frontmatter keys, the body). If the
+/// frontmatter has no `schedule:` line, one is inserted just before the closing
+/// fence. If there is no (valid) frontmatter at all, a minimal one is prepended.
+/// A `schedule:` occurring in the body (after the closing fence) is never touched.
+pub fn rewrite_schedule(md: &str, schedule: &str) -> String {
+    // The value MUST be double-quoted: cron macros (`@daily`) and raw cron
+    // expressions (`*/30 * * * *`) start with YAML indicator characters (`@`, `*`)
+    // and break the frontmatter parser when left bare — which silently drops the
+    // pipe from the registry. Quoting makes every schedule string YAML-safe.
+    let new_line = format!("schedule: \"{}\"", schedule.replace('"', "\\\""));
+    let starts_fm = md.starts_with("---\n") || md.starts_with("---\r\n");
+    if !starts_fm {
+        return format!("---\n{new_line}\nenabled: true\n---\n\n{md}");
+    }
+    let trailing_nl = md.ends_with('\n');
+    let mut out: Vec<String> = Vec::new();
+    let mut in_fm = false;
+    let mut fm_closed = false;
+    let mut replaced = false;
+    for (i, line) in md.lines().enumerate() {
+        if i == 0 {
+            out.push(line.to_string()); // opening "---"
+            in_fm = true;
+            continue;
+        }
+        if in_fm && line.trim() == "---" {
+            if !replaced {
+                out.push(new_line.clone()); // no schedule key existed — insert before fence
+            }
+            out.push(line.to_string());
+            in_fm = false;
+            fm_closed = true;
+            continue;
+        }
+        if in_fm && line.trim_start().starts_with("schedule:") {
+            out.push(new_line.clone());
+            replaced = true;
+            continue;
+        }
+        out.push(line.to_string());
+    }
+    if !fm_closed {
+        // frontmatter never closed — treat as malformed, prepend a fresh one
+        return format!("---\n{new_line}\nenabled: true\n---\n\n{md}");
+    }
+    let mut s = out.join("\n");
+    if trailing_nl {
+        s.push('\n');
+    }
+    s
+}
+
+/// True if the named pipe is currently enabled (reads `pipe list --json`).
+fn is_enabled(name: &str) -> Result<bool, String> {
+    let v = list()?;
+    let enabled = v
+        .as_array()
+        .and_then(|arr| {
+            arr.iter().find(|p| p.pointer("/config/name").and_then(|n| n.as_str()) == Some(name))
+        })
+        .and_then(|p| p.pointer("/config/enabled").and_then(|e| e.as_bool()))
+        .unwrap_or(false);
+    Ok(enabled)
+}
+
+/// Set a pipe's schedule by editing its pipe.md frontmatter, then force the
+/// running scheduler to re-read it via disable+enable (only when the pipe is
+/// enabled, so we never silently turn a disabled pipe back on).
+pub fn set_schedule(name: &str, schedule: &str) -> Result<(), String> {
+    let md = config_read(name)?;
+    config_write(name, &rewrite_schedule(&md, schedule))?;
+    if is_enabled(name).unwrap_or(false) {
+        let _ = disable(name);
+        let _ = enable(name);
+    }
+    Ok(())
+}
+
 /// Pure: parse `screenpipe pipe search` text table (cols separated by 2+ spaces)
 /// into `[{slug, category, installs, description}]`.
 pub fn parse_search_table(stdout: &str) -> Value {
@@ -197,5 +276,55 @@ notion-crm-sync                productivity    25         Auto-detect business c
         assert_eq!(arr[0]["category"], "productivity");
         assert_eq!(arr[0]["installs"], "45");
         assert!(arr[0]["description"].as_str().unwrap().contains("Synchronize"));
+    }
+
+    #[test]
+    fn rewrite_schedule_replaces_existing_line_and_quotes() {
+        let md = "---\nschedule: manual\nenabled: true\ntitle: AI Habits\n---\n\nBody text here.\n";
+        let out = rewrite_schedule(md, "every 30m");
+        assert!(out.contains("schedule: \"every 30m\""));
+        assert!(!out.contains("schedule: manual"));
+        assert!(out.contains("enabled: true"));
+        assert!(out.contains("title: AI Habits"));
+        assert!(out.ends_with("Body text here.\n"));
+        // exactly one schedule line
+        assert_eq!(out.matches("schedule:").count(), 1);
+    }
+
+    #[test]
+    fn rewrite_schedule_quotes_cron_macros() {
+        // bare `@daily` / `*/30 ...` break YAML — must be quoted.
+        let md = "---\nschedule: manual\n---\n\nBody.\n";
+        assert!(rewrite_schedule(md, "@daily").contains("schedule: \"@daily\""));
+        assert!(rewrite_schedule(md, "*/30 * * * *").contains("schedule: \"*/30 * * * *\""));
+    }
+
+    #[test]
+    fn rewrite_schedule_inserts_when_missing() {
+        let md = "---\nenabled: true\ntitle: X\n---\n\nBody.\n";
+        let out = rewrite_schedule(md, "@daily");
+        assert!(out.contains("schedule: \"@daily\""));
+        assert!(out.contains("enabled: true"));
+        assert!(out.contains("title: X"));
+        // inserted before the closing fence, body intact
+        assert!(out.ends_with("Body.\n"));
+    }
+
+    #[test]
+    fn rewrite_schedule_prepends_when_no_frontmatter() {
+        let md = "Just a body, no frontmatter.\n";
+        let out = rewrite_schedule(md, "every 1h");
+        assert!(out.starts_with("---\nschedule: \"every 1h\"\nenabled: true\n---\n\n"));
+        assert!(out.ends_with("Just a body, no frontmatter.\n"));
+    }
+
+    #[test]
+    fn rewrite_schedule_ignores_schedule_word_in_body() {
+        let md = "---\nschedule: manual\n---\n\nMy schedule: do not touch this line.\n";
+        let out = rewrite_schedule(md, "@hourly");
+        assert!(out.contains("schedule: \"@hourly\""));
+        assert!(out.contains("My schedule: do not touch this line."));
+        // frontmatter schedule replaced, body schedule untouched => 2 total
+        assert_eq!(out.matches("schedule:").count(), 2);
     }
 }

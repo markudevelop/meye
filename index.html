@@ -34,6 +34,9 @@
           <button id="tab-btn-pipes" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v5M15 2v5M7 7h10v3a5 5 0 0 1-10 0V7ZM12 15v7"/></svg><span>Pipes</span>
           </button>
+          <button id="tab-btn-schedule" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg><span>Schedule</span>
+          </button>
           <button id="tab-btn-performance" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19a7 7 0 1 1 14 0"/><path d="M12 19l4.2-6"/></svg><span>Performance</span>
           </button>
@@ -157,6 +160,13 @@
               <div class="row"><button id="p-config-save" class="primary">Save</button><button id="p-config-cancel">Cancel</button></div>
             </div>
             <h3>Logs</h3><pre id="p-logs">—</pre>
+          </section>
+
+          <section id="panel-schedule" class="panel hidden">
+            <header class="panel-head"><h1>Schedule</h1></header>
+            <p class="meta">Choose when each pipe runs automatically. Toggle a pipe on/off, or set how often it runs. Changes apply immediately.</p>
+            <div class="row"><button id="sched-refresh">Refresh</button></div>
+            <div id="sched-list">—</div>
           </section>
 
           <section id="panel-performance" class="panel hidden">

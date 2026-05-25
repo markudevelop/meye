@@ -252,8 +252,17 @@ async function submit() {
   return doChat(text);
 }
 
+function thinkingBubble(): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "msg assistant";
+  wrap.innerHTML = `<div class="bubble meye thinking"><span class="dots"><i></i><i></i><i></i></span></div>`;
+  feed().appendChild(wrap);
+  feed().scrollTop = feed().scrollHeight;
+  return wrap;
+}
+
 async function doChat(question: string) {
-  const placeholder = add({ kind: "assistant", ts: Date.now(), text: "…thinking…" });
+  const placeholder = thinkingBubble();
   try {
     const reply = await api.chat(question);
     const entry = { kind: "assistant", ts: Date.now(), text: reply.answer, sources: reply.sources };

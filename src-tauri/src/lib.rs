@@ -57,6 +57,7 @@ pub fn run() {
             commands::api_pipe_enable,
             commands::api_pipe_disable,
             commands::api_pipe_logs,
+            commands::api_pipe_set_schedule,
             commands::api_models_list,
             commands::api_models_create,
             commands::api_models_set_default,
