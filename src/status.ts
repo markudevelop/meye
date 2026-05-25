@@ -58,8 +58,25 @@ export async function refreshHealth() {
   $("m-uptime").textContent = `${Math.round(h.pipeline?.uptime_secs ?? 0)} s`;
   $("m-fps").textContent = (h.pipeline?.capture_fps_actual ?? 0).toFixed(3);
   $("m-audio").textContent = h.audio_status || "—";
-  $("m-pending").textContent = String(h.audio_pipeline?.pending_transcription_segments ?? 0);
+  const pending = h.audio_pipeline?.pending_transcription_segments ?? 0;
+  $("m-pending").textContent = String(pending);
   $("m-monitors").textContent = (h.monitors ?? []).join(", ") || "—";
+
+  // Explain a non-healthy screenpipe status in plain language. A "degraded" caused only by a
+  // transcription backlog (frame+audio ok) is benign — capture is still running.
+  const reason = $("health-reason");
+  const coreOk = h.frame_status === "ok" && h.audio_status === "ok";
+  if (h.status && h.status !== "healthy" && h.status !== "ok") {
+    if (coreOk && pending > 0) {
+      reason.textContent = `✓ Recording normally — whisper is transcribing ${pending} audio segment${pending === 1 ? "" : "s"} in the background. This clears itself.`;
+    } else {
+      reason.textContent = h.message || "Some subsystems are not healthy — see logs below.";
+    }
+    reason.classList.remove("hidden");
+  } else {
+    reason.classList.add("hidden");
+  }
+
   $("logs-pre").textContent = await api.tailLogs(40);
 }
 

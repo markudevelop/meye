@@ -110,42 +110,64 @@ fn collect(
     }
 }
 
-/// Grounding context: most-recent activity (so "today"-style questions work) plus
-/// keyword hits for the question. Returns (prompt context, sources for display).
-async fn build_context(question: &str) -> (String, Vec<Source>) {
-    let mut prompt = String::new();
-    let mut sources: Vec<Source> = Vec::new();
-    let mut seen = std::collections::HashSet::new();
-
-    // Keyword-relevant hits first (good for "find the X I saw" questions).
+/// Run one recording search and fold its hits into the shared sources/seen, returning the
+/// snippet text to hand back to the model as a tool result.
+async fn run_search(
+    query: &str,
+    sources: &mut Vec<Source>,
+    seen: &mut std::collections::HashSet<String>,
+) -> String {
+    let mut snippets = String::new();
     if let Ok(res) = screenpipe_api::search(&screenpipe_api::SearchParams {
-        q: Some(question.to_string()),
+        q: Some(query.to_string()),
         content_type: Some("all".into()),
-        limit: Some(12),
+        limit: Some(15),
         ..Default::default()
     })
     .await
     {
-        collect(&res, &mut prompt, &mut sources, &mut seen);
+        collect(&res, &mut snippets, sources, seen);
     }
-
-    // Then a little most-recent activity (so "what did I do today" style questions still
-    // ground), but kept modest so it doesn't dominate general questions.
-    if let Ok(res) = screenpipe_api::search(&screenpipe_api::SearchParams {
-        content_type: Some("all".into()),
-        limit: Some(12),
-        ..Default::default()
-    })
-    .await
-    {
-        collect(&res, &mut prompt, &mut sources, &mut seen);
-    }
-
-    // Empty => the caller sends no context at all (plain general-assistant chat).
-    (prompt, sources)
+    snippets
 }
 
-/// Answer a question about the user's recordings via their default model preset.
+/// The tool the model may call to look at the user's recordings. By exposing this as an
+/// *optional* tool (rather than always injecting context), the model itself decides whether
+/// the question needs the recordings — so general questions never get forced through activity,
+/// and "sources" only appear when the model actually searched.
+fn search_tool() -> Value {
+    json!({
+        "type": "function",
+        "function": {
+            "name": "search_recordings",
+            "description": "Search the user's own recorded screen text (OCR) and audio transcripts. \
+                Call this ONLY when answering needs the user's personal context — what they did, \
+                saw, heard, worked on, or any reference to 'I/my/me/today/earlier/this'. Do NOT call \
+                it for general knowledge questions you can answer on your own.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": { "type": "string", "description": "Keywords to search the recordings for." }
+                },
+                "required": ["query"]
+            }
+        }
+    })
+}
+
+fn post_body(p: &Preset, body: &Value) -> reqwest::RequestBuilder {
+    let mut req = crate::screenpipe_api::client()
+        .post(endpoint(p))
+        .timeout(std::time::Duration::from_secs(60))
+        .json(body);
+    if !p.api_key.is_empty() {
+        req = req.bearer_auth(&p.api_key);
+    }
+    req
+}
+
+/// Answer a question as a general assistant that can *optionally* consult the user's
+/// recordings via the `search_recordings` tool. The model decides whether to search.
 pub async fn chat(question: &str) -> Result<ChatReply, String> {
     let p = default_preset()?;
     if p.url.is_empty() || p.model.is_empty() {
@@ -154,52 +176,67 @@ pub async fn chat(question: &str) -> Result<ChatReply, String> {
     if p.provider == "anthropic" {
         return Err("Chat via the Anthropic provider isn't wired yet — use a custom/openai/ollama preset (DeepSeek works).".into());
     }
-    let (context, mut sources) = build_context(question).await;
-    let system = if context.trim().is_empty() {
-        "You are Meye, a helpful, knowledgeable personal assistant. Answer naturally and \
-         conversationally like a capable general-purpose AI."
-            .to_string()
-    } else {
-        format!(
-            "You are Meye, a helpful, knowledgeable personal assistant. Answer naturally and \
-             conversationally like a capable general-purpose AI.\n\n\
-             You ALSO have access to snippets of the user's recent screen/audio recordings, shown \
-             below as OPTIONAL background. Use them only when the question is actually about what \
-             the user did, saw, heard, or worked on — or when they're clearly relevant. For general \
-             questions, ignore the recordings and just answer well. Never force an answer to be \
-             about the user's activity.\n\n--- Recent recordings (optional context) ---\n{context}"
-        )
-    };
-    // Don't advertise "sources" for a general chat where the recordings weren't the point.
-    if context.trim().is_empty() {
-        sources.clear();
+
+    let system = "You are Meye, a helpful, knowledgeable personal assistant running locally on \
+        the user's Mac. Answer naturally like a capable general-purpose AI. You can also search \
+        the user's own screen/audio recordings with the search_recordings tool — use it only when \
+        the question actually depends on their personal context (what they did, saw, heard, worked \
+        on, or anything referring to themselves/their activity/time). For general questions, just \
+        answer directly without searching.";
+
+    let mut messages: Vec<Value> = vec![
+        json!({"role": "system", "content": system}),
+        json!({"role": "user", "content": question}),
+    ];
+    let tools = json!([search_tool()]);
+    let mut sources: Vec<Source> = Vec::new();
+    let mut seen = std::collections::HashSet::new();
+
+    // Tool-use loop: let the model search as many times as it needs (capped), then answer.
+    let mut answer: Option<String> = None;
+    for round in 0..4 {
+        // On the last round, stop offering the tool so the model must produce a final answer.
+        let body = if round < 3 {
+            json!({ "model": p.model, "messages": messages, "tools": tools, "tool_choice": "auto", "max_tokens": 1024 })
+        } else {
+            json!({ "model": p.model, "messages": messages, "max_tokens": 1024 })
+        };
+        let resp = post_body(&p, &body).send().await.map_err(|e| e.to_string())?;
+        let v: Value = resp.json().await.map_err(|e| e.to_string())?;
+        let msg = v
+            .pointer("/choices/0/message")
+            .cloned()
+            .ok_or_else(|| format!("unexpected model response: {v}"))?;
+
+        let tool_calls = msg.get("tool_calls").and_then(|t| t.as_array()).cloned().unwrap_or_default();
+        if tool_calls.is_empty() {
+            answer = Some(msg.get("content").and_then(|s| s.as_str()).unwrap_or("").to_string());
+            break;
+        }
+
+        // Echo the assistant's tool-call message back, then answer each call with search results.
+        messages.push(msg);
+        for tc in &tool_calls {
+            let id = tc.get("id").and_then(|s| s.as_str()).unwrap_or("").to_string();
+            let args = tc.pointer("/function/arguments").and_then(|s| s.as_str()).unwrap_or("{}");
+            let query = serde_json::from_str::<Value>(args)
+                .ok()
+                .and_then(|a| a.get("query").and_then(|q| q.as_str()).map(|s| s.to_string()))
+                .unwrap_or_else(|| question.to_string());
+            let snippets = run_search(&query, &mut sources, &mut seen).await;
+            let content = if snippets.is_empty() {
+                "(no matching recordings found)".to_string()
+            } else {
+                snippets
+            };
+            messages.push(json!({"role": "tool", "tool_call_id": id, "content": content}));
+        }
     }
-    let body = json!({
-        "model": p.model,
-        "messages": [
-            {"role": "system", "content": system},
-            {"role": "user", "content": question}
-        ],
-        "max_tokens": 1024
-    });
-    let mut req = crate::screenpipe_api::client()
-        .post(endpoint(&p))
-        .timeout(std::time::Duration::from_secs(60))
-        .json(&body);
-    if !p.api_key.is_empty() {
-        req = req.bearer_auth(&p.api_key);
-    }
-    let resp = req.send().await.map_err(|e| e.to_string())?;
-    let v: Value = resp.json().await.map_err(|e| e.to_string())?;
-    let answer = v
-        .get("choices")
-        .and_then(|c| c.get(0))
-        .and_then(|c| c.get("message"))
-        .and_then(|m| m.get("content"))
-        .and_then(|s| s.as_str())
-        .map(|s| s.to_string())
-        .ok_or_else(|| format!("unexpected model response: {v}"))?;
-    Ok(ChatReply { answer, sources })
+
+    Ok(ChatReply {
+        answer: answer.filter(|a| !a.is_empty()).unwrap_or_else(|| "(no answer returned)".into()),
+        sources,
+    })
 }
 
 #[cfg(test)]

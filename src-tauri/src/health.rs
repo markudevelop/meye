@@ -54,10 +54,23 @@ pub fn parse(json: &str) -> Result<Health, serde_json::Error> {
 }
 
 /// Pure: classify a parsed Health into a coarse Status.
+///
+/// screenpipe reports "degraded" (HTTP 503) whenever *anything* is off — including a
+/// purely transient whisper backlog (audio segments waiting for background transcription).
+/// That isn't a real problem: capture is still running. So we only surface Degraded when a
+/// core subsystem is actually unhealthy; a degraded status with both frame and audio "ok"
+/// is treated as Healthy (it's just catching up).
 pub fn classify(h: &Health) -> Status {
     match h.status.as_str() {
         "healthy" | "ok" => Status::Healthy,
-        "degraded" => Status::Degraded,
+        "degraded" => {
+            let core_ok = h.frame_status == "ok" && h.audio_status == "ok";
+            if core_ok {
+                Status::Healthy
+            } else {
+                Status::Degraded
+            }
+        }
         _ => Status::Down,
     }
 }
@@ -120,12 +133,23 @@ mod tests {
     #[test]
     fn classify_maps_status_strings() {
         let mut h = Health::default();
+        // degraded with a down subsystem (frame/audio not "ok") => Degraded
         h.status = "degraded".into();
         assert_eq!(classify(&h), Status::Degraded);
         h.status = "healthy".into();
         assert_eq!(classify(&h), Status::Healthy);
         h.status = "whatever".into();
         assert_eq!(classify(&h), Status::Down);
+    }
+
+    #[test]
+    fn degraded_only_from_transcription_backlog_is_healthy() {
+        // Real captured case: status degraded but both core subsystems ok.
+        let h = parse(SAMPLE).unwrap();
+        assert_eq!(h.status, "degraded");
+        assert_eq!(h.frame_status, "ok");
+        assert_eq!(h.audio_status, "ok");
+        assert_eq!(classify(&h), Status::Healthy);
     }
 
     #[test]
