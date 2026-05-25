@@ -162,6 +162,15 @@ pub fn run() {
             // Restore discreet mode from the saved preference at launch.
             apply_discreet(&app.handle().clone(), prefs::get_discreet());
 
+            // Always show the window when the app is launched. The window is configured
+            // hidden (no white flash on boot) and is normally revealed by the tray; but in
+            // discreet mode there is no tray, so launching the app from Applications/Spotlight
+            // is the way back in — it must reveal the window or the user is locked out.
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.show();
+                let _ = w.set_focus();
+            }
+
             // Health poll loop: emit status to the frontend every 5s.
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
@@ -190,6 +199,14 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|app, event| {
+            // macOS "reopen" (clicking the dock icon, or `open -a Meye` while it's already
+            // running) — re-show the window. Critical for getting back in from discreet mode.
+            if let tauri::RunEvent::Reopen { .. } = event {
+                if let Some(w) = app.get_webview_window("main") {
+                    let _ = w.show();
+                    let _ = w.set_focus();
+                }
+            }
             // Menu-bar behavior: closing the window hides it; the app stays in the tray.
             if let tauri::RunEvent::WindowEvent {
                 event: tauri::WindowEvent::CloseRequested { api, .. },
