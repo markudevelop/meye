@@ -6,6 +6,77 @@ function esc(s: string): string {
   return s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
 }
 
+// Preset value -> the exact schedule string written to pipe.md frontmatter.
+// screenpipe accepts cron macros (@hourly/@daily/@weekly), "every Nm/Nh", and "manual".
+const PRESETS: { key: string; label: string; schedule: string }[] = [
+  { key: "manual", label: "Manual (off)", schedule: "manual" },
+  { key: "30m", label: "Every 30 min", schedule: "every 30m" },
+  { key: "hourly", label: "Hourly", schedule: "@hourly" },
+  { key: "daily", label: "Daily", schedule: "@daily" },
+  { key: "weekly", label: "Weekly", schedule: "@weekly" },
+  { key: "custom", label: "Custom…", schedule: "" },
+];
+
+/** Map a frontmatter schedule string to a preset key (or "custom" if it's none of them). */
+function scheduleKey(schedule: string): string {
+  const s = (schedule ?? "").trim();
+  const hit = PRESETS.find((p) => p.key !== "custom" && p.schedule === s);
+  return hit ? hit.key : "custom";
+}
+
+async function applySchedule(name: string, schedule: string) {
+  await wrap(`Schedule ${name} → ${schedule}`, () => api.pipeSetSchedule(name, schedule));
+  void refreshPipes();
+}
+
+/** Build the "Runs: [dropdown] [custom cron]" control for a pipe card. */
+function scheduleControl(name: string, schedule: string): HTMLElement {
+  const key = scheduleKey(schedule);
+  const row = document.createElement("div");
+  row.className = "row sched-inline";
+
+  const label = document.createElement("span");
+  label.className = "meta";
+  label.textContent = "Runs:";
+
+  const sel = document.createElement("select");
+  sel.className = "sched-select";
+  sel.innerHTML = PRESETS.map(
+    (p) => `<option value="${p.key}"${p.key === key ? " selected" : ""}>${p.label}</option>`
+  ).join("");
+
+  const custom = document.createElement("input");
+  custom.className = "sched-custom" + (key === "custom" ? "" : " hidden");
+  custom.placeholder = "cron or 'every 30m'";
+  if (key === "custom") custom.value = schedule;
+
+  sel.onchange = () => {
+    if (sel.value === "custom") {
+      custom.classList.remove("hidden");
+      custom.focus();
+      return; // wait for the user to type + commit
+    }
+    custom.classList.add("hidden");
+    void applySchedule(name, PRESETS.find((x) => x.key === sel.value)!.schedule);
+  };
+
+  // Custom cron applies on Enter or blur — never per keystroke.
+  const commit = () => {
+    const v = custom.value.trim();
+    if (v) void applySchedule(name, v);
+  };
+  custom.onkeydown = (e) => {
+    if ((e as KeyboardEvent).key === "Enter") {
+      e.preventDefault();
+      commit();
+    }
+  };
+  custom.onblur = commit;
+
+  row.append(label, sel, custom);
+  return row;
+}
+
 let editing: string | null = null;
 
 async function openEditor(name: string) {
@@ -119,6 +190,7 @@ export async function refreshPipes() {
       controls.appendChild(delBtn);
 
       card.appendChild(controls);
+      card.appendChild(scheduleControl(name, schedule));
 
       // Per-pipe AI preset assignment (space-separated ids = fallback chain).
       const presetRow = document.createElement("div");
