@@ -53,6 +53,16 @@ pub fn set_record_args(args: &[String]) -> io::Result<()> {
 pub fn reload() -> io::Result<()> {
     if is_loaded() {
         let _ = run_launchctl(&bootout_args(current_uid()));
+        // `bootout` is asynchronous: it signals teardown but the service stays "loaded" for a
+        // moment while the process exits. If we bootstrap (via start()) before it finishes,
+        // start()'s is_loaded() check still sees the old service, early-returns, and the new
+        // plist is never loaded — leaving the recorder stopped. Wait for the unload to land.
+        for _ in 0..50 {
+            if !is_loaded() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
     start()
 }
