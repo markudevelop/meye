@@ -105,6 +105,9 @@ export async function refreshPipes() {
     for (const p of pipes) {
       const cfg = p.config ?? p;
       const name: string = cfg.name ?? p.name ?? "?";
+      const title: string = cfg.title ?? name;
+      const icon: string = cfg.icon ?? "⚙️";
+      const desc: string = cfg.description ?? "";
       const enabled: boolean = cfg.enabled ?? p.enabled ?? false;
       const schedule: string = cfg.schedule ?? p.schedule ?? "manual";
       const lastRun: string = p.last_run ?? cfg.last_run ?? "never";
@@ -118,8 +121,14 @@ export async function refreshPipes() {
           : "";
 
       const card = document.createElement("div");
-      card.className = "hit";
-      card.innerHTML = `<b>${esc(name)}</b> <span class="meta">${enabled ? "enabled" : "disabled"} · ${esc(schedule)} · last: ${esc(String(lastRun))}${running}${statusBit}</span>`;
+      card.className = "pipe-card";
+      card.innerHTML =
+        `<div class="pipe-head">` +
+        `<span class="pipe-icon">${esc(icon)}</span>` +
+        `<div class="pipe-name"><b>${esc(title)}</b>${desc ? `<span class="meta">${esc(desc)}</span>` : ""}` +
+        `<span class="meta">last run: ${esc(String(lastRun))}${running}${statusBit}</span></div>` +
+        `<span class="pipe-state ${enabled ? "on" : "off"}">${enabled ? "On" : "Off"}</span>` +
+        `</div>`;
 
       const cardStatus = document.createElement("div");
       cardStatus.className = "pipe-status meta";
@@ -194,9 +203,9 @@ export async function refreshPipes() {
       card.appendChild(controls);
       card.appendChild(scheduleControl(name, schedule));
 
-      // Per-pipe AI preset assignment (space-separated ids = fallback chain).
+      // Per-pipe AI preset assignment (space-separated ids = fallback chain). Advanced.
       const presetRow = document.createElement("div");
-      presetRow.className = "row";
+      presetRow.className = "row dev-only";
       const presetInput = document.createElement("input");
       presetInput.placeholder = "preset id(s) for this pipe";
       const presetBtn = document.createElement("button");

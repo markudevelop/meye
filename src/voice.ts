@@ -56,7 +56,7 @@ function dispatch(cmd: { action: string; arg: string }) {
 export async function pushToTalk() {
   if (listening) return;
   listening = true;
-  const fab = document.getElementById("voice-fab");
+  const fab = document.getElementById("home-mic");
   fab?.classList.add("listening");
   toast("🎙 Listening… say a command", { sticky: true, spin: true });
 
@@ -97,11 +97,11 @@ export function isVoiceEnabled(): boolean {
 
 export function setVoiceEnabled(on: boolean) {
   localStorage.setItem(KEY, on ? "1" : "0");
-  document.getElementById("voice-fab")?.classList.toggle("hidden", !on);
+  document.getElementById("home-mic")?.classList.toggle("hidden", !on);
 }
 
 export function initVoice() {
-  const fab = document.getElementById("voice-fab");
+  const fab = document.getElementById("home-mic");
   if (fab) fab.onclick = () => void pushToTalk();
   setVoiceEnabled(isVoiceEnabled());
 }
