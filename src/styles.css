@@ -263,6 +263,19 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
   animation: spin 0.7s linear infinite; margin-right: 8px;
 }
 
+/* Live view */
+.live-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; align-items: start; }
+@media (max-width: 760px) { .live-grid { grid-template-columns: 1fr; } }
+#live-frame img { width: 100%; border-radius: 8px; border: 1px solid var(--border); display: block; }
+.live-cap { font-size: 11.5px; color: var(--muted); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
+#live-audio { max-height: 360px; overflow-y: auto; }
+.live-line { font-size: 13px; line-height: 1.5; padding: 6px 0; border-top: 1px solid var(--border); }
+.live-line:first-child { border-top: none; }
+.live-line-time { color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; margin-right: 6px; }
+.live-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); }
+.live-pill.on { color: #34c759; border-color: rgba(52,199,89,0.4); background: rgba(52,199,89,0.08); }
+.live-pill.off { color: var(--muted); opacity: 0.7; }
+
 /* push-to-talk mic button (floating, all tabs) */
 .voice-fab {
   position: fixed; bottom: 22px; right: 22px; z-index: 40;

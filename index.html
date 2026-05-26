@@ -19,6 +19,9 @@
           <button id="tab-btn-home" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-1L3 20l1-5.5a8.5 8.5 0 0 1 16-3Z"/></svg><span>Chat</span>
           </button>
+          <button id="tab-btn-live" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg><span>Live</span>
+          </button>
           <button id="tab-btn-status" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 6 4-14 2 8h6"/></svg><span>Status</span>
           </button>
@@ -84,6 +87,22 @@
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-live" class="panel hidden">
+            <header class="panel-head"><h1>Live</h1><span id="live-badge" class="badge"><span class="dot grey"></span><span>—</span></span></header>
+            <p class="page-intro">Exactly what Meye is capturing right now — the latest screen frame and the words it just heard. Refreshes every few seconds while this tab is open.</p>
+            <div id="live-sources" class="row"></div>
+            <div class="live-grid">
+              <div class="section">
+                <div class="section-title">Latest screen</div>
+                <div id="live-frame"><p class="meta">Loading…</p></div>
+              </div>
+              <div class="section">
+                <div class="section-title">Latest audio</div>
+                <div id="live-audio"><p class="meta">Loading…</p></div>
               </div>
             </div>
           </section>
