@@ -19,14 +19,8 @@
           <button id="tab-btn-home" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 9 9 0 0 1-4-1L3 20l1-5.5a8.5 8.5 0 0 1 16-3Z"/></svg><span>Chat</span>
           </button>
-          <button id="tab-btn-live" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/></svg><span>Live</span>
-          </button>
-          <button id="tab-btn-search" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><span>Search</span>
-          </button>
-          <button id="tab-btn-timeline" class="nav-item">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Timeline</span>
+          <button id="tab-btn-memory" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><span>Memory</span>
           </button>
           <button id="tab-btn-pipes" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v5M15 2v5M7 7h10v3a5 5 0 0 1-10 0V7ZM12 15v7"/></svg><span>Pipes</span>
@@ -82,48 +76,22 @@
             </div>
           </section>
 
-          <section id="panel-live" class="panel hidden">
-            <header class="panel-head"><h1>Live</h1><span id="live-badge" class="badge"><span class="dot grey"></span><span>—</span></span></header>
-            <p class="page-intro">Exactly what Meye is capturing right now — the latest screen frame and the words it just heard. Refreshes every few seconds while this tab is open.</p>
-            <div id="live-sources" class="row"></div>
-            <div class="live-grid">
-              <div class="section">
-                <div class="section-title">Latest screen</div>
-                <div id="live-frame"><p class="meta">Loading…</p></div>
-              </div>
-              <div class="section">
-                <div class="section-title">Latest audio</div>
-                <div id="live-audio"><p class="meta">Loading…</p></div>
-              </div>
+          <section id="panel-memory" class="panel hidden">
+            <header class="panel-head"><h1>Memory</h1></header>
+            <div class="mem-search">
+              <svg class="mem-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+              <input id="mem-q" placeholder="Search everything you've seen &amp; heard…" autocomplete="off" />
+              <select id="mem-type" title="Filter by type">
+                <option value="all">Everything</option>
+                <option value="ocr">Screen</option>
+                <option value="audio">Audio</option>
+                <option value="ui">App UI</option>
+              </select>
             </div>
-          </section>
-
-          <section id="panel-search" class="panel hidden">
-            <header class="panel-head"><h1>Search</h1></header>
-            <p class="page-intro">Find anything you've seen or heard — text from your screen, words from your mic. Type a few keywords.</p>
-            <div class="section">
-              <div class="row">
-                <input id="s-q" placeholder="Search your screen &amp; audio…" />
-                <select id="s-type"><option value="all">Everything</option><option value="ocr">Screen text</option><option value="audio">Audio</option><option value="ui">App UI</option></select>
-                <button id="s-go" class="primary">Search</button>
-              </div>
-              <div class="row">
-                <input id="s-app" placeholder="Filter by app (optional, e.g. Chrome)" />
-                <input id="s-limit" type="number" value="50" min="1" max="500" style="max-width:6em" title="Max results" />
-              </div>
-            </div>
-            <div id="s-results"></div>
-          </section>
-
-          <section id="panel-timeline" class="panel hidden">
-            <header class="panel-head">
-              <h1>Timeline</h1>
-              <button id="t-refresh">↻ Refresh</button>
-            </header>
-            <p class="page-intro">A scrollable feed of everything Meye has seen, newest first. Keep scrolling to go back in time.</p>
-            <div id="t-feed"></div>
-            <div id="t-sentinel" style="height:1px"></div>
-            <p id="t-end" class="meta hidden">— that's the beginning of your recordings —</p>
+            <div id="mem-live" class="mem-live"></div>
+            <div id="mem-feed"></div>
+            <div id="mem-sentinel" style="height:1px"></div>
+            <p id="mem-end" class="meta hidden">— that's the beginning of your recordings —</p>
           </section>
 
           <section id="panel-pipes" class="panel hidden">

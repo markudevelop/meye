@@ -1,13 +1,12 @@
 import { $ } from "./ui";
 import { goTab, type Tab } from "./tabs";
+import { searchMemory } from "./memory";
 
 type Action = { label: string; run: () => void };
 
 const TAB_ACTIONS: { tab: Tab; label: string }[] = [
   { tab: "home", label: "Go to Chat" },
-  { tab: "live", label: "Go to Live" },
-  { tab: "search", label: "Go to Search" },
-  { tab: "timeline", label: "Go to Timeline" },
+  { tab: "memory", label: "Go to Memory" },
   { tab: "pipes", label: "Go to Automations" },
   { tab: "settings", label: "Go to Settings" },
   { tab: "advanced", label: "Go to Advanced" },
@@ -36,9 +35,8 @@ function build(q: string) {
           label: `Search recordings for “${query}”`,
           run: () => {
             close();
-            goTab("search");
-            ($("s-q") as HTMLInputElement).value = query;
-            ($("s-go") as HTMLButtonElement).click();
+            goTab("memory");
+            searchMemory(query);
           },
         },
         {

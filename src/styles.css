@@ -316,6 +316,22 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 .sources .src .meta { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.04em; }
 .sources .src img { max-height: 96px; border-radius: 6px; margin-top: 5px; display: block; border: 1px solid var(--border); }
 
+/* Memory: search-forward view (replaces Live/Search/Timeline) */
+.mem-search { position: relative; display: flex; align-items: center; gap: 8px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 14px; padding: 4px 8px 4px 14px; margin-bottom: 16px; transition: border-color 0.12s, box-shadow 0.12s; }
+.mem-search:focus-within { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.mem-search-icon { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+#mem-q { flex: 1; border: none; background: none; padding: 11px 0; font-size: 15px; outline: none; }
+#mem-q:focus { box-shadow: none; border: none; }
+#mem-type { border: none; background: none; color: var(--muted); font-size: 13px; padding: 6px; }
+#mem-type:focus { box-shadow: none; }
+.mem-live { margin-bottom: 14px; }
+.mem-live-card { display: inline-flex; align-items: center; gap: 12px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 8px; max-width: 100%; }
+.mem-live-card img { width: 120px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+.mem-live-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.live-pulse { width: 8px; height: 8px; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 0 0 rgba(255,59,48,0.5); animation: livepulse 1.6s ease-out infinite; flex-shrink: 0; }
+@keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(255,59,48,0.5); } 70% { box-shadow: 0 0 0 7px rgba(255,59,48,0); } 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); } }
+#mem-feed { display: flex; flex-direction: column; gap: 14px; }
+
 /* timeline feed (infinite scroll) */
 #t-feed { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; }
 .tl-card { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--bg-elev); }

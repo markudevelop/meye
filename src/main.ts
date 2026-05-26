@@ -2,9 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { initTabs, goTab, type Tab } from "./tabs";
 import { initHome, loadHome, startNewChat } from "./home";
 import { initStatus, refreshHealth } from "./status";
-import { initSearch } from "./search";
-import { initTimeline, loadTimelineIfEmpty } from "./timeline";
-import { initLive, startLive, stopLive } from "./live";
+import { initMemory, startMemory, stopMemory } from "./memory";
 import { initDevices, refreshDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
@@ -20,9 +18,7 @@ if (localStorage.getItem("meye.dev") === "1") document.body.classList.add("dev")
 initPalette();
 initHome();
 initStatus();
-initSearch();
-initTimeline();
-initLive();
+initMemory();
 initDevices();
 initPipes();
 initSettings();
@@ -56,9 +52,8 @@ document.querySelectorAll<HTMLElement>(".subtab").forEach((b) => {
 
 initTabs((tab: Tab) => {
   if (tab === "home") void loadHome();
-  if (tab === "timeline") loadTimelineIfEmpty();
-  if (tab === "live") startLive();
-  else stopLive();
+  if (tab === "memory") startMemory();
+  else stopMemory();
   if (tab === "pipes") void refreshPipes();
   if (tab === "settings") showSettingsSub(activeSub);
 });

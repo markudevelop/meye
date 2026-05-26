@@ -3,7 +3,7 @@ import { toast } from "./ui";
 import { goTab, type Tab } from "./tabs";
 import { startNewChat } from "./home";
 import { setVisionPaused } from "./performance";
-import { runSearchWith } from "./search";
+import { searchMemory } from "./memory";
 
 // Push-to-talk voice commands. Instead of polling the transcript continuously (heavy, and it
 // kept the recorder in realtime mode), you tap the floating mic button and speak one command.
@@ -30,15 +30,23 @@ function dispatch(cmd: { action: string; arg: string }) {
       toast("🎙 New chat");
       break;
     case "open": {
-      // status/devices/performance are now sub-tabs of Settings; map them so we don't open a tab that no longer exists.
-      const map: Record<string, Tab> = { status: "settings", devices: "settings", performance: "settings", chat: "home" };
+      // status/devices/performance → Settings; live/search/timeline → Memory (consolidated).
+      const map: Record<string, Tab> = {
+        status: "settings",
+        devices: "settings",
+        performance: "settings",
+        chat: "home",
+        live: "memory",
+        search: "memory",
+        timeline: "memory",
+      };
       goTab((map[cmd.arg] ?? cmd.arg) as Tab);
       toast(`🎙 Opened ${cmd.arg}`);
       break;
     }
     case "search":
-      goTab("search");
-      runSearchWith(cmd.arg);
+      goTab("memory");
+      searchMemory(cmd.arg);
       toast(`🎙 Searching "${cmd.arg}"`);
       break;
   }
