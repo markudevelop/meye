@@ -1,6 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { initTabs, goTab, type Tab } from "./tabs";
-import { initHome, loadHome } from "./home";
+import { initHome, loadHome, startNewChat } from "./home";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
 import { initTimeline, loadTimelineIfEmpty } from "./timeline";
@@ -62,6 +62,9 @@ initTabs((tab: Tab) => {
   if (tab === "pipes") void refreshPipes();
   if (tab === "settings") showSettingsSub(activeSub);
 });
+
+// Clicking "Chat" in the sidebar starts a fresh new chat (not the previous conversation).
+$("tab-btn-home").onclick = () => startNewChat();
 
 // Sidebar footer (status dot + label) jumps to Settings → Recorder to start/stop.
 $("side-foot").onclick = () => {
