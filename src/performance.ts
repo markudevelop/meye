@@ -2,10 +2,17 @@ import { $, wrap, toast } from "./ui";
 import { api } from "./api";
 import { isVoiceEnabled, setVoiceEnabled } from "./voice";
 
+// --prioritize-input-latency keeps the mouse/keyboard responsive (yields CPU to input,
+// skips a11y capture right after a click). --transcription-mode batch + --filter-music cut
+// GPU/heat by transcribing in larger chunks and skipping music/video audio.
 const PRESETS: Record<string, string[]> = {
   saver: [
     "--audio-transcription-engine",
     "whisper-tiny-quantized",
+    "--transcription-mode",
+    "batch",
+    "--filter-music",
+    "--prioritize-input-latency",
     "--disable-meeting-detector",
     "--disable-clipboard-capture",
     "--idle-capture-interval-ms",
@@ -14,12 +21,16 @@ const PRESETS: Record<string, string[]> = {
   balanced: [
     "--audio-transcription-engine",
     "whisper-large-v3-turbo-quantized",
+    "--transcription-mode",
+    "batch",
+    "--filter-music",
+    "--prioritize-input-latency",
     "--disable-meeting-detector",
     "--disable-clipboard-capture",
     "--idle-capture-interval-ms",
     "60000",
   ],
-  performance: ["--audio-transcription-engine", "whisper-large-v3-turbo"],
+  performance: ["--audio-transcription-engine", "whisper-large-v3-turbo", "--prioritize-input-latency"],
 };
 
 const AUDIO: Record<string, string[]> = {
@@ -116,7 +127,7 @@ export function initPerformance() {
   ($("perf-voice") as HTMLInputElement).onchange = (e) => {
     const on = (e.target as HTMLInputElement).checked;
     setVoiceEnabled(on);
-    toast(on ? "🎙 Voice commands on — say 'Hey Meye …'" : "Voice commands off");
+    toast(on ? "🎙 Voice button shown — tap it, then speak a command" : "Voice button hidden");
   };
   $("perf-pause").onclick = async () => {
     const args = await api.getRecordArgs();

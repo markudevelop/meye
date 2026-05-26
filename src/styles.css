@@ -263,6 +263,22 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
   animation: spin 0.7s linear infinite; margin-right: 8px;
 }
 
+/* push-to-talk mic button (floating, all tabs) */
+.voice-fab {
+  position: fixed; bottom: 22px; right: 22px; z-index: 40;
+  width: 50px; height: 50px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center;
+  background: var(--accent); border: none; color: #fff;
+  box-shadow: var(--shadow); cursor: pointer; transition: filter 0.12s, transform 0.08s;
+}
+.voice-fab:hover { filter: brightness(1.08); }
+.voice-fab svg { width: 22px; height: 22px; }
+.voice-fab.listening { animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft), var(--shadow); }
+  50% { box-shadow: 0 0 0 10px var(--accent-soft), var(--shadow); }
+}
+
 /* command palette (⌘K) */
 .palette { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); display: flex; align-items: flex-start; justify-content: center; padding-top: 14vh; z-index: 100; }
 .pal-box { width: 520px; max-width: 90vw; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }

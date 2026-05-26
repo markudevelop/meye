@@ -238,8 +238,8 @@
               </div>
               <div class="toggle-row">
                 <div class="tr-text">
-                  <div class="tr-title">Voice commands</div>
-                  <div class="tr-desc">Say <b>"Hey Meye …"</b> then <b>pause</b>, <b>resume</b>, <b>new chat</b>, <b>open timeline</b>, or <b>search for …</b>. Runs fully on-device off your mic; needs Audio on (not Off). ~1–3s lag.</div>
+                  <div class="tr-title">Voice button (push-to-talk)</div>
+                  <div class="tr-desc">Shows a floating mic button. Tap it, then say <b>pause</b>, <b>resume</b>, <b>new chat</b>, <b>open timeline</b>, or <b>search for …</b> ("Hey Meye" optional). On-demand only — nothing listens in the background. Needs Audio on; recognition is a touch slower in Balanced/Saver (batch mode).</div>
                 </div>
                 <label class="switch"><input type="checkbox" id="perf-voice" /><span class="slider"></span></label>
               </div>
@@ -299,6 +299,9 @@
 
           <p id="toast" class="toast hidden"></p>
         </div>
+        <button id="voice-fab" class="voice-fab hidden" title="Push to talk — say a command (Hey Meye optional)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg>
+        </button>
       </main>
     </div>
 

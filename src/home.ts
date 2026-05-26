@@ -3,10 +3,15 @@ import { api } from "./api";
 import { goTab } from "./tabs";
 import { renderMarkdown } from "./md";
 
+// Kept in sync with performance.ts PRESETS (used by the /profile slash-command).
 const PRESETS: Record<string, string[]> = {
   saver: [
     "--audio-transcription-engine",
     "whisper-tiny-quantized",
+    "--transcription-mode",
+    "batch",
+    "--filter-music",
+    "--prioritize-input-latency",
     "--disable-meeting-detector",
     "--disable-clipboard-capture",
     "--idle-capture-interval-ms",
@@ -15,12 +20,16 @@ const PRESETS: Record<string, string[]> = {
   balanced: [
     "--audio-transcription-engine",
     "whisper-large-v3-turbo-quantized",
+    "--transcription-mode",
+    "batch",
+    "--filter-music",
+    "--prioritize-input-latency",
     "--disable-meeting-detector",
     "--disable-clipboard-capture",
     "--idle-capture-interval-ms",
     "60000",
   ],
-  performance: ["--audio-transcription-engine", "whisper-large-v3-turbo"],
+  performance: ["--audio-transcription-engine", "whisper-large-v3-turbo", "--prioritize-input-latency"],
 };
 
 const COMMANDS = [
