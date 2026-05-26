@@ -163,11 +163,25 @@ export async function refreshPerf() {
     .then((on) => (($("perf-discreet") as HTMLInputElement).checked = on))
     .catch(() => {});
   ($("perf-voice") as HTMLInputElement).checked = isVoiceEnabled();
-  // Capture-source toggles reflect current args.
+  // Capture-source toggles reflect the configured intent (the args)...
   const aud = audioState(args);
-  ($("cap-video") as HTMLInputElement).checked = !args.includes("--disable-vision");
+  const videoOn = !args.includes("--disable-vision");
+  ($("cap-video") as HTMLInputElement).checked = videoOn;
   ($("cap-mic") as HTMLInputElement).checked = aud.mic;
   ($("cap-pc") as HTMLInputElement).checked = aud.pc;
+
+  // ...but show what the recorder is ACTUALLY capturing (from /health), since the two can
+  // disagree — e.g. audio "enabled" in settings but not actually capturing.
+  const audioDisabled = (h?.audio_status ?? "") === "disabled";
+  const frameOk = (h?.frame_status ?? "") === "ok";
+  const screenState = !videoOn ? "Screen off" : frameOk ? "Screen ✓" : "Screen ⚠ stalled";
+  const audioState_ = audioDisabled ? "Audio ✗ not capturing" : "Audio ✓";
+  let status = `<b>Actually capturing:</b> ${screenState} · ${audioState_}`;
+  if ((aud.mic || aud.pc) && audioDisabled) {
+    status +=
+      " — audio is turned on here but the recorder isn't recording any. Computer-audio-only doesn't start capture on macOS; enable Microphone for audio, or this stays screen-only.";
+  }
+  $("cap-status").innerHTML = status;
 }
 
 async function applyArgs(args: string[]) {
