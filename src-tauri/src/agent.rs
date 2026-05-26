@@ -12,14 +12,18 @@ pub fn program_arguments() -> Vec<String> {
     v
 }
 
-/// Default profile for fresh installs: the Best model (runs on the GPU) + input-latency
-/// priority. All whisper models run on the GPU, so CPU is low regardless; Best gives the
-/// most accurate transcription out of the box.
+/// Default profile for fresh installs: Best model (runs on the GPU) + input-latency priority,
+/// capturing screen + computer (system) audio but NOT the microphone. The mic is the heavy,
+/// flaky source (its stream gaps force constant CPU resampling), so it's off by default; the
+/// user can enable it in Performance → Capture sources. "System Audio (output)" is screenpipe's
+/// standard macOS system-audio device.
 pub fn default_record_args() -> Vec<String> {
     vec![
         "--audio-transcription-engine".into(),
         "whisper-large-v3-turbo".into(),
         "--prioritize-input-latency".into(),
+        "--audio-device".into(),
+        "System Audio (output)".into(),
     ]
 }
 

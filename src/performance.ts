@@ -185,6 +185,30 @@ export async function setVisionPaused(paused: boolean) {
   await applyArgs(next);
 }
 
+/** Apply a power profile (model + cadence) while PRESERVING the user's capture-source choices
+ * (which screens/mics are on), so switching profiles never silently re-enables the microphone. */
+async function applyProfile(preset: string[]) {
+  const cur = await api.getRecordArgs().catch(() => [] as string[]);
+  const keepVision = cur.includes("--disable-vision") ? ["--disable-vision"] : [];
+  if (cur.includes("--disable-audio")) {
+    // Audio fully off — drop the preset's transcription engine and disable audio.
+    const noEngine: string[] = [];
+    for (let i = 0; i < preset.length; i++) {
+      if (preset[i] === "--audio-transcription-engine") {
+        i++;
+        continue;
+      }
+      noEngine.push(preset[i]);
+    }
+    return void applyArgs([...noEngine, ...keepVision, "--disable-audio"]);
+  }
+  // Preserve any explicit --audio-device selection (e.g. mic off / system-audio only).
+  const devs: string[] = [];
+  for (let i = 0; i < cur.length; i++) if (cur[i] === "--audio-device") devs.push(cur[i + 1] ?? "");
+  const keepDevices = devs.flatMap((d) => ["--audio-device", d]);
+  void applyArgs([...preset, ...keepVision, ...keepDevices]);
+}
+
 /** Swap just the transcription engine, keeping the other flags. */
 async function applyAudio(key: string) {
   const current = await api.getRecordArgs().catch(() => [] as string[]);
@@ -193,9 +217,9 @@ async function applyAudio(key: string) {
 
 export function initPerformance() {
   $("perf-refresh").onclick = () => void refreshPerf();
-  $("perf-saver").onclick = () => void applyArgs(PRESETS.saver);
-  $("perf-balanced").onclick = () => void applyArgs(PRESETS.balanced);
-  $("perf-performance").onclick = () => void applyArgs(PRESETS.performance);
+  $("perf-saver").onclick = () => void applyProfile(PRESETS.saver);
+  $("perf-balanced").onclick = () => void applyProfile(PRESETS.balanced);
+  $("perf-performance").onclick = () => void applyProfile(PRESETS.performance);
   ($("perf-audio") as HTMLSelectElement).onchange = (e) => void applyAudio((e.target as HTMLSelectElement).value);
   ($("perf-discreet") as HTMLInputElement).onchange = (e) => {
     const on = (e.target as HTMLInputElement).checked;
