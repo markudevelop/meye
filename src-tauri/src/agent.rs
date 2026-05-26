@@ -12,9 +12,22 @@ pub fn program_arguments() -> Vec<String> {
     v
 }
 
-/// Read the persisted extra `record` flags (performance profile).
+/// Default profile for fresh installs: the Best model (runs on the GPU) + input-latency
+/// priority. All whisper models run on the GPU, so CPU is low regardless; Best gives the
+/// most accurate transcription out of the box.
+pub fn default_record_args() -> Vec<String> {
+    vec![
+        "--audio-transcription-engine".into(),
+        "whisper-large-v3-turbo".into(),
+        "--prioritize-input-latency".into(),
+    ]
+}
+
+/// Read the persisted extra `record` flags (performance profile), or the default if none saved.
 fn extra_args() -> Vec<String> {
-    let txt = std::fs::read_to_string(paths::record_config()).unwrap_or_default();
+    let Ok(txt) = std::fs::read_to_string(paths::record_config()) else {
+        return default_record_args(); // no config yet — fresh install
+    };
     serde_json::from_str::<serde_json::Value>(&txt)
         .ok()
         .and_then(|v| {
@@ -24,7 +37,7 @@ fn extra_args() -> Vec<String> {
                     .collect::<Vec<String>>()
             })
         })
-        .unwrap_or_default()
+        .unwrap_or_else(default_record_args)
 }
 
 pub fn get_record_args() -> Vec<String> {
@@ -291,6 +304,13 @@ mod tests {
         assert!(xml.contains("<string>record</string>"));
         assert!(xml.contains("/tmp/o.log"));
         assert!(xml.contains("/tmp/e.log"));
+    }
+
+    #[test]
+    fn default_profile_is_best_model() {
+        let d = default_record_args();
+        assert!(d.contains(&"whisper-large-v3-turbo".to_string()));
+        assert!(d.contains(&"--prioritize-input-latency".to_string()));
     }
 
     #[test]
