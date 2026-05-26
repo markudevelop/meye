@@ -292,6 +292,17 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 .live-pill.on { color: #34c759; border-color: rgba(52,199,89,0.4); background: rgba(52,199,89,0.08); }
 .live-pill.off { color: var(--muted); opacity: 0.7; }
 
+/* first-run onboarding */
+.onboard { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 24px; }
+.onboard-box { width: 440px; max-width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); padding: 36px 32px; text-align: center; }
+.onboard-box .hero-eye { width: 44px; height: 44px; color: var(--accent); }
+.onboard-box h1 { font-size: 23px; font-weight: 680; letter-spacing: -0.02em; margin: 14px 0 8px; }
+.onboard-box .meta { font-size: 14px; line-height: 1.55; }
+.onboard-actions { display: flex; gap: 8px; justify-content: center; margin-top: 18px; }
+.onboard-actions .primary { min-width: 120px; }
+.onboard-skip { margin-top: 14px; background: none; border: none; color: var(--muted); font-size: 13px; }
+.onboard-skip:hover { background: none; color: var(--text); border: none; }
+
 /* command palette (⌘K) */
 .palette { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.35); display: flex; align-items: flex-start; justify-content: center; padding-top: 14vh; z-index: 100; }
 .pal-box { width: 520px; max-width: 90vw; background: var(--bg); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }

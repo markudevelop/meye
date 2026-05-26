@@ -315,5 +315,30 @@
         <div id="pal-list"></div>
       </div>
     </div>
+
+    <div id="onboard" class="onboard hidden">
+      <div class="onboard-box">
+        <div class="onboard-step" data-step="0">
+          <svg class="hero-eye" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.6 5.4 4.6 9.4 10 10-5.4.6-9.4 4.6-10 10-.6-5.4-4.6-9.4-10-10 5.4-.6 9.4-4.6 10-10Z"/></svg>
+          <h1>Welcome to Meye</h1>
+          <p class="meta">Meye privately records your screen &amp; audio on this Mac, so you can search and chat with everything you've seen. <b>Nothing leaves your computer.</b></p>
+          <div class="onboard-actions"><button class="primary onboard-next">Get started</button></div>
+          <button class="onboard-skip">Skip setup</button>
+        </div>
+        <div class="onboard-step hidden" data-step="1">
+          <h1>Turn on recording</h1>
+          <p class="meta">Meye runs a small background recorder. macOS will ask you to allow <b>Screen Recording</b> and <b>Microphone</b> — that's how Meye sees and hears.</p>
+          <div class="onboard-actions"><button id="onboard-setup" class="primary">Set up &amp; start</button></div>
+          <p id="onboard-setup-status" class="meta"></p>
+          <div class="onboard-actions"><button class="onboard-back">Back</button><button class="onboard-next">Next</button></div>
+        </div>
+        <div class="onboard-step hidden" data-step="2">
+          <h1>Connect an AI model</h1>
+          <p class="meta">Chat &amp; automations need a model — your own API key, or a free local one (Ollama). You can set this up now or anytime in Settings.</p>
+          <div class="onboard-actions"><button id="onboard-open-ai" class="primary">Open AI settings</button></div>
+          <div class="onboard-actions"><button class="onboard-back">Back</button><button class="onboard-finish primary">Finish</button></div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

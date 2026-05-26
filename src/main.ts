@@ -9,6 +9,7 @@ import { initSettings, refreshSettings } from "./settings";
 import { initPerformance, refreshPerf, refreshPerfStats } from "./performance";
 import { initPalette } from "./palette";
 import { initPrivacy, refreshPrivacy } from "./privacy";
+import { initOnboarding } from "./onboarding";
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
@@ -24,6 +25,7 @@ initPipes();
 initSettings();
 initPerformance();
 initPrivacy();
+initOnboarding();
 
 $("a-go").onclick = () =>
   wrap("SQL", async () => {
