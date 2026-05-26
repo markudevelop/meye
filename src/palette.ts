@@ -4,12 +4,11 @@ import { goTab, type Tab } from "./tabs";
 type Action = { label: string; run: () => void };
 
 const TAB_ACTIONS: { tab: Tab; label: string }[] = [
-  { tab: "home", label: "Go to Home" },
-  { tab: "status", label: "Go to Status" },
+  { tab: "home", label: "Go to Chat" },
+  { tab: "live", label: "Go to Live" },
   { tab: "search", label: "Go to Search" },
   { tab: "timeline", label: "Go to Timeline" },
-  { tab: "devices", label: "Go to Devices" },
-  { tab: "pipes", label: "Go to Pipes" },
+  { tab: "pipes", label: "Go to Automations" },
   { tab: "settings", label: "Go to Settings" },
   { tab: "advanced", label: "Go to Advanced" },
 ];

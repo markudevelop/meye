@@ -29,10 +29,13 @@ function dispatch(cmd: { action: string; arg: string }) {
       startNewChat();
       toast("🎙 New chat");
       break;
-    case "open":
-      goTab(cmd.arg as Tab);
+    case "open": {
+      // status/devices/performance are now sub-tabs of Settings; map them so we don't open a tab that no longer exists.
+      const map: Record<string, Tab> = { status: "settings", devices: "settings", performance: "settings", chat: "home" };
+      goTab((map[cmd.arg] ?? cmd.arg) as Tab);
       toast(`🎙 Opened ${cmd.arg}`);
       break;
+    }
     case "search":
       goTab("search");
       runSearchWith(cmd.arg);

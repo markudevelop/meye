@@ -148,6 +148,14 @@ h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacin
 /* developer-only elements — hidden unless body.dev */
 body:not(.dev) .dev-only { display: none !important; }
 
+/* Settings sub-tabs (segmented nav) */
+.subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 4px 0 18px; flex-wrap: wrap; }
+.subtab { background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 9px 12px; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; }
+.subtab:hover { background: var(--hover); color: var(--text); border-color: transparent; }
+.subtab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; background: none; }
+.subpanel { animation: fadein 0.12s ease; }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+
 /* Per-pipe schedule control (Pipes tab) */
 .sched-inline .meta { flex: none; }
 .sched-select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elev); color: var(--text); font: inherit; font-size: 13px; }
