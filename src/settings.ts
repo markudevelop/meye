@@ -7,12 +7,13 @@ function esc(s: string): string {
 
 export async function refreshSettings() {
   const out = $("set-list");
-  out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
+  out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Loading models…</div>';
   try {
     const res = await api.modelsList();
     const presets: any[] = Array.isArray(res) ? res : (res.data ?? []);
     if (!presets.length) {
-      out.innerHTML = "<p class='meta'>No AI presets yet — add one below so pipes can run.</p>";
+      out.innerHTML =
+        "<div class='empty-state'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M12 8V4M8 8H4v4M12 16v4m4-8h4'/><circle cx='12' cy='12' r='3'/></svg><div class='es-title'>No AI model yet</div><div class='es-sub'>Add one below so chat &amp; automations can think.</div></div>";
       return;
     }
     out.innerHTML = "";

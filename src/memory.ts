@@ -42,7 +42,7 @@ function card(hit: any): string {
 async function loadMore() {
   if (loading || done) return;
   loading = true;
-  const spinner = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
+  const spinner = `<div class="loading-row"><span class="run-spin"></span> ${query ? "Searching your memory…" : "Loading your memory…"}</div>`;
   if (offset === 0) $("mem-feed").innerHTML = spinner;
   else $("mem-feed").insertAdjacentHTML("beforeend", `<div class="loading-row" id="mem-more"><span class="run-spin"></span></div>`);
   try {
@@ -54,9 +54,9 @@ async function loadMore() {
       done = true;
       $("mem-end").classList.remove("hidden");
       if (offset === 0)
-        $("mem-feed").innerHTML = `<p class="meta">${
-          query ? "No matches for that search." : "No recordings yet — check the recorder in Settings → Recorder."
-        }</p>`;
+        $("mem-feed").innerHTML = query
+          ? `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><div class="es-title">No matches for "${esc(query)}"</div><div class="es-sub">Try fewer or different words.</div></div>`
+          : `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="es-title">Nothing here yet</div><div class="es-sub">Your memory fills up as you work. Make sure recording is on in Settings → Recorder.</div></div>`;
       return;
     }
     $("mem-feed").insertAdjacentHTML("beforeend", data.map(card).join(""));

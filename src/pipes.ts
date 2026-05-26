@@ -96,12 +96,13 @@ export async function refreshPipes() {
   // Auto-refresh runs on a timer — skip a rebuild while the user is interacting with the list
   // (e.g. typing a custom cron), so we never steal focus or wipe input.
   if (out.children.length && document.activeElement && out.contains(document.activeElement)) return;
-  if (!out.children.length || out.textContent === "—") out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
+  if (!out.children.length || out.textContent === "—") out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Loading automations…</div>';
   try {
     const res = await api.pipeList();
     const pipes: any[] = Array.isArray(res) ? res : (res.data ?? res.pipes ?? []);
     if (!pipes.length) {
-      out.textContent = "No pipes installed.";
+      out.innerHTML =
+        '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4m8-8h-4M6 12H2"/><circle cx="12" cy="12" r="3"/></svg><div class="es-title">No automations yet</div><div class="es-sub">Add one from the store below to turn your recordings into notes, summaries &amp; more.</div></div>';
       return;
     }
     out.innerHTML = "";
