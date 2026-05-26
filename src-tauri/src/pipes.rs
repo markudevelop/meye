@@ -18,10 +18,55 @@ fn run_pipe(args: &[&str]) -> Result<String, String> {
     }
 }
 
-/// List all pipes as parsed JSON (`screenpipe pipe list --json`).
+/// Pure: turn a run-log filename ("20260525_085953.json") into a readable
+/// "YYYY-MM-DD HH:MM" stamp. screenpipe names each run log by its start time.
+pub fn parse_log_stamp(filename: &str) -> Option<String> {
+    let stem = filename.strip_suffix(".json").unwrap_or(filename);
+    let b = stem.as_bytes();
+    // Expect YYYYMMDD_HHMMSS
+    if stem.len() >= 15 && b.get(8) == Some(&b'_') && stem[..8].bytes().all(|c| c.is_ascii_digit()) {
+        let d = &stem[0..8];
+        let t = &stem[9..15];
+        Some(format!("{}-{}-{} {}:{}", &d[0..4], &d[4..6], &d[6..8], &t[0..2], &t[2..4]))
+    } else {
+        None
+    }
+}
+
+/// The most recent run time for a pipe, derived from its `logs/` directory — screenpipe's
+/// `pipe list` JSON reports `last_run: null` even for pipes that run on schedule, so we read
+/// the newest timestamped run log instead.
+fn last_run_from_logs(name: &str) -> Option<String> {
+    let dir = pipe_dir(name).ok()?.join("logs");
+    let newest = std::fs::read_dir(&dir)
+        .ok()?
+        .flatten()
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .filter(|n| n.ends_with(".json"))
+        .max()?; // filename is YYYYMMDD_HHMMSS → lexicographic order == chronological
+    parse_log_stamp(&newest)
+}
+
+/// List all pipes as parsed JSON (`screenpipe pipe list --json`), enriching `last_run` from
+/// each pipe's run logs when screenpipe reports it as null.
 pub fn list() -> Result<Value, String> {
     let stdout = run_pipe(&["list", "--json"])?;
-    serde_json::from_str(&stdout).map_err(|e| format!("could not parse pipe list JSON: {e}"))
+    let mut v: Value =
+        serde_json::from_str(&stdout).map_err(|e| format!("could not parse pipe list JSON: {e}"))?;
+    if let Some(arr) = v.as_array_mut() {
+        for p in arr.iter_mut() {
+            let needs = p.get("last_run").map(|x| x.is_null()).unwrap_or(true);
+            if !needs {
+                continue;
+            }
+            if let Some(name) = p.pointer("/config/name").and_then(|n| n.as_str()).map(String::from) {
+                if let Some(stamp) = last_run_from_logs(&name) {
+                    p["last_run"] = Value::String(stamp);
+                }
+            }
+        }
+    }
+    Ok(v)
 }
 
 pub fn run_once(name: &str) -> Result<String, String> {
@@ -276,6 +321,14 @@ notion-crm-sync                productivity    25         Auto-detect business c
         assert_eq!(arr[0]["category"], "productivity");
         assert_eq!(arr[0]["installs"], "45");
         assert!(arr[0]["description"].as_str().unwrap().contains("Synchronize"));
+    }
+
+    #[test]
+    fn parse_log_stamp_formats_run_filename() {
+        assert_eq!(parse_log_stamp("20260525_085953.json").as_deref(), Some("2026-05-25 08:59"));
+        assert_eq!(parse_log_stamp("20260101_000000.json").as_deref(), Some("2026-01-01 00:00"));
+        assert_eq!(parse_log_stamp("not-a-stamp.json"), None);
+        assert_eq!(parse_log_stamp("README.md"), None);
     }
 
     #[test]
