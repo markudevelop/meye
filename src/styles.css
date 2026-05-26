@@ -6,10 +6,12 @@
   --muted: #76767e;
   --border: #e7e7ec;
   --accent: #6d5efc;
+  --accent-hover: #5a4af2;
   --accent-soft: rgba(109, 94, 252, 0.12);
+  --ring: rgba(109, 94, 252, 0.32);
   --hover: rgba(0, 0, 0, 0.045);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 20px rgba(0, 0, 0, 0.04);
-  --radius: 10px;
+  --radius: 11px;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   font-size: 14px;
   color-scheme: light dark;
@@ -24,7 +26,9 @@
     --muted: #9a9aa3;
     --border: #2b2c31;
     --accent: #8f81ff;
+    --accent-hover: #a397ff;
     --accent-soft: rgba(143, 129, 255, 0.16);
+    --ring: rgba(143, 129, 255, 0.4);
     --hover: rgba(255, 255, 255, 0.06);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.28);
   }
@@ -81,7 +85,7 @@ body { background: var(--bg); color: var(--text); overflow: hidden; }
 
 /* ---------- main ---------- */
 .main { flex: 1; overflow-y: auto; }
-.content { max-width: 1040px; margin: 0 auto; padding: 24px 36px; }
+.content { max-width: 1000px; margin: 0 auto; padding: 30px 42px; }
 
 /* dashboard stat cards */
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
@@ -165,29 +169,33 @@ body:not(.dev) .dev-only { display: none !important; }
 
 /* ---------- controls ---------- */
 button {
-  padding: 8px 14px; border-radius: 8px;
+  padding: 8px 15px; border-radius: 9px;
   border: 1px solid var(--border); background: var(--bg-elev);
-  color: var(--text); cursor: pointer; font: inherit; font-size: 13px; font-weight: 500;
-  transition: background 0.12s, border-color 0.12s, transform 0.04s;
+  color: var(--text); cursor: pointer; font: inherit; font-size: 13px; font-weight: 550;
+  transition: background 0.13s, border-color 0.13s, box-shadow 0.13s, transform 0.06s;
 }
 button:hover { background: var(--hover); border-color: var(--muted); }
-button:active { transform: translateY(0.5px); }
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.primary:hover { filter: brightness(1.07); }
+button:active { transform: translateY(1px); }
+button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+button.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 button.danger { background: #ff3b30; border-color: #ff3b30; color: #fff; }
-button.danger:hover { filter: brightness(1.08); background: #ff3b30; }
+button.danger:hover { filter: brightness(1.07); background: #ff3b30; }
 button:disabled { opacity: 0.4; cursor: default; }
 button:disabled:hover { background: var(--bg-elev); border-color: var(--border); filter: none; }
 
 input, select, textarea {
-  padding: 8px 11px; border-radius: 8px;
+  padding: 9px 12px; border-radius: 9px;
   border: 1px solid var(--border); background: var(--bg);
   color: var(--text); font: inherit; font-size: 13px;
-  outline: none; transition: border-color 0.12s, box-shadow 0.12s;
+  outline: none; transition: border-color 0.13s, box-shadow 0.13s;
 }
+input:hover, select:hover, textarea:hover { border-color: var(--muted); }
 input:focus, select:focus, textarea:focus {
-  border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft);
+  border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring);
 }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.75; }
+select { cursor: pointer; }
 textarea { resize: vertical; font-family: inherit; }
 #s-q, #r-q, #set-id, #set-model, #set-url, #set-key { flex: 1; }
 
