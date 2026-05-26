@@ -142,14 +142,16 @@ export async function refreshPerf() {
   ]);
   if (devs) ({ mic: micName, sys: sysName } = pickDevices(devs));
   const p = h?.pipeline ?? {};
+  const ap = h?.audio_pipeline ?? {};
+  const queued = ap.pending_transcription_segments ?? 0;
   $("perf-stats").innerHTML =
     stat("Recorder CPU", `${(s.cpu ?? 0).toFixed(1)}%`) +
     stat("Recorder RAM", `${s.rss_mb ?? 0} MB`) +
-    stat("Capture FPS", (p.capture_fps_actual ?? 0).toFixed(3)) +
-    stat("DB latency", `${Math.round(p.avg_db_latency_ms ?? 0)} ms`) +
+    stat("Audio queued", `${queued}${queued > 0 ? " ⏳" : " ✓"}`) +
+    stat("Transcribed", String(ap.transcriptions_completed ?? 0)) +
     stat("DB size", `${s.db_mb ?? 0} MB`) +
     stat("Media size", `${s.data_mb ?? 0} MB`) +
-    stat("Pending transcripts", String(h?.audio_pipeline?.pending_transcription_segments ?? 0));
+    stat("Capture FPS", (p.capture_fps_actual ?? 0).toFixed(3));
   $("perf-flags").textContent = args.length ? args.join(" ") : "(defaults — no tuning applied)";
   const prof = activeProfile(args);
   for (const key of ["saver", "balanced", "performance"] as const) {

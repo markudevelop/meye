@@ -91,6 +91,12 @@ pub fn generate_plist(program_args: &[String], out_log: &str, err_log: &str) -> 
   <true/>
   <key>RunAtLoad</key>
   <true/>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>Nice</key>
+  <integer>10</integer>
+  <key>LowPriorityIO</key>
+  <true/>
   <key>StandardOutPath</key>
   <string>{out}</string>
   <key>StandardErrorPath</key>
@@ -267,6 +273,10 @@ mod tests {
         assert!(xml.contains("com.meye.recorder.agent"));
         assert!(xml.contains("<key>KeepAlive</key>"));
         assert!(xml.contains("<key>RunAtLoad</key>"));
+        // Background priority so the recorder yields CPU to foreground apps.
+        assert!(xml.contains("<key>ProcessType</key>"));
+        assert!(xml.contains("<string>Background</string>"));
+        assert!(xml.contains("<key>Nice</key>"));
         assert!(xml.contains("<string>/bin/sp</string>"));
         assert!(xml.contains("<string>record</string>"));
         assert!(xml.contains("/tmp/o.log"));
