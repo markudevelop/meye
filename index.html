@@ -208,23 +208,47 @@
               <div class="section-title">Power profile</div>
               <div class="section-desc">Lower = lighter on battery and memory. Higher = more detail captured.</div>
               <div class="row">
-                <button id="perf-saver">🔋 Battery Saver</button>
-                <button id="perf-balanced" class="primary">⚖️ Balanced</button>
-                <button id="perf-performance">⚡ Performance</button>
+                <button id="perf-saver" class="profile-btn">🔋 Battery Saver</button>
+                <button id="perf-balanced" class="profile-btn">⚖️ Balanced</button>
+                <button id="perf-performance" class="profile-btn">⚡ Performance</button>
+              </div>
+            </div>
+
+            <div class="section">
+              <div class="section-title">Capture sources</div>
+              <div class="section-desc">Choose what Meye records. Turn off anything you don't want captured.</div>
+              <div class="toggle-row">
+                <div class="tr-text">
+                  <div class="tr-title">🖥 Screen (video)</div>
+                  <div class="tr-desc">Captures your screen for Search &amp; Timeline. Turning off removes the macOS recording dot.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="cap-video" /><span class="slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="tr-text">
+                  <div class="tr-title">🎙 Microphone</div>
+                  <div class="tr-desc">Records &amp; transcribes your microphone.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="cap-mic" /><span class="slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="tr-text">
+                  <div class="tr-title">🔊 Computer audio</div>
+                  <div class="tr-desc">Records sound coming out of your Mac (calls, videos). On a call this captures the other people too — mind their consent.</div>
+                </div>
+                <label class="switch"><input type="checkbox" id="cap-pc" /><span class="slider"></span></label>
               </div>
             </div>
 
             <div class="section">
               <div class="section-title">Audio accuracy</div>
-              <div class="section-desc">Better transcription uses more memory. Off disables audio entirely.</div>
+              <div class="section-desc">Better transcription uses more memory. (Only matters if an audio source is on.)</div>
               <div class="row">
                 <select id="perf-audio">
-                  <option value="off">Off — no audio, lowest memory</option>
                   <option value="tiny">Light — ~250 MB, basic accuracy</option>
                   <option value="balanced">Balanced — ~430 MB</option>
                   <option value="best">Best — top accuracy, most memory</option>
                 </select>
-                <button id="perf-pause">⏸ Pause screen capture</button>
               </div>
             </div>
 
