@@ -235,7 +235,11 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 .home-main.empty #home-feed { display: none; }
 .home-main.empty .composer-wrap { max-width: 640px; width: 100%; margin: 0 auto; }
 .home-hero { text-align: center; max-width: 600px; margin: 0 auto 26px; }
-.hero-eye { width: 46px; height: 46px; color: var(--accent); }
+.hero-eye { width: 46px; height: 46px; color: var(--accent); animation: heroFloat 3.5s ease-in-out infinite; }
+@keyframes heroFloat { 0%, 100% { transform: translateY(0); opacity: 0.92; } 50% { transform: translateY(-5px); opacity: 1; } }
+/* friendly hover lift on content cards */
+.pipe-card, .tl-card { transition: border-color 0.14s, transform 0.1s, box-shadow 0.14s; }
+.pipe-card:hover, .tl-card:hover { border-color: var(--muted); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06); }
 .home-hero h1 { font-size: 27px; font-weight: 680; letter-spacing: -0.025em; margin: 16px 0 8px; }
 .hero-chips { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
 .chip { border-radius: 999px; padding: 8px 15px; font-size: 13px; background: var(--bg-elev); transition: background 0.12s, transform 0.04s; }

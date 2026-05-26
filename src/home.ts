@@ -113,6 +113,12 @@ function feed(): HTMLElement {
 function setEmpty(empty: boolean) {
   document.querySelector(".home-main")?.classList.toggle("empty", empty);
   document.getElementById("home-hero")?.classList.toggle("hidden", !empty);
+  if (empty) {
+    const h = new Date().getHours();
+    const g = h < 5 ? "Working late? 🌙" : h < 12 ? "Good morning ☀️" : h < 18 ? "Good afternoon 👋" : "Good evening 🌙";
+    const el = document.getElementById("hero-greeting");
+    if (el) el.textContent = g;
+  }
 }
 
 function add(e: any): HTMLElement {
