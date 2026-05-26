@@ -1,10 +1,9 @@
 import { $, wrap } from "./ui";
 import { api } from "./api";
-import { goTab } from "./tabs";
-import { showSettingsSub } from "./main";
 
 // First-run onboarding overlay: welcome → set up the recorder (permissions) → connect a model.
-// Shown once; "meye.onboarded" in localStorage marks completion.
+// Only shown on a genuine first run (recorder not installed). For an already-set-up Mac we mark
+// it done immediately — re-running setup would re-sign the recorder and reset its permissions.
 
 const KEY = "meye.onboarded";
 let step = 0;
@@ -34,15 +33,18 @@ export function initOnboarding() {
       "✓ Recorder installed. If macOS asked for Screen Recording / Microphone, allow <b>Meye Recorder</b>, then continue.";
   };
 
-  $("onboard-open-ai").onclick = () => {
-    finish();
-    goTab("settings");
-    showSettingsSub("ai");
-  };
-
-  // Show on first run only.
-  if (localStorage.getItem(KEY) !== "1") {
-    show(0);
-    $("onboard").classList.remove("hidden");
-  }
+  if (localStorage.getItem(KEY) === "1") return;
+  // Don't show (and never re-run setup) if the recorder is already installed — that's what was
+  // resetting permissions. Mark onboarded so it stays out of the way.
+  api
+    .getState()
+    .then((st) => {
+      if (st.installed) {
+        localStorage.setItem(KEY, "1");
+        return;
+      }
+      show(0);
+      $("onboard").classList.remove("hidden");
+    })
+    .catch(() => {});
 }
