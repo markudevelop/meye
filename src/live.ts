@@ -24,23 +24,36 @@ async function tick() {
       api.search({ content_type: "ocr", limit: 1 }) as Promise<any>,
       api.search({ content_type: "audio", limit: 6 }) as Promise<any>,
       api.getRecordArgs().catch(() => [] as string[]),
+      api.getHealth().catch(() => null) as Promise<any>,
     ]);
 
-    // Which sources are recording (parsed from the live record args).
+    // Actual runtime status from /health is the source of truth — args can say "audio on"
+    // while the OS blocks it (e.g. Microphone permission reset), in which case audio_status
+    // is "disabled" and frame_status goes "stale".
+    const audioDisabled = (h?.audio_status ?? "") === "disabled";
+    const frameStale = !!h?.frame_status && h.frame_status !== "ok";
+
+    // Which sources are configured (record args) AND actually working (health).
     const video = !args.includes("--disable-vision");
-    const audioOff = args.includes("--disable-audio");
+    const audioOff = args.includes("--disable-audio") || audioDisabled;
     const devs: string[] = [];
     for (let i = 0; i < args.length; i++) if (args[i] === "--audio-device") devs.push(args[i + 1] ?? "");
     const micOn = !audioOff && (devs.length === 0 || devs.some((d) => /input|microphone|mic/i.test(d)));
     const pcOn = !audioOff && (devs.length === 0 || devs.some((d) => /output|system/i.test(d)));
-    $("live-sources").innerHTML = pill("🖥 Screen", video) + pill("🎙 Microphone", micOn) + pill("🔊 Computer audio", pcOn);
+    $("live-sources").innerHTML = pill("🖥 Screen", video && !frameStale) + pill("🎙 Microphone", micOn) + pill("🔊 Computer audio", pcOn);
 
-    const anyOn = video || micOn || pcOn;
-    $("live-badge").innerHTML = `<span class="dot ${anyOn ? "green" : "grey"}"></span><span>${anyOn ? "Recording" : "Idle"}</span>`;
+    const anyOn = (video && !frameStale) || micOn || pcOn;
+    $("live-badge").innerHTML = `<span class="dot ${anyOn ? "green" : "grey"}"></span><span>${anyOn ? "Recording" : "Not capturing"}</span>`;
 
     // Latest screen frame (only rebuild the <img> when the frame id changes, to avoid flicker).
     const f = (frameRes.data ?? [])[0];
-    if (f) {
+    if (!video) {
+      lastFrameId = null;
+      $("live-frame").innerHTML = "<div class='empty-state'><div class='es-title'>Screen capture is off</div><div class='es-sub'>Turn it on in Performance → Capture sources.</div></div>";
+    } else if (frameStale) {
+      lastFrameId = null;
+      $("live-frame").innerHTML = "<div class='empty-state'><div class='es-title'>⚠ Screen capture stalled</div><div class='es-sub'>The recorder isn't getting fresh frames — Screen Recording permission was likely reset. Re-grant it (Status tab), then Stop/Start.</div></div>";
+    } else if (f) {
       const c = f.content ?? f;
       const id = c.frame_id ?? c.frameId ?? c.id ?? null;
       if (id !== lastFrameId) {
@@ -51,23 +64,28 @@ async function tick() {
             ? `<img src="http://127.0.0.1:3030/frames/${id}" /><div class="live-cap">${cap}</div>`
             : "<p class='meta'>No frames captured yet.</p>";
       }
-    } else if (!video) {
-      lastFrameId = null;
-      $("live-frame").innerHTML = "<div class='empty-state'><div class='es-title'>Screen capture is off</div><div class='es-sub'>Turn it on in Performance → Capture sources.</div></div>";
     }
 
     // Recent audio transcripts.
     const lines = ((audioRes.data ?? []) as any[])
-      .map((h) => {
-        const c = h.content ?? h;
+      .map((hit) => {
+        const c = hit.content ?? hit;
         return { ts: String(c.timestamp ?? ""), text: String(c.transcription ?? c.text ?? "").trim() };
       })
       .filter((l) => l.text);
-    $("live-audio").innerHTML = lines.length
-      ? lines.map((l) => `<div class="live-line"><span class="live-line-time">${esc(fmtTime(l.ts))}</span> ${esc(l.text)}</div>`).join("")
-      : audioOff
-        ? "<div class='empty-state'><div class='es-title'>Audio capture is off</div><div class='es-sub'>Turn on Microphone or Computer audio in Performance.</div></div>"
-        : "<p class='meta'>Listening… nothing transcribed in the last clips.</p>";
+    if (audioDisabled) {
+      $("live-audio").innerHTML =
+        "<div class='empty-state'><div class='es-title'>Audio capture is off</div><div class='es-sub'>macOS reports audio disabled — the Microphone permission was likely reset. Re-grant it in System Settings → Privacy → Microphone, then Status → Stop/Start. Or enable a source in Performance → Capture sources.</div></div>";
+    } else if (audioOff) {
+      $("live-audio").innerHTML =
+        "<div class='empty-state'><div class='es-title'>Audio capture is off</div><div class='es-sub'>Turn on Microphone or Computer audio in Performance.</div></div>";
+    } else if (lines.length) {
+      $("live-audio").innerHTML = lines
+        .map((l) => `<div class="live-line"><span class="live-line-time">${esc(fmtTime(l.ts))}</span> ${esc(l.text)}</div>`)
+        .join("");
+    } else {
+      $("live-audio").innerHTML = "<p class='meta'>Listening… nothing transcribed in the last clips.</p>";
+    }
   } catch {
     $("live-frame").innerHTML = "<p class='warn'>Can't reach the recorder — check the Status tab.</p>";
   }
