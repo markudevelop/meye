@@ -131,6 +131,7 @@
               <button class="subtab active" data-sub="recorder">Recorder</button>
               <button class="subtab" data-sub="capture">Capture &amp; Performance</button>
               <button class="subtab" data-sub="devices">Devices</button>
+              <button class="subtab" data-sub="privacy">Privacy &amp; Storage</button>
               <button class="subtab" data-sub="ai">AI &amp; Advanced</button>
             </nav>
 
@@ -235,6 +236,35 @@
                 <div class="section-title">Microphones &amp; audio</div>
                 <div id="d-audio">—</div>
                 <div class="row dev-only"><button id="d-audio-start">Start audio</button><button id="d-audio-stop">Stop audio</button></div>
+              </div>
+            </div>
+
+            <div id="sub-privacy" class="subpanel hidden">
+              <p class="page-intro">Everything is stored only on this Mac. Control how much is kept and clean up space — recordings grow ~continuously.</p>
+              <div id="priv-storage" class="stats"></div>
+              <div class="section">
+                <div class="section-title">Auto-delete old recordings</div>
+                <div class="section-desc">Reclaim space past a cutoff. By default it frees the video/audio files but keeps the searchable text &amp; timeline; tick the box to wipe those too.</div>
+                <div class="row">
+                  <select id="priv-retention">
+                    <option value="0">Keep forever</option>
+                    <option value="7">Keep last 7 days</option>
+                    <option value="14">Keep last 14 days</option>
+                    <option value="30">Keep last 30 days</option>
+                    <option value="90">Keep last 90 days</option>
+                  </select>
+                  <label class="check"><input type="checkbox" id="priv-mode-all" /> Also delete transcripts &amp; text</label>
+                </div>
+                <p id="priv-retention-status" class="meta"></p>
+              </div>
+              <div class="section">
+                <div class="section-title">Delete recent recordings</div>
+                <div class="section-desc">Just did something private? Permanently remove recent recordings. <b>This can't be undone.</b></div>
+                <div class="row">
+                  <button id="priv-del-hour">Delete last hour</button>
+                  <button id="priv-del-today">Delete today</button>
+                </div>
+                <p id="priv-del-status" class="meta"></p>
               </div>
             </div>
 

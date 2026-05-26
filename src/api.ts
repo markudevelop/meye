@@ -75,6 +75,11 @@ export const api = {
   convoUnarchive: (id: string) => invoke("api_convo_unarchive", { id }) as Promise<void>,
   getRecordArgs: () => invoke("api_get_record_args") as Promise<string[]>,
   setRecordArgs: (args: string[]) => invoke("api_set_record_args", { args }) as Promise<void>,
+  retentionStatus: () => invoke("api_retention_status") as Promise<any>,
+  retentionConfigure: (enabled: boolean, days: number, mode: string) =>
+    invoke("api_retention_configure", { enabled, days, mode }) as Promise<any>,
+  storagePreview: (olderThanDays: number) => invoke("api_storage_preview", { olderThanDays }) as Promise<any>,
+  deleteRange: (start: string, end: string) => invoke("api_delete_range", { start, end }) as Promise<any>,
   getDiscreet: () => invoke("api_get_discreet") as Promise<boolean>,
   setDiscreet: (on: boolean) => invoke("api_set_discreet", { on }) as Promise<void>,
   parseVoiceCommand: (transcript: string) =>

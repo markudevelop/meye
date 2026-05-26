@@ -149,6 +149,31 @@ pub async fn remove_tags(kind: &str, id: i64, tags: Vec<String>) -> Result<Value
         .map_err(|e| e.to_string())
 }
 
+// --- privacy / storage ---
+
+pub async fn retention_status() -> Result<Value, String> {
+    get_json("/retention/status", &[]).await
+}
+
+/// Configure auto-deletion of old recordings. mode: "media" (reclaim files, keep transcripts) or "all".
+pub async fn retention_configure(enabled: bool, days: u32, mode: &str) -> Result<Value, String> {
+    post(
+        "/retention/configure",
+        serde_json::json!({ "enabled": enabled, "retention_days": days, "mode": mode }),
+    )
+    .await
+}
+
+/// How much would be freed by deleting recordings older than N days.
+pub async fn storage_preview(older_than_days: u32) -> Result<Value, String> {
+    get_json("/data/storage-preview", &[("older_than_days".into(), older_than_days.to_string())]).await
+}
+
+/// Permanently delete recordings in an RFC3339 time range [start, end].
+pub async fn delete_range(start: &str, end: &str) -> Result<Value, String> {
+    post("/data/delete-range", serde_json::json!({ "start": start, "end": end })).await
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

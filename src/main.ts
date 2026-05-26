@@ -9,6 +9,7 @@ import { initSettings, refreshSettings } from "./settings";
 import { initPerformance, refreshPerf, refreshPerfStats } from "./performance";
 import { initPalette } from "./palette";
 import { initVoice } from "./voice";
+import { initPrivacy, refreshPrivacy } from "./privacy";
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
@@ -23,6 +24,7 @@ initDevices();
 initPipes();
 initSettings();
 initPerformance();
+initPrivacy();
 initVoice();
 
 $("a-go").onclick = () =>
@@ -36,6 +38,7 @@ const SUB_REFRESH: Record<string, () => void> = {
   recorder: () => refreshHealth(),
   capture: () => void refreshPerf(),
   devices: () => void refreshDevices(),
+  privacy: () => void refreshPrivacy(),
   ai: () => void refreshSettings(),
 };
 let activeSub = "recorder";

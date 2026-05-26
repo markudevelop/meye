@@ -174,6 +174,26 @@ pub async fn api_remove_tags(kind: String, id: i64, tags: Vec<String>) -> Result
 }
 
 #[tauri::command]
+pub async fn api_retention_status() -> Result<Value, String> {
+    screenpipe_api::retention_status().await
+}
+
+#[tauri::command]
+pub async fn api_retention_configure(enabled: bool, days: u32, mode: String) -> Result<Value, String> {
+    screenpipe_api::retention_configure(enabled, days, &mode).await
+}
+
+#[tauri::command]
+pub async fn api_storage_preview(older_than_days: u32) -> Result<Value, String> {
+    screenpipe_api::storage_preview(older_than_days).await
+}
+
+#[tauri::command]
+pub async fn api_delete_range(start: String, end: String) -> Result<Value, String> {
+    screenpipe_api::delete_range(&start, &end).await
+}
+
+#[tauri::command]
 pub async fn api_pipe_list() -> Result<Value, String> {
     tauri::async_runtime::spawn_blocking(crate::pipes::list)
         .await
