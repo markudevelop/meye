@@ -1,5 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import { initTabs, type Tab } from "./tabs";
+import { initTabs, goTab, type Tab } from "./tabs";
 import { initHome, loadHome } from "./home";
 import { initStatus, refreshHealth } from "./status";
 import { initSearch } from "./search";
@@ -41,6 +41,9 @@ initTabs((tab: Tab) => {
   if (tab === "settings") void refreshSettings();
   if (tab === "performance") void refreshPerf();
 });
+
+// Sidebar footer (status dot + label) is a shortcut to the Status tab — start/stop from there.
+$("side-foot").onclick = () => goTab("status");
 
 listen("status", (e) => (window as any).__meyeApplyStatus?.(e.payload));
 

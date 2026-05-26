@@ -71,9 +71,13 @@ body { background: var(--bg); color: var(--text); overflow: hidden; }
 
 .side-foot {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 11px 4px; border-top: 1px solid var(--border);
-  font-size: 12px;
+  width: 100%; margin-top: 4px; padding: 9px 11px;
+  border: none; border-top: 1px solid var(--border); border-radius: 0;
+  background: none; color: var(--muted); font-size: 12px;
+  cursor: pointer; text-align: left;
 }
+.side-foot:hover { background: var(--hover); border-top-color: var(--border); }
+.side-foot-arrow { width: 14px; height: 14px; margin-left: auto; opacity: 0.5; flex-shrink: 0; }
 
 /* ---------- main ---------- */
 .main { flex: 1; overflow-y: auto; }
