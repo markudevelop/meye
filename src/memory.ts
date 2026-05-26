@@ -1,5 +1,6 @@
 import { $ } from "./ui";
 import { api } from "./api";
+import { renderMarkdown } from "./md";
 
 // Memory = the one place to look at everything Meye has captured. A search bar on top
 // (empty = live-updating timeline feed; typing = filtered results), a small live peek of the
@@ -109,6 +110,14 @@ async function tickLive() {
   }
 }
 
+// Auto-surface new recordings: only when not searching, not loading, and the user is parked at
+// the top — so we never yank the page while they scroll or search.
+let feedTimer: ReturnType<typeof setInterval> | null = null;
+function maybeRefreshFeed() {
+  const main = document.querySelector(".main") as HTMLElement | null;
+  if (query === "" && !loading && main && main.scrollTop < 40) resetFeed();
+}
+
 export function startMemory() {
   if (offset === 0 && !$("mem-feed").children.length) resetFeed();
   if (!liveTimer) {
@@ -116,6 +125,7 @@ export function startMemory() {
     void tickLive();
     liveTimer = setInterval(() => void tickLive(), 4000);
   }
+  if (!feedTimer) feedTimer = setInterval(maybeRefreshFeed, 12000);
 }
 
 export function stopMemory() {
@@ -123,9 +133,31 @@ export function stopMemory() {
     clearInterval(liveTimer);
     liveTimer = null;
   }
+  if (feedTimer) {
+    clearInterval(feedTimer);
+    feedTimer = null;
+  }
+}
+
+/** Generate an AI recap of today's activity from the recordings (on demand). */
+async function recapDay() {
+  const out = $("mem-today-out");
+  const btn = $("mem-today-btn") as HTMLButtonElement;
+  btn.disabled = true;
+  out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Summarizing your day…</div>';
+  try {
+    const r = await api.chat(
+      "Give me a concise recap of what I worked on and did today, based on my screen and audio recordings. A few short bullet points grouped by topic; skip anything you have no data for."
+    );
+    out.innerHTML = `<div class="md mem-today-md">${renderMarkdown(r.answer)}</div>`;
+  } catch (e) {
+    out.innerHTML = `<p class="warn">Couldn't generate a recap: ${esc(String(e))} (set an AI model in Settings → AI).</p>`;
+  }
+  btn.disabled = false;
 }
 
 export function initMemory() {
+  ($("mem-today-btn") as HTMLButtonElement).onclick = () => void recapDay();
   const q = $("mem-q") as HTMLInputElement;
   let deb: ReturnType<typeof setTimeout> | undefined;
   q.addEventListener("input", () => {

@@ -328,6 +328,8 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 #mem-type { border: none; background: none; color: var(--muted); font-size: 13px; padding: 6px; }
 #mem-type:focus { box-shadow: none; }
 .mem-live { margin-bottom: 14px; }
+.mem-today { margin-bottom: 16px; }
+.mem-today-md { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 10px; font-size: 13.5px; line-height: 1.55; }
 .mem-live-card { display: inline-flex; align-items: center; gap: 12px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 12px; padding: 8px; max-width: 100%; }
 .mem-live-card img { width: 120px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
 .mem-live-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
