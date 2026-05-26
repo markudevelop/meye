@@ -39,30 +39,7 @@ const AUDIO: Record<string, string[]> = {
   best: ["--audio-transcription-engine", "whisper-large-v3-turbo"],
 };
 
-// Live audio device names (filled by refreshPerf from /audio/list) used to build
-// --audio-device flags for the Microphone / Computer-audio capture toggles.
-let micName = "";
-let sysName = "";
-
-function pickDevices(res: any): { mic: string; sys: string } {
-  const arr: any[] = Array.isArray(res) ? res : (res?.data ?? []);
-  const inputs = arr.filter((d) => /\(input\)/i.test(d?.name ?? ""));
-  const outputs = arr.filter((d) => /\(output\)|system audio/i.test(d?.name ?? ""));
-  const mic = (inputs.find((d) => d.is_default) ?? inputs[0])?.name ?? "";
-  const sys = (outputs.find((d) => d.is_default) ?? outputs[0])?.name ?? "";
-  return { mic, sys };
-}
-
-/** Audio devices currently selected in args. No --audio-device + no --disable-audio = defaults (both on). */
-function audioState(args: string[]): { mic: boolean; pc: boolean } {
-  if (args.includes("--disable-audio")) return { mic: false, pc: false };
-  const devs: string[] = [];
-  for (let i = 0; i < args.length; i++) if (args[i] === "--audio-device") devs.push(args[i + 1]);
-  if (!devs.length) return { mic: true, pc: true };
-  return { mic: micName !== "" && devs.includes(micName), pc: sysName !== "" && devs.includes(sysName) };
-}
-
-/** Strip all audio source/engine flags so we can rebuild them cleanly. */
+/** Strip all audio source flags (devices / disable / system-default) so we can rebuild them cleanly. */
 function stripAudioSources(args: string[]): string[] {
   const out: string[] = [];
   for (let i = 0; i < args.length; i++) {
@@ -76,23 +53,63 @@ function stripAudioSources(args: string[]): string[] {
   return out;
 }
 
-/** Rebuild args for a given mic/pc selection, preserving the transcription engine (adding a default if missing). */
-function buildAudioArgs(args: string[], mic: boolean, pc: boolean): string[] {
-  let out = stripAudioSources(args);
-  if (!mic && !pc) {
-    out = out.filter((a, i) => a !== "--audio-transcription-engine" && out[i - 1] !== "--audio-transcription-engine");
-    out.push("--disable-audio");
-    return out;
-  }
-  if (!out.includes("--audio-transcription-engine")) out.push("--audio-transcription-engine", "whisper-tiny-quantized");
-  if (mic && micName) out.push("--audio-device", micName);
-  if (pc && sysName) out.push("--audio-device", sysName);
-  return out;
-}
-
 function setVideoArg(args: string[], on: boolean): string[] {
   const without = args.filter((a) => a !== "--disable-vision");
   return on ? without : [...without, "--disable-vision"];
+}
+
+function esc(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+}
+
+function devTitle(name: string): string {
+  if (/output|system audio/i.test(name)) return "🔊 " + name.replace(/\s*\(output\)/i, "");
+  return "🎙 " + name.replace(/\s*\(input\)/i, "");
+}
+
+/** Render one toggle per audio device from /audio/list, reflecting the current --audio-device selection. */
+function renderAudioDevices(devs: any, args: string[]) {
+  const list: any[] = Array.isArray(devs) ? devs : (devs?.data ?? []);
+  const el = $("cap-audio");
+  if (!list.length) {
+    el.innerHTML = "<p class='meta'>No audio devices found.</p>";
+    return;
+  }
+  const disabled = args.includes("--disable-audio");
+  const selected: string[] = [];
+  for (let i = 0; i < args.length; i++) if (args[i] === "--audio-device") selected.push(args[i + 1] ?? "");
+  el.innerHTML = "";
+  for (const d of list) {
+    const name = String(d?.name ?? "");
+    if (!name) continue;
+    const on = !disabled && selected.includes(name);
+    const row = document.createElement("div");
+    row.className = "toggle-row";
+    row.innerHTML =
+      `<div class="tr-text"><div class="tr-title">${esc(devTitle(name))}</div>` +
+      `<div class="tr-desc">${esc(name)}${d.is_default ? " · system default" : ""}</div></div>` +
+      `<label class="switch"><input type="checkbox"${on ? " checked" : ""} /><span class="slider"></span></label>`;
+    const cb = row.querySelector("input") as HTMLInputElement;
+    cb.onchange = () => void toggleDevice(name, cb.checked);
+    el.appendChild(row);
+  }
+}
+
+/** Add/remove one audio device from the capture set, then apply. No devices => audio off. */
+async function toggleDevice(name: string, on: boolean) {
+  const cur = await api.getRecordArgs().catch(() => [] as string[]);
+  let sel: string[] = [];
+  for (let i = 0; i < cur.length; i++) if (cur[i] === "--audio-device") sel.push(cur[i + 1] ?? "");
+  sel = sel.filter((d) => d !== name);
+  if (on) sel.push(name);
+  const base = stripAudioSources(cur).filter((a) => a !== "--disable-audio");
+  if (sel.length === 0) {
+    base.push("--disable-audio");
+  } else {
+    if (!base.includes("--audio-transcription-engine")) base.push("--audio-transcription-engine", "whisper-large-v3-turbo");
+    for (const d of sel) base.push("--audio-device", d);
+  }
+  void applyArgs(base);
 }
 
 function stripAudio(args: string[]): string[] {
@@ -140,7 +157,6 @@ export async function refreshPerf() {
     api.getRecordArgs().catch(() => [] as string[]),
     api.audioDevices().catch(() => null),
   ]);
-  if (devs) ({ mic: micName, sys: sysName } = pickDevices(devs));
   const p = h?.pipeline ?? {};
   const ap = h?.audio_pipeline ?? {};
   const queued = ap.pending_transcription_segments ?? 0;
@@ -163,23 +179,22 @@ export async function refreshPerf() {
     .then((on) => (($("perf-discreet") as HTMLInputElement).checked = on))
     .catch(() => {});
   ($("perf-voice") as HTMLInputElement).checked = isVoiceEnabled();
-  // Capture-source toggles reflect the configured intent (the args)...
-  const aud = audioState(args);
+  // Screen toggle reflects config; audio is a per-device picker built from /audio/list.
   const videoOn = !args.includes("--disable-vision");
   ($("cap-video") as HTMLInputElement).checked = videoOn;
-  ($("cap-mic") as HTMLInputElement).checked = aud.mic;
-  ($("cap-pc") as HTMLInputElement).checked = aud.pc;
+  renderAudioDevices(devs, args);
 
-  // ...but show what the recorder is ACTUALLY capturing (from /health), since the two can
-  // disagree — e.g. audio "enabled" in settings but not actually capturing.
+  // Show what the recorder is ACTUALLY capturing (from /health), since config intent and
+  // reality can disagree (e.g. a device selected but macOS Microphone permission blocks it).
   const audioDisabled = (h?.audio_status ?? "") === "disabled";
   const frameOk = (h?.frame_status ?? "") === "ok";
+  const audioSelected = !args.includes("--disable-audio") && args.includes("--audio-device");
   const screenState = !videoOn ? "Screen off" : frameOk ? "Screen ✓" : "Screen ⚠ stalled";
-  const audioState_ = audioDisabled ? "Audio ✗ not capturing" : "Audio ✓";
-  let status = `<b>Actually capturing:</b> ${screenState} · ${audioState_}`;
-  if ((aud.mic || aud.pc) && audioDisabled) {
+  const audioStateLabel = audioDisabled ? "Audio ✗ not capturing" : "Audio ✓";
+  let status = `<b>Actually capturing:</b> ${screenState} · ${audioStateLabel}`;
+  if (audioSelected && audioDisabled) {
     status +=
-      " — audio is turned on here but the recorder isn't recording any. Computer-audio-only doesn't start capture on macOS; enable Microphone for audio, or this stays screen-only.";
+      " — a device is selected but the recorder isn't recording audio. macOS is blocking microphone access for the recorder (Privacy → Microphone → enable Meye Recorder).";
   }
   $("cap-status").innerHTML = status;
 }
@@ -245,14 +260,9 @@ export function initPerformance() {
     toast(on ? "🎙 Voice button shown — tap it, then speak a command" : "Voice button hidden");
   };
 
-  // Capture-source toggles (Screen / Microphone / Computer audio).
-  const onCapture = async (which: "video" | "mic" | "pc", on: boolean) => {
+  // Screen toggle; audio device toggles are wired per-row in renderAudioDevices().
+  ($("cap-video") as HTMLInputElement).onchange = async (e) => {
     const cur = await api.getRecordArgs().catch(() => [] as string[]);
-    if (which === "video") return void applyArgs(setVideoArg(cur, on));
-    const st = audioState(cur);
-    return void applyArgs(buildAudioArgs(cur, which === "mic" ? on : st.mic, which === "pc" ? on : st.pc));
+    void applyArgs(setVideoArg(cur, (e.target as HTMLInputElement).checked));
   };
-  ($("cap-video") as HTMLInputElement).onchange = (e) => void onCapture("video", (e.target as HTMLInputElement).checked);
-  ($("cap-mic") as HTMLInputElement).onchange = (e) => void onCapture("mic", (e.target as HTMLInputElement).checked);
-  ($("cap-pc") as HTMLInputElement).onchange = (e) => void onCapture("pc", (e.target as HTMLInputElement).checked);
 }

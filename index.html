@@ -243,20 +243,9 @@
                 </div>
                 <label class="switch"><input type="checkbox" id="cap-video" /><span class="slider"></span></label>
               </div>
-              <div class="toggle-row">
-                <div class="tr-text">
-                  <div class="tr-title">🎙 Microphone</div>
-                  <div class="tr-desc">Records &amp; transcribes your microphone.</div>
-                </div>
-                <label class="switch"><input type="checkbox" id="cap-mic" /><span class="slider"></span></label>
-              </div>
-              <div class="toggle-row">
-                <div class="tr-text">
-                  <div class="tr-title">🔊 Computer audio</div>
-                  <div class="tr-desc">Records sound coming out of your Mac (calls, videos). On a call this captures the other people too — mind their consent.</div>
-                </div>
-                <label class="switch"><input type="checkbox" id="cap-pc" /><span class="slider"></span></label>
-              </div>
+              <div class="tr-title" style="margin-top:10px">🎧 Audio devices</div>
+              <div class="section-desc">Pick exactly which mics/audio sources to record. <b>Tip:</b> enable one at a time and watch <b>Recorder CPU</b> above — that's how you find the heavy device.</div>
+              <div id="cap-audio"><p class="meta">Loading devices…</p></div>
               <p id="cap-status" class="meta"></p>
             </div>
 
