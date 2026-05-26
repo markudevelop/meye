@@ -20,7 +20,7 @@ function pill(label: string, on: boolean): string {
 
 async function tick() {
   try {
-    const [frameRes, audioRes, args] = await Promise.all([
+    const [frameRes, audioRes, args, h] = await Promise.all([
       api.search({ content_type: "ocr", limit: 1 }) as Promise<any>,
       api.search({ content_type: "audio", limit: 6 }) as Promise<any>,
       api.getRecordArgs().catch(() => [] as string[]),
