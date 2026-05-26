@@ -93,7 +93,10 @@ async function openEditor(name: string) {
 
 export async function refreshPipes() {
   const out = $("p-list");
-  out.textContent = "Loading…";
+  // Auto-refresh runs on a timer — skip a rebuild while the user is interacting with the list
+  // (e.g. typing a custom cron), so we never steal focus or wipe input.
+  if (out.children.length && document.activeElement && out.contains(document.activeElement)) return;
+  if (!out.children.length || out.textContent === "—") out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
   try {
     const res = await api.pipeList();
     const pipes: any[] = Array.isArray(res) ? res : (res.data ?? res.pipes ?? []);
@@ -259,7 +262,6 @@ async function renderRegistry(query: string) {
 }
 
 export function initPipes() {
-  $("p-refresh").onclick = () => void refreshPipes();
   $("r-go").onclick = () => void renderRegistry(($("r-q") as HTMLInputElement).value.trim());
   ($("r-q") as HTMLInputElement).addEventListener("keydown", (e) => {
     if ((e as KeyboardEvent).key === "Enter") void renderRegistry(($("r-q") as HTMLInputElement).value.trim());

@@ -150,12 +150,12 @@ function stat(label: string, val: string): string {
   return `<div class="stat"><span class="stat-label">${label}</span><span class="stat-val">${val}</span></div>`;
 }
 
-export async function refreshPerf() {
-  const [s, h, args, devs] = await Promise.all([
+/** Just the live numbers + "actually capturing" line — cheap, safe to poll (no list rebuilds). */
+export async function refreshPerfStats() {
+  const [s, h, args] = await Promise.all([
     api.perfStats(),
     api.getHealth().catch(() => null),
     api.getRecordArgs().catch(() => [] as string[]),
-    api.audioDevices().catch(() => null),
   ]);
   const p = h?.pipeline ?? {};
   const ap = h?.audio_pipeline ?? {};
@@ -168,6 +168,26 @@ export async function refreshPerf() {
     stat("DB size", `${s.db_mb ?? 0} MB`) +
     stat("Media size", `${s.data_mb ?? 0} MB`) +
     stat("Capture FPS", (p.capture_fps_actual ?? 0).toFixed(3));
+  const videoOn = !args.includes("--disable-vision");
+  const audioDisabled = (h?.audio_status ?? "") === "disabled";
+  const frameOk = (h?.frame_status ?? "") === "ok";
+  const audioSelected = !args.includes("--disable-audio") && args.includes("--audio-device");
+  const screenState = !videoOn ? "Screen off" : frameOk ? "Screen ✓" : "Screen ⚠ stalled";
+  const audioStateLabel = audioDisabled ? "Audio ✗ not capturing" : "Audio ✓";
+  let status = `<b>Actually capturing:</b> ${screenState} · ${audioStateLabel}`;
+  if (audioSelected && audioDisabled) {
+    status +=
+      " — a device is selected but the recorder isn't recording audio. macOS is blocking microphone access for the recorder (Privacy → Microphone → enable Meye Recorder).";
+  }
+  $("cap-status").innerHTML = status;
+}
+
+export async function refreshPerf() {
+  await refreshPerfStats();
+  const [args, devs] = await Promise.all([
+    api.getRecordArgs().catch(() => [] as string[]),
+    api.audioDevices().catch(() => null),
+  ]);
   $("perf-flags").textContent = args.length ? args.join(" ") : "(defaults — no tuning applied)";
   const prof = activeProfile(args);
   for (const key of ["saver", "balanced", "performance"] as const) {
@@ -180,23 +200,9 @@ export async function refreshPerf() {
     .catch(() => {});
   ($("perf-voice") as HTMLInputElement).checked = isVoiceEnabled();
   // Screen toggle reflects config; audio is a per-device picker built from /audio/list.
-  const videoOn = !args.includes("--disable-vision");
-  ($("cap-video") as HTMLInputElement).checked = videoOn;
+  ($("cap-video") as HTMLInputElement).checked = !args.includes("--disable-vision");
   renderAudioDevices(devs, args);
-
-  // Show what the recorder is ACTUALLY capturing (from /health), since config intent and
-  // reality can disagree (e.g. a device selected but macOS Microphone permission blocks it).
-  const audioDisabled = (h?.audio_status ?? "") === "disabled";
-  const frameOk = (h?.frame_status ?? "") === "ok";
-  const audioSelected = !args.includes("--disable-audio") && args.includes("--audio-device");
-  const screenState = !videoOn ? "Screen off" : frameOk ? "Screen ✓" : "Screen ⚠ stalled";
-  const audioStateLabel = audioDisabled ? "Audio ✗ not capturing" : "Audio ✓";
-  let status = `<b>Actually capturing:</b> ${screenState} · ${audioStateLabel}`;
-  if (audioSelected && audioDisabled) {
-    status +=
-      " — a device is selected but the recorder isn't recording audio. macOS is blocking microphone access for the recorder (Privacy → Microphone → enable Meye Recorder).";
-  }
-  $("cap-status").innerHTML = status;
+  // (perf-stats + the "actually capturing" line are handled by refreshPerfStats, called above)
 }
 
 async function applyArgs(args: string[]) {
@@ -245,7 +251,6 @@ async function applyAudio(key: string) {
 }
 
 export function initPerformance() {
-  $("perf-refresh").onclick = () => void refreshPerf();
   $("perf-saver").onclick = () => void applyProfile(PRESETS.saver);
   $("perf-balanced").onclick = () => void applyProfile(PRESETS.balanced);
   $("perf-performance").onclick = () => void applyProfile(PRESETS.performance);

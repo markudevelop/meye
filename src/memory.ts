@@ -41,9 +41,14 @@ function card(hit: any): string {
 async function loadMore() {
   if (loading || done) return;
   loading = true;
+  const spinner = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
+  if (offset === 0) $("mem-feed").innerHTML = spinner;
+  else $("mem-feed").insertAdjacentHTML("beforeend", `<div class="loading-row" id="mem-more"><span class="run-spin"></span></div>`);
   try {
     const res: any = await api.search({ q: query || undefined, content_type: ctype, limit: PAGE, offset });
     const data: any[] = res.data ?? res.results ?? [];
+    if (offset === 0) $("mem-feed").innerHTML = "";
+    document.getElementById("mem-more")?.remove();
     if (!data.length) {
       done = true;
       $("mem-end").classList.remove("hidden");
@@ -60,6 +65,8 @@ async function loadMore() {
       $("mem-end").classList.remove("hidden");
     }
   } catch (e) {
+    document.getElementById("mem-more")?.remove();
+    if (offset === 0) $("mem-feed").innerHTML = "";
     $("mem-feed").insertAdjacentHTML("beforeend", `<p class="warn">Couldn't load: ${esc(String(e))} (is the recorder running?)</p>`);
     done = true;
   } finally {

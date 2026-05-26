@@ -7,7 +7,7 @@ function esc(s: string): string {
 
 export async function refreshSettings() {
   const out = $("set-list");
-  out.textContent = "Loading…";
+  out.innerHTML = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
   try {
     const res = await api.modelsList();
     const presets: any[] = Array.isArray(res) ? res : (res.data ?? []);

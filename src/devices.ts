@@ -36,8 +36,9 @@ function render(el: HTMLElement, res: any, label: string) {
 }
 
 export async function refreshDevices() {
-  $("d-monitors").innerHTML = "<p class='meta'>Loading…</p>";
-  $("d-audio").innerHTML = "<p class='meta'>Loading…</p>";
+  const spin = '<div class="loading-row"><span class="run-spin"></span> Loading…</div>';
+  if ($("d-monitors").textContent === "—" || !$("d-monitors").children.length) $("d-monitors").innerHTML = spin;
+  if ($("d-audio").textContent === "—" || !$("d-audio").children.length) $("d-audio").innerHTML = spin;
   try {
     render($("d-monitors"), await api.monitors(), "monitors");
   } catch (e) {
@@ -51,7 +52,6 @@ export async function refreshDevices() {
 }
 
 export function initDevices() {
-  $("d-refresh").onclick = () => void refreshDevices();
   $("d-audio-start").onclick = () => wrap("Start audio", () => api.audioStart()).then(refreshDevices);
   $("d-audio-stop").onclick = () => wrap("Stop audio", () => api.audioStop()).then(refreshDevices);
 }
