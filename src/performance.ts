@@ -1,6 +1,5 @@
-import { $, wrap, toast } from "./ui";
+import { $, wrap } from "./ui";
 import { api } from "./api";
-import { isVoiceEnabled, setVoiceEnabled } from "./voice";
 
 // --prioritize-input-latency keeps the mouse/keyboard responsive (yields CPU to input,
 // skips a11y capture right after a click). --transcription-mode batch + --filter-music cut
@@ -198,7 +197,6 @@ export async function refreshPerf() {
     .getDiscreet()
     .then((on) => (($("perf-discreet") as HTMLInputElement).checked = on))
     .catch(() => {});
-  ($("perf-voice") as HTMLInputElement).checked = isVoiceEnabled();
   // Screen toggle reflects config; audio is a per-device picker built from /audio/list.
   ($("cap-video") as HTMLInputElement).checked = !args.includes("--disable-vision");
   renderAudioDevices(devs, args);
@@ -259,12 +257,6 @@ export function initPerformance() {
     const on = (e.target as HTMLInputElement).checked;
     void wrap(on ? "Discreet mode on" : "Discreet mode off", () => api.setDiscreet(on));
   };
-  ($("perf-voice") as HTMLInputElement).onchange = (e) => {
-    const on = (e.target as HTMLInputElement).checked;
-    setVoiceEnabled(on);
-    toast(on ? "🎙 Voice button shown — tap it, then speak a command" : "Voice button hidden");
-  };
-
   // Screen toggle; audio device toggles are wired per-row in renderAudioDevices().
   ($("cap-video") as HTMLInputElement).onchange = async (e) => {
     const cur = await api.getRecordArgs().catch(() => [] as string[]);

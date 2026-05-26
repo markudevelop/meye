@@ -66,9 +66,6 @@
                 <div class="composer-wrap">
                   <div id="home-suggest" class="suggest hidden"></div>
                   <div class="composer">
-                    <button id="home-mic" class="mic-btn hidden" title="Push to talk — say a command" aria-label="Voice">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4M8 22h8"/></svg>
-                    </button>
                     <textarea id="home-input" rows="1" placeholder="Ask my mind…   (type / for commands)"></textarea>
                     <button id="home-send" class="send-btn" aria-label="Send">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
@@ -211,13 +208,6 @@
                     <div class="tr-desc">Hides Meye's dock &amp; tray icons during screen shares. Closing the window fully quits Meye (recording keeps running — reopen from Applications). The macOS recording dot stays, so people you share with are still informed.</div>
                   </div>
                   <label class="switch"><input type="checkbox" id="perf-discreet" /><span class="slider"></span></label>
-                </div>
-                <div class="toggle-row">
-                  <div class="tr-text">
-                    <div class="tr-title">Voice button (push-to-talk)</div>
-                    <div class="tr-desc">Shows a floating mic button. Tap it, then say <b>pause</b>, <b>resume</b>, <b>new chat</b>, <b>open timeline</b>, or <b>search for …</b> ("Hey Meye" optional). On-demand only — nothing listens in the background. Needs Audio on; recognition is a touch slower in Balanced/Saver (batch mode).</div>
-                  </div>
-                  <label class="switch"><input type="checkbox" id="perf-voice" /><span class="slider"></span></label>
                 </div>
               </div>
               <div class="section dev-only">

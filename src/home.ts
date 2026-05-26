@@ -401,11 +401,8 @@ export async function loadHome() {
     })
     .catch(() => {});
   await renderConvoList();
-  if (activeId == null) {
-    const list = await api.convoList().catch(() => []);
-    if (list.length) await openConvo(list[0].id);
-    else newConvo();
-  }
+  // Opening the app (or Chat with nothing active) lands on a fresh new chat, not the last one.
+  if (activeId == null) newConvo();
 }
 
 export function initHome() {
