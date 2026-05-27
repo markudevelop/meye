@@ -24,10 +24,14 @@ mod prefs;
 mod voice;
 
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
     Emitter, Manager,
 };
+
+/// Tray toggle labels — reflect whether the recorder is currently running.
+const PAUSE_LABEL: &str = "Pause recording";
+const RESUME_LABEL: &str = "Resume recording";
 
 /// Managed handle to the tray icon so commands can show/hide it (discreet mode).
 pub struct AppTray(pub tauri::tray::TrayIcon);
@@ -117,48 +121,35 @@ pub fn run() {
             commands::api_parse_voice_command,
         ])
         .setup(|app| {
+            // Minimal tray: open the app, one state-aware recording toggle, quit.
+            // Everything else (logs, data folder, update) lives in the Dashboard.
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
-            let start_i = MenuItem::with_id(app, "start", "Start", true, None::<&str>)?;
-            let stop_i = MenuItem::with_id(app, "stop", "Stop", true, None::<&str>)?;
-            let restart_i = MenuItem::with_id(app, "restart", "Restart", true, None::<&str>)?;
-            let data_i = MenuItem::with_id(app, "data", "Open Data Folder", true, None::<&str>)?;
-            let logs_i = MenuItem::with_id(app, "logs", "Open Logs", true, None::<&str>)?;
-            let update_i = MenuItem::with_id(app, "update", "Update screenpipe", true, None::<&str>)?;
+            let toggle_label = if agent::is_loaded() { PAUSE_LABEL } else { RESUME_LABEL };
+            let toggle_i = MenuItem::with_id(app, "toggle", toggle_label, true, None::<&str>)?;
+            let sep = PredefinedMenuItem::separator(app)?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(
-                app,
-                &[&open_i, &start_i, &stop_i, &restart_i, &data_i, &logs_i, &update_i, &quit_i],
-            )?;
+            let menu = Menu::with_items(app, &[&open_i, &toggle_i, &sep, &quit_i])?;
 
+            // Clone the toggle into the handler so it can flip its own label after acting.
+            let toggle_handle = toggle_i.clone();
             let tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .on_menu_event(|app, event| match event.id.as_ref() {
+                .on_menu_event(move |app, event| match event.id.as_ref() {
                     "open" => {
                         if let Some(w) = app.get_webview_window("main") {
                             let _ = w.show();
                             let _ = w.set_focus();
                         }
                     }
-                    "start" => {
-                        let _ = agent::start();
-                    }
-                    "stop" => {
-                        let _ = agent::stop();
-                    }
-                    "restart" => {
-                        let _ = agent::restart();
-                    }
-                    "data" => {
-                        let _ = commands::open_data_dir();
-                    }
-                    "logs" => {
-                        let _ = commands::open_logs();
-                    }
-                    "update" => {
-                        tauri::async_runtime::spawn_blocking(|| {
-                            let _ = binary::update();
-                        });
+                    "toggle" => {
+                        if agent::is_loaded() {
+                            let _ = agent::stop();
+                            let _ = toggle_handle.set_text(RESUME_LABEL);
+                        } else {
+                            let _ = agent::start();
+                            let _ = toggle_handle.set_text(PAUSE_LABEL);
+                        }
                     }
                     "quit" => app.exit(0),
                     _ => {}
