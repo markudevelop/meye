@@ -4,9 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Meye — My memory</title>
-<meta name="description" content="Meye privately records your screen & audio on your Mac, so you can search and chat with everything you've seen. Nothing leaves your computer." />
+<meta name="description" content="Meye privately records your screen & audio on your Mac, so you can search and chat with everything you've seen. Free, and nothing leaves your computer." />
 <meta property="og:title" content="Meye — My memory" />
-<meta property="og:description" content="A private, local memory for your Mac. Search and chat with everything you've seen." />
+<meta property="og:description" content="A free, private, local memory for your Mac. Search and chat with everything you've seen." />
 <meta property="og:type" content="website" />
 <style>
   /* ── tokens lifted from the app (src/styles.css) ── */
@@ -96,23 +96,13 @@
   .step h3{margin:10px 0 6px;font-size:17px}
   .step p{color:var(--muted);font-size:15px}
 
-  /* ── pricing ── */
-  .prices{display:grid;gap:22px;grid-template-columns:repeat(2,1fr);max-width:760px;margin:0 auto}
-  @media(max-width:680px){.prices{grid-template-columns:1fr}}
-  .price{border:1px solid var(--border);border-radius:18px;padding:30px;background:var(--bg-elev);display:flex;flex-direction:column}
-  .price.pro{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 12px 40px rgba(109,94,252,.18);position:relative}
-  .price.pro .tag{position:absolute;top:-13px;right:24px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;
-    padding:5px 12px;border-radius:999px;letter-spacing:.02em}
-  .price h3{font-size:19px;margin-bottom:4px}
-  .price .amt{font-size:44px;font-weight:800;letter-spacing:-.03em;margin:8px 0 2px}
-  .price .amt span{font-size:16px;font-weight:600;color:var(--muted)}
-  .price .note{color:var(--muted);font-size:14px;margin-bottom:20px}
-  .price ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:24px;flex:1}
-  .price li{display:flex;gap:10px;font-size:15px;color:var(--text)}
-  .price li::before{content:"✓";color:var(--green);font-weight:800}
-  .price li.off{color:var(--muted)}
-  .price li.off::before{content:"–";color:var(--muted)}
-  .price .btn{width:100%;justify-content:center}
+  /* ── free band ── */
+  .band{max-width:760px;margin:0 auto;text-align:center;border:1px solid var(--accent);border-radius:20px;
+    padding:48px 36px;background:color-mix(in srgb,var(--accent) 7%,var(--bg-elev));
+    box-shadow:0 0 0 1px var(--accent),0 12px 40px rgba(109,94,252,.16)}
+  .band .amt{font-size:54px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .band .amt small{font-size:18px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .band p{color:var(--muted);font-size:17px;max-width:480px;margin:14px auto 26px}
 
   /* ── faq ── */
   .faq{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
@@ -139,9 +129,9 @@
     <nav>
       <a href="#features">Features</a>
       <a href="#how">How it works</a>
-      <a href="#pricing">Pricing</a>
       <a href="#faq">FAQ</a>
-      <a class="btn primary" href="#pricing" style="padding:8px 16px">Get Pro</a>
+      <!-- ▼ DOWNLOAD: replace with your GitHub Releases / download URL ▼ -->
+      <a class="btn primary" href="DOWNLOAD_URL_REPLACE_ME" style="padding:8px 16px">Download</a>
     </nav>
   </div>
 </header>
@@ -151,16 +141,15 @@
   <!-- HERO -->
   <section class="hero">
     <div class="wrap">
-      <span class="pill"><span class="dot"></span> 100% local · nothing leaves your Mac</span>
+      <span class="pill"><span class="dot"></span> 100% local · free · nothing leaves your Mac</span>
       <h1>Meye — <span class="accent">my memory</span></h1>
       <p class="sub">Meye privately records your screen and audio on your Mac, so you can search and chat with everything you've ever seen, read, or heard.</p>
       <div class="cta">
-        <!-- ▼▼ STRIPE: replace href with your $9/mo Payment Link URL ▼▼ -->
-        <a class="btn primary lg" href="STRIPE_PAYMENT_LINK_REPLACE_ME">Get Meye Pro — $9/mo</a>
         <!-- ▼ DOWNLOAD: replace with your GitHub Releases / download URL ▼ -->
-        <a class="btn lg" href="DOWNLOAD_URL_REPLACE_ME">Download free</a>
+        <a class="btn primary lg" href="DOWNLOAD_URL_REPLACE_ME">Download for macOS — free</a>
+        <a class="btn lg" href="#how">See how it works</a>
       </div>
-      <p class="fineprint">Free to use · Cancel anytime · macOS</p>
+      <p class="fineprint">Free · No account · macOS</p>
     </div>
   </section>
 
@@ -213,41 +202,17 @@
     </div>
   </section>
 
-  <!-- PRICING -->
-  <section id="pricing">
+  <!-- FREE -->
+  <section id="download">
     <div class="wrap">
       <p class="eyebrow">Pricing</p>
-      <h2 class="title">Simple and fair</h2>
-      <p class="lead">Meye is free to use. Go Pro to support development and unlock more.</p>
-      <div class="prices">
-        <div class="price">
-          <h3>Free</h3>
-          <div class="amt">$0</div>
-          <p class="note">For everyone. Forever.</p>
-          <ul>
-            <li>24/7 local recording</li>
-            <li>Full-text search</li>
-            <li>Local AI recall &amp; chat</li>
-            <li class="off">Priority updates</li>
-            <li class="off">Support the project</li>
-          </ul>
-          <a class="btn" href="DOWNLOAD_URL_REPLACE_ME">Download free</a>
-        </div>
-        <div class="price pro">
-          <span class="tag">Recommended</span>
-          <h3>Pro</h3>
-          <div class="amt">$9<span> / month</span></div>
-          <p class="note">A Pro license, billed monthly.</p>
-          <ul>
-            <li>Everything in Free</li>
-            <li>Priority updates &amp; new features</li>
-            <li>Advanced summaries (weekly / monthly / yearly)</li>
-            <li>Directly fund development</li>
-            <li>License key emailed after checkout</li>
-          </ul>
-          <!-- ▼▼ STRIPE: replace href with your $9/mo Payment Link URL ▼▼ -->
-          <a class="btn primary" href="STRIPE_PAYMENT_LINK_REPLACE_ME">Get Meye Pro — $9/mo</a>
-        </div>
+      <h2 class="title">Free, for everyone</h2>
+      <p class="lead">Meye is free to download and use. No subscription, no account, no catch.</p>
+      <div class="band">
+        <div class="amt">$0<small> / forever</small></div>
+        <p>Your memory belongs to you. Meye keeps it on your machine and asks nothing in return.</p>
+        <!-- ▼ DOWNLOAD: replace with your GitHub Releases / download URL ▼ -->
+        <a class="btn primary lg" href="DOWNLOAD_URL_REPLACE_ME">Download for macOS</a>
       </div>
     </div>
   </section>
@@ -263,16 +228,12 @@
           <p>Nowhere. Meye records, indexes, and runs AI search entirely on your own Mac. Nothing is uploaded — there are no accounts and no servers involved in capturing or searching your memory.</p>
         </details>
         <details>
-          <summary>What does Pro unlock?</summary>
-          <p>Pro funds development and gives you priority updates plus advanced periodic summaries. After checkout you'll receive a license key by email to activate Pro in the app.</p>
-        </details>
-        <details>
-          <summary>Can I cancel anytime?</summary>
-          <p>Yes. Pro is a monthly subscription you can cancel at any time from the Stripe billing portal — no questions asked. Meye stays free to use either way.</p>
+          <summary>Is Meye really free?</summary>
+          <p>Yes. Meye is free to download and use, with no subscription and no account required.</p>
         </details>
         <details>
           <summary>Which platforms are supported?</summary>
-          <p>Meye is a native macOS app today. It builds on screenpipe and keeps the recorder alive with a launchd background agent.</p>
+          <p>Meye is a native macOS app today. It keeps the recorder alive with a launchd background agent so capture survives logout and reboot.</p>
         </details>
       </div>
     </div>
@@ -288,7 +249,7 @@
       <!-- ▼ replace with your repo URL ▼ -->
       <a href="GITHUB_URL_REPLACE_ME">GitHub</a>
       <a href="#faq">Privacy</a>
-      <a href="#pricing">Pricing</a>
+      <a href="#download">Download</a>
     </nav>
   </div>
 </footer>
