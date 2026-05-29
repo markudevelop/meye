@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meye — My memory</title>
+<meta name="description" content="Meye privately records your screen & audio on your Mac, so you can search and chat with everything you've seen. Nothing leaves your computer." />
+<meta property="og:title" content="Meye — My memory" />
+<meta property="og:description" content="A private, local memory for your Mac. Search and chat with everything you've seen." />
+<meta property="og:type" content="website" />
+<style>
+  /* ── tokens lifted from the app (src/styles.css) ── */
+  :root{
+    --bg:#ffffff; --bg-elev:#fbfbfc; --panel:#f5f5f7;
+    --text:#1b1b1f; --muted:#76767e; --border:#e7e7ec;
+    --accent:#6d5efc; --accent-hover:#5a4af2;
+    --green:#34c759;
+    --radius:14px; --maxw:1080px;
+    --shadow:0 1px 2px rgba(0,0,0,.06), 0 8px 30px rgba(20,20,40,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1a1b1e; --bg-elev:#212227; --panel:#151619;
+      --text:#ececee; --muted:#9a9aa3; --border:#2b2c31;
+      --accent:#8f81ff; --accent-hover:#a397ff;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 40px rgba(0,0,0,.45);
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+    background:var(--bg); color:var(--text);
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+  /* ── nav ── */
+  header.nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(180%) blur(14px);
+    background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom:1px solid var(--border)}
+  .nav .wrap{display:flex;align-items:center;gap:16px;height:60px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+  .logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:#fff;font-size:17px}
+  .nav nav{margin-left:auto;display:flex;gap:6px;align-items:center}
+  .nav nav a{padding:8px 12px;border-radius:9px;color:var(--muted);font-size:14.5px;font-weight:500}
+  .nav nav a:hover{color:var(--text);background:var(--panel)}
+
+  /* ── buttons ── */
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:15px;
+    padding:11px 20px;border-radius:11px;border:1px solid var(--border);
+    background:var(--bg-elev);color:var(--text);cursor:pointer;transition:.15s;white-space:nowrap}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;
+    box-shadow:0 4px 14px rgba(109,94,252,.35)}
+  .btn.primary:hover{background:var(--accent-hover)}
+  .btn.lg{padding:14px 26px;font-size:16px}
+
+  /* ── hero ── */
+  .hero{text-align:center;padding:84px 0 56px;position:relative;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-40% 0 auto 0;height:520px;z-index:-1;
+    background:radial-gradient(60% 60% at 50% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 70%)}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--muted);
+    border:1px solid var(--border);background:var(--bg-elev);padding:6px 13px;border-radius:999px;margin-bottom:22px}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.18)}
+  .hero h1{font-size:clamp(40px,7vw,68px);line-height:1.04;letter-spacing:-.03em;font-weight:800;margin-bottom:18px}
+  .hero h1 .accent{background:linear-gradient(135deg,var(--accent),var(--accent-hover));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.sub{font-size:clamp(17px,2.4vw,21px);color:var(--muted);max-width:620px;margin:0 auto 30px}
+  .hero .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .hero .fineprint{margin-top:16px;font-size:13px;color:var(--muted)}
+
+  /* ── sections ── */
+  section{padding:64px 0}
+  .eyebrow{text-align:center;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  h2.title{text-align:center;font-size:clamp(28px,4vw,38px);letter-spacing:-.02em;font-weight:800;margin-bottom:8px}
+  .lead{text-align:center;color:var(--muted);max-width:560px;margin:0 auto 44px;font-size:17px}
+
+  .grid{display:grid;gap:20px;grid-template-columns:repeat(3,1fr)}
+  @media(max-width:780px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius);padding:26px;transition:.15s}
+  .card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+  .card .ic{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font-size:21px;margin-bottom:14px;
+    background:color-mix(in srgb,var(--accent) 14%,transparent)}
+  .card h3{font-size:18px;letter-spacing:-.01em;margin-bottom:6px}
+  .card p{color:var(--muted);font-size:15px}
+
+  /* ── steps ── */
+  .steps{counter-reset:step;display:grid;gap:20px;grid-template-columns:repeat(3,1fr)}
+  @media(max-width:780px){.steps{grid-template-columns:1fr}}
+  .step{position:relative;padding:26px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-elev)}
+  .step::before{counter-increment:step;content:counter(step);position:absolute;top:-14px;left:22px;
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;font-size:15px;
+    background:var(--accent);color:#fff;box-shadow:0 3px 10px rgba(109,94,252,.4)}
+  .step h3{margin:10px 0 6px;font-size:17px}
+  .step p{color:var(--muted);font-size:15px}
+
+  /* ── pricing ── */
+  .prices{display:grid;gap:22px;grid-template-columns:repeat(2,1fr);max-width:760px;margin:0 auto}
+  @media(max-width:680px){.prices{grid-template-columns:1fr}}
+  .price{border:1px solid var(--border);border-radius:18px;padding:30px;background:var(--bg-elev);display:flex;flex-direction:column}
+  .price.pro{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 12px 40px rgba(109,94,252,.18);position:relative}
+  .price.pro .tag{position:absolute;top:-13px;right:24px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;
+    padding:5px 12px;border-radius:999px;letter-spacing:.02em}
+  .price h3{font-size:19px;margin-bottom:4px}
+  .price .amt{font-size:44px;font-weight:800;letter-spacing:-.03em;margin:8px 0 2px}
+  .price .amt span{font-size:16px;font-weight:600;color:var(--muted)}
+  .price .note{color:var(--muted);font-size:14px;margin-bottom:20px}
+  .price ul{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:24px;flex:1}
+  .price li{display:flex;gap:10px;font-size:15px;color:var(--text)}
+  .price li::before{content:"✓";color:var(--green);font-weight:800}
+  .price li.off{color:var(--muted)}
+  .price li.off::before{content:"–";color:var(--muted)}
+  .price .btn{width:100%;justify-content:center}
+
+  /* ── faq ── */
+  .faq{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  details{border:1px solid var(--border);border-radius:12px;background:var(--bg-elev);padding:4px 18px}
+  summary{cursor:pointer;font-weight:600;font-size:16px;padding:14px 0;list-style:none;display:flex;justify-content:space-between;align-items:center}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--muted);font-size:22px;font-weight:400;transition:.2s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{color:var(--muted);font-size:15px;padding:0 0 16px}
+
+  /* ── footer ── */
+  footer{border-top:1px solid var(--border);padding:40px 0;color:var(--muted);font-size:14px}
+  footer .wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  footer .brand{font-size:15px;color:var(--text)}
+  footer nav{margin-left:auto;display:flex;gap:18px}
+  footer a:hover{color:var(--text)}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="logo">M</span> Meye</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn primary" href="#pricing" style="padding:8px 16px">Get Pro</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <span class="pill"><span class="dot"></span> 100% local · nothing leaves your Mac</span>
+      <h1>Meye — <span class="accent">my memory</span></h1>
+      <p class="sub">Meye privately records your screen and audio on your Mac, so you can search and chat with everything you've ever seen, read, or heard.</p>
+      <div class="cta">
+        <!-- ▼▼ STRIPE: replace href with your $9/mo Payment Link URL ▼▼ -->
+        <a class="btn primary lg" href="STRIPE_PAYMENT_LINK_REPLACE_ME">Get Meye Pro — $9/mo</a>
+        <!-- ▼ DOWNLOAD: replace with your GitHub Releases / download URL ▼ -->
+        <a class="btn lg" href="DOWNLOAD_URL_REPLACE_ME">Download free</a>
+      </div>
+      <p class="fineprint">Free to use · Cancel anytime · macOS</p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="wrap">
+      <p class="eyebrow">Why Meye</p>
+      <h2 class="title">Your second memory, kept private</h2>
+      <p class="lead">Everything is captured and processed on your own machine. No cloud, no accounts, no one watching.</p>
+      <div class="grid">
+        <div class="card">
+          <div class="ic">🔒</div>
+          <h3>Private by default</h3>
+          <p>Recording and search run entirely on your Mac. Your data never touches a server — not ours, not anyone's.</p>
+        </div>
+        <div class="card">
+          <div class="ic">💬</div>
+          <h3>Recall & chat</h3>
+          <p>Ask "what was that link from Tuesday?" and get the answer. Search your whole screen history in plain language.</p>
+        </div>
+        <div class="card">
+          <div class="ic">🗂️</div>
+          <h3>Obsidian-ready</h3>
+          <p>Meye organizes what it sees into structured notes, so your memory grows into a knowledge base you own.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section id="how">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2 class="title">Set it once, then forget it</h2>
+      <p class="lead">Meye runs a small background recorder that stays alive across restarts.</p>
+      <div class="steps">
+        <div class="step">
+          <h3>Install & allow</h3>
+          <p>Download Meye and grant Screen Recording &amp; Microphone — that's how it sees and hears.</p>
+        </div>
+        <div class="step">
+          <h3>It records quietly</h3>
+          <p>The recorder runs in the background 24/7, auto-restarting on crash and starting at login.</p>
+        </div>
+        <div class="step">
+          <h3>Search anything</h3>
+          <p>Open the dashboard and search or chat with everything you've seen — instantly, locally.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="wrap">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="title">Simple and fair</h2>
+      <p class="lead">Meye is free to use. Go Pro to support development and unlock more.</p>
+      <div class="prices">
+        <div class="price">
+          <h3>Free</h3>
+          <div class="amt">$0</div>
+          <p class="note">For everyone. Forever.</p>
+          <ul>
+            <li>24/7 local recording</li>
+            <li>Full-text search</li>
+            <li>Local AI recall &amp; chat</li>
+            <li class="off">Priority updates</li>
+            <li class="off">Support the project</li>
+          </ul>
+          <a class="btn" href="DOWNLOAD_URL_REPLACE_ME">Download free</a>
+        </div>
+        <div class="price pro">
+          <span class="tag">Recommended</span>
+          <h3>Pro</h3>
+          <div class="amt">$9<span> / month</span></div>
+          <p class="note">A Pro license, billed monthly.</p>
+          <ul>
+            <li>Everything in Free</li>
+            <li>Priority updates &amp; new features</li>
+            <li>Advanced summaries (weekly / monthly / yearly)</li>
+            <li>Directly fund development</li>
+            <li>License key emailed after checkout</li>
+          </ul>
+          <!-- ▼▼ STRIPE: replace href with your $9/mo Payment Link URL ▼▼ -->
+          <a class="btn primary" href="STRIPE_PAYMENT_LINK_REPLACE_ME">Get Meye Pro — $9/mo</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="wrap">
+      <p class="eyebrow">FAQ</p>
+      <h2 class="title">Good questions</h2>
+      <div class="faq">
+        <details open>
+          <summary>Where does my data go?</summary>
+          <p>Nowhere. Meye records, indexes, and runs AI search entirely on your own Mac. Nothing is uploaded — there are no accounts and no servers involved in capturing or searching your memory.</p>
+        </details>
+        <details>
+          <summary>What does Pro unlock?</summary>
+          <p>Pro funds development and gives you priority updates plus advanced periodic summaries. After checkout you'll receive a license key by email to activate Pro in the app.</p>
+        </details>
+        <details>
+          <summary>Can I cancel anytime?</summary>
+          <p>Yes. Pro is a monthly subscription you can cancel at any time from the Stripe billing portal — no questions asked. Meye stays free to use either way.</p>
+        </details>
+        <details>
+          <summary>Which platforms are supported?</summary>
+          <p>Meye is a native macOS app today. It builds on screenpipe and keeps the recorder alive with a launchd background agent.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand"><span class="logo" style="width:24px;height:24px;font-size:13px;display:inline-grid;vertical-align:middle">M</span> Meye</span>
+    <span>My memory, private and local.</span>
+    <nav>
+      <!-- ▼ replace with your repo URL ▼ -->
+      <a href="GITHUB_URL_REPLACE_ME">GitHub</a>
+      <a href="#faq">Privacy</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
