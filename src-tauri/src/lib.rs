@@ -172,6 +172,7 @@ pub fn run() {
             // Health poll loop: emit status to the frontend every 5s.
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
+                let mut prev_running = false;
                 loop {
                     let status = if !agent::is_installed() {
                         health::Status::NotInstalled
@@ -187,6 +188,18 @@ pub fn run() {
                             }
                         }
                     };
+                    // On the edge into "running" (app launch, or a recorder restart while
+                    // the dashboard is open), re-arm any scheduled pipe that drifted to
+                    // disabled so scheduled agents keep firing. Fire-and-forget; never
+                    // blocks the status emit. Manual pipes are left untouched.
+                    let running =
+                        matches!(status, health::Status::Healthy | health::Status::Degraded);
+                    if running && !prev_running {
+                        let _ = tauri::async_runtime::spawn_blocking(|| {
+                            let _ = crate::pipes::reassert_scheduled();
+                        });
+                    }
+                    prev_running = running;
                     let _ = handle.emit("status", &status);
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 }

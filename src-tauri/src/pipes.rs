@@ -291,6 +291,40 @@ pub fn delete(name: &str) -> Result<String, String> {
     run_pipe(&["delete", name])
 }
 
+/// Pure: from a `pipe list --json` value, the names of pipes that carry a real
+/// schedule (not "manual"/empty) yet report disabled. These are the agents worth
+/// re-arming when the recorder comes back up, so a stray disable doesn't silently
+/// stop a scheduled pipe. Manual pipes are intentionally left alone — enabling
+/// them changes nothing (no schedule to fire) and would only fight user intent.
+pub fn scheduled_but_disabled(list: &Value) -> Vec<String> {
+    let mut names = Vec::new();
+    if let Some(arr) = list.as_array() {
+        for p in arr {
+            let sched = p.pointer("/config/schedule").and_then(|s| s.as_str()).unwrap_or("");
+            let enabled = p.pointer("/config/enabled").and_then(|e| e.as_bool()).unwrap_or(false);
+            let scheduled = !sched.trim().is_empty() && sched != "manual";
+            if scheduled && !enabled {
+                if let Some(name) = p.pointer("/config/name").and_then(|n| n.as_str()) {
+                    names.push(name.to_string());
+                }
+            }
+        }
+    }
+    names
+}
+
+/// Re-enable every scheduled-but-disabled pipe (see [`scheduled_but_disabled`]).
+/// Called when the recorder transitions to running so scheduled agents keep
+/// firing across restarts. Best-effort: one pipe failing to enable does not stop
+/// the rest. Returns the names that were (attempted) re-enabled.
+pub fn reassert_scheduled() -> Result<Vec<String>, String> {
+    let names = scheduled_but_disabled(&list()?);
+    for n in &names {
+        let _ = enable(n);
+    }
+    Ok(names)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -321,6 +355,22 @@ notion-crm-sync                productivity    25         Auto-detect business c
         assert_eq!(arr[0]["category"], "productivity");
         assert_eq!(arr[0]["installs"], "45");
         assert!(arr[0]["description"].as_str().unwrap().contains("Synchronize"));
+    }
+
+    #[test]
+    fn scheduled_but_disabled_selects_only_scheduled_off_pipes() {
+        let list = serde_json::json!([
+            {"config": {"name": "obsidian-sync", "schedule": "every 30m", "enabled": true}},
+            {"config": {"name": "weekly-summary", "schedule": "0 23 * * 0", "enabled": false}},
+            {"config": {"name": "day-recap", "schedule": "manual", "enabled": false}},
+            {"config": {"name": "no-sched", "enabled": false}},
+            {"config": {"name": "blank-sched", "schedule": "  ", "enabled": false}},
+        ]);
+        // only the scheduled pipe that is off should be picked
+        assert_eq!(scheduled_but_disabled(&list), vec!["weekly-summary".to_string()]);
+        // empty / non-array input is safe
+        assert!(scheduled_but_disabled(&serde_json::json!([])).is_empty());
+        assert!(scheduled_but_disabled(&serde_json::json!({})).is_empty());
     }
 
     #[test]
