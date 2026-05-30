@@ -113,9 +113,15 @@ pub fn pin() -> io::Result<usize> {
     let src = ensure_npx_cached()?;
     let macos = paths::recorder_macos_dir();
     let n = copy_dir_files(&src, &macos)?;
+    // Rebrand: the upstream binary ships as `screenpipe`; rename to `meye-recorder`
+    // so TCC, Activity Monitor, and `ps` all show our identity.
+    let upstream = macos.join("screenpipe");
+    if upstream.exists() {
+        std::fs::rename(&upstream, paths::recorder_binary())?;
+    }
     std::fs::write(
         paths::recorder_info_plist(),
-        build_info_plist(paths::RECORDER_BUNDLE_ID, "screenpipe"),
+        build_info_plist(paths::RECORDER_BUNDLE_ID, "meye-recorder"),
     )?;
     codesign(&paths::recorder_app())?;
     Ok(n)
@@ -166,11 +172,11 @@ mod tests {
 
     #[test]
     fn info_plist_declares_identity_and_mic() {
-        let xml = build_info_plist("com.meye.recorder", "screenpipe");
+        let xml = build_info_plist("com.meye.recorder", "meye-recorder");
         assert!(xml.contains("<key>CFBundleIdentifier</key>"));
         assert!(xml.contains("<string>com.meye.recorder</string>"));
         assert!(xml.contains("<key>CFBundleExecutable</key>"));
-        assert!(xml.contains("<string>screenpipe</string>"));
+        assert!(xml.contains("<string>meye-recorder</string>"));
         assert!(xml.contains("<key>NSMicrophoneUsageDescription</key>"));
         assert!(xml.contains("<key>LSUIElement</key>"));
     }

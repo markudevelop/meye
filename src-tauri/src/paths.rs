@@ -22,9 +22,10 @@ pub fn recorder_macos_dir() -> PathBuf {
     recorder_app().join("Contents/MacOS")
 }
 
-/// The pinned screenpipe executable (inside the bundle).
+/// The pinned recorder executable (inside the bundle). Renamed from upstream
+/// `screenpipe` so TCC, Activity Monitor, and `ps` show our brand.
 pub fn recorder_binary() -> PathBuf {
-    recorder_macos_dir().join("screenpipe")
+    recorder_macos_dir().join("meye-recorder")
 }
 
 pub fn recorder_info_plist() -> PathBuf {
@@ -89,7 +90,7 @@ mod tests {
     fn paths_are_under_home() {
         let h = home();
         assert!(recorder_binary().starts_with(&h));
-        assert!(recorder_binary().ends_with("Meye Recorder.app/Contents/MacOS/screenpipe"));
+        assert!(recorder_binary().ends_with("Meye Recorder.app/Contents/MacOS/meye-recorder"));
         assert!(plist_path().ends_with("com.meye.recorder.agent.plist"));
         assert_eq!(out_log().file_name().unwrap(), "out.log");
         assert!(log_dir().ends_with("Logs/meye"));
