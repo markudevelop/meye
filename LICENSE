@@ -1,0 +1,37 @@
+Meye — Proprietary License
+Copyright (c) 2026 Mark Uretsky. All rights reserved.
+
+Meye is distributed as a free-of-charge personal-use product. The source
+code, build artifacts, designs, and assets in this repository are the
+exclusive property of the copyright holder.
+
+You MAY:
+  - Download, install, and use the published Meye binaries on your own
+    personal devices, free of charge, for any lawful purpose.
+
+You MAY NOT, without prior written permission from the copyright holder:
+  - Copy, modify, fork, or create derivative works of the source code,
+    designs, or assets.
+  - Redistribute, host, sell, sublicense, or rebrand the Meye binaries.
+  - Reverse-engineer, decompile, or disassemble the application beyond
+    what is expressly permitted by applicable law (e.g., interoperability
+    rights under EU Directive 2009/24/EC).
+  - Use the name "Meye", the Meye eye-mark, or other Meye trademarks
+    except to refer to the original product.
+  - Use Meye or its outputs to train, fine-tune, or evaluate machine-
+    learning models, or to build a competing product.
+
+This software incorporates third-party components distributed under their
+own licenses. See NOTICE for attributions. Nothing in this license
+overrides or limits those upstream licenses.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+For commercial use, partnerships, or other licensing inquiries, contact
+the copyright holder.
