@@ -121,6 +121,9 @@ pub fn run() {
             commands::api_parse_voice_command,
         ])
         .setup(|app| {
+            // Upgrade old plists in-place before anything else touches the agent.
+            agent::migrate_plist_format();
+
             // Minimal tray: open the app, one state-aware recording toggle, quit.
             // Everything else (logs, data folder, update) lives in the Dashboard.
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;

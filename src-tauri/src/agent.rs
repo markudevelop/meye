@@ -115,7 +115,12 @@ pub fn generate_plist(program_args: &[String], out_log: &str, err_log: &str) -> 
   <array>
 {args}  </array>
   <key>KeepAlive</key>
-  <true/>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
   <key>RunAtLoad</key>
   <true/>
   <key>ProcessType</key>
@@ -212,6 +217,22 @@ pub fn install() -> io::Result<()> {
     start()
 }
 
+/// Self-heal: if the installed plist predates the throttle/SuccessfulExit keys, rewrite it
+/// and reload. Older installs flap the recorder once per second on a missing TCC grant —
+/// each flap re-pops the permission prompt over the user's Settings window.
+pub fn migrate_plist_format() {
+    if !paths::plist_path().exists() {
+        return;
+    }
+    let current = std::fs::read_to_string(paths::plist_path()).unwrap_or_default();
+    if current.contains("<key>ThrottleInterval</key>") {
+        return;
+    }
+    if write_plist().is_ok() && is_loaded() {
+        let _ = reload();
+    }
+}
+
 pub fn start() -> io::Result<()> {
     if is_loaded() {
         return Ok(()); // already running — Start is a no-op
@@ -299,6 +320,11 @@ mod tests {
         assert!(xml.contains("<key>Label</key>"));
         assert!(xml.contains("com.meye.recorder.agent"));
         assert!(xml.contains("<key>KeepAlive</key>"));
+        // KeepAlive only on failure — clean exits don't relaunch (avoids re-popping the TCC
+        // prompt over the user's Settings window while they're granting Screen Recording).
+        assert!(xml.contains("<key>SuccessfulExit</key>"));
+        // Throttle relaunches so a permission gap doesn't flap the recorder once per second.
+        assert!(xml.contains("<key>ThrottleInterval</key>"));
         assert!(xml.contains("<key>RunAtLoad</key>"));
         // Background priority so the recorder yields CPU to foreground apps.
         assert!(xml.contains("<key>ProcessType</key>"));

@@ -106,6 +106,10 @@ pub fn get_permissions() -> Permissions {
 
 #[tauri::command]
 pub fn open_settings(pane: String) -> Result<(), String> {
+    // Pause the recorder before opening Settings. Otherwise launchd keeps relaunching it
+    // (it exits whenever a TCC grant is missing) and each relaunch re-pops the permission
+    // prompt on top of the Settings window the user is trying to use. Re-check restarts it.
+    let _ = agent::stop();
     let url = match pane.as_str() {
         "screen" => "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
         "microphone" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
