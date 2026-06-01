@@ -234,8 +234,20 @@ pub fn migrate_plist_format() {
 }
 
 pub fn start() -> io::Result<()> {
+    // `is_loaded()` only tells us launchd has the service registered — it can still be
+    // wedged in spawn-scheduled limbo after an EX_CONFIG failure (e.g. stale binary path).
+    // Kickstart forces a fresh spawn so Start always does something visible.
     if is_loaded() {
-        return Ok(()); // already running — Start is a no-op
+        let out = run_launchctl(&kickstart_args(current_uid()))?;
+        if out.status.success() {
+            return Ok(());
+        }
+        let stderr = String::from_utf8_lossy(&out.stderr);
+        if stderr.contains("Could not find") || stderr.contains("No such process") {
+            // Lost registration between is_loaded() and kickstart — fall through to bootstrap.
+        } else {
+            return Err(io::Error::other(humanize_launchctl(&stderr)));
+        }
     }
     let plist = paths::plist_path().to_string_lossy().into_owned();
     let out = run_launchctl(&bootstrap_args(current_uid(), &plist))?;
@@ -281,6 +293,25 @@ pub fn is_loaded() -> bool {
     run_launchctl(&print_args(current_uid()))
         .map(|o| o.status.success())
         .unwrap_or(false)
+}
+
+/// True if launchd has the service registered AND a process is actually alive.
+/// `is_loaded` returns true even when the recorder is wedged in spawn-scheduled limbo
+/// (EX_CONFIG) or has self-exited — so tray labels and "Start" guards must use this.
+pub fn is_running() -> bool {
+    let out = match run_launchctl(&print_args(current_uid())) {
+        Ok(o) if o.status.success() => o,
+        _ => return false,
+    };
+    let s = String::from_utf8_lossy(&out.stdout);
+    // launchctl print emits one of:
+    //   state = running       — process alive
+    //   state = not running   — exited / never started
+    //   state = spawn scheduled — wedged
+    s.lines()
+        .filter_map(|l| l.split_once("state ="))
+        .map(|(_, v)| v.trim())
+        .any(|v| v == "running")
 }
 
 /// Pure: from the agent's err.log content, return the permissions screenpipe is

@@ -123,11 +123,25 @@ pub fn run() {
         .setup(|app| {
             // Upgrade old plists in-place before anything else touches the agent.
             agent::migrate_plist_format();
+            // Pre-rebrand installs have `screenpipe` instead of `meye-recorder` in the
+            // pinned bundle; the rewritten plist then points at a path that does not
+            // exist and launchd wedges with EX_CONFIG. Rename + re-sign so they match.
+            binary::migrate_binary_name();
+            // Auto-resume the recorder on app launch. `open_settings` intentionally
+            // stops the agent so the TCC prompt does not race the Settings window, and
+            // a previous Stop click leaves it bootout'd too. Without this, users have
+            // to click Start every time they open the app — which they do not.
+            if agent::is_installed() && binary::is_pinned() {
+                let _ = agent::start();
+            }
 
             // Minimal tray: open the app, one state-aware recording toggle, quit.
             // Everything else (logs, data folder, update) lives in the Dashboard.
             let open_i = MenuItem::with_id(app, "open", "Open Dashboard", true, None::<&str>)?;
-            let toggle_label = if agent::is_loaded() { PAUSE_LABEL } else { RESUME_LABEL };
+            // Initial label: only show "Pause" if launchd has the agent AND the recorder
+            // process is actually alive. `is_loaded()` alone lies after EX_CONFIG limbo or
+            // a screenpipe self-exit — the service is registered but no process is running.
+            let toggle_label = if agent::is_running() { PAUSE_LABEL } else { RESUME_LABEL };
             let toggle_i = MenuItem::with_id(app, "toggle", toggle_label, true, None::<&str>)?;
             let sep = PredefinedMenuItem::separator(app)?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
@@ -174,6 +188,7 @@ pub fn run() {
 
             // Health poll loop: emit status to the frontend every 5s.
             let handle = app.handle().clone();
+            let tray_toggle = toggle_i.clone();
             tauri::async_runtime::spawn(async move {
                 let mut prev_running = false;
                 loop {
@@ -201,6 +216,11 @@ pub fn run() {
                         let _ = tauri::async_runtime::spawn_blocking(|| {
                             let _ = crate::pipes::reassert_scheduled();
                         });
+                    }
+                    // Keep tray toggle label honest: only "Pause" if a recorder process is
+                    // actually alive. Edge-only so we are not re-setting the same string.
+                    if running != prev_running {
+                        let _ = tray_toggle.set_text(if running { PAUSE_LABEL } else { RESUME_LABEL });
                     }
                     prev_running = running;
                     let _ = handle.emit("status", &status);

@@ -68,6 +68,10 @@ pub fn build_info_plist(bundle_id: &str, exec_name: &str) -> String {
   <true/>
   <key>NSMicrophoneUsageDescription</key>
   <string>Meye records audio so you can search and recall what you heard.</string>
+  <key>NSScreenCaptureUsageDescription</key>
+  <string>Meye records the screen so you can search and recall what you saw.</string>
+  <key>NSAccessibilityUsageDescription</key>
+  <string>Meye reads on-screen UI text so the timeline can capture what you were working on.</string>
 </dict>
 </plist>
 "#
@@ -76,6 +80,41 @@ pub fn build_info_plist(bundle_id: &str, exec_name: &str) -> String {
 
 pub fn is_pinned() -> bool {
     paths::recorder_binary().is_file()
+}
+
+/// Self-heal: pre-rebrand installs have `screenpipe` in MacOS/ but the plist points at
+/// `meye-recorder`. launchd then fails with EX_CONFIG and the service is stuck in
+/// spawn-scheduled limbo — Start becomes a silent no-op. Rename + re-sign so the bundle
+/// matches the plist.
+///
+/// Also self-heal Info.plist: older installs are missing NSScreenCaptureUsageDescription
+/// and still declare CFBundleExecutable=screenpipe, both of which keep macOS re-prompting
+/// for Screen Recording on every relaunch.
+pub fn migrate_binary_name() {
+    let mut changed = false;
+    let upstream = paths::recorder_macos_dir().join("screenpipe");
+    if !paths::recorder_binary().is_file() && upstream.is_file() {
+        if std::fs::rename(&upstream, paths::recorder_binary()).is_ok() {
+            changed = true;
+        }
+    }
+    let needs_info = match std::fs::read_to_string(paths::recorder_info_plist()) {
+        Ok(s) => !s.contains("NSScreenCaptureUsageDescription") || s.contains("<string>screenpipe</string>"),
+        Err(_) => false,
+    };
+    if needs_info {
+        if std::fs::write(
+            paths::recorder_info_plist(),
+            build_info_plist(paths::RECORDER_BUNDLE_ID, "meye-recorder"),
+        )
+        .is_ok()
+        {
+            changed = true;
+        }
+    }
+    if changed {
+        let _ = codesign(&paths::recorder_app());
+    }
 }
 
 /// Populate the npx cache with the latest screenpipe, then return its bin dir.
