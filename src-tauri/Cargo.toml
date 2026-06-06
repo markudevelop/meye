@@ -2,8 +2,9 @@
 name = "meye"
 version = "0.1.2"
 description = "Meye — local personal-memory app on screenpipe"
-authors = ["you"]
+authors = ["Mark Uretsky"]
 edition = "2021"
+license = "AGPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

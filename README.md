@@ -46,3 +46,8 @@ launchctl print gui/$(id -u)/com.screenpipe.keeper      # status
 launchctl bootout gui/$(id -u)/com.screenpipe.keeper    # stop
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.screenpipe.keeper.plist  # start
 ```
+
+## License
+Meye is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** —
+see [LICENSE](LICENSE). Third-party components (screenpipe and others) retain their
+own licenses; see [NOTICE](NOTICE).
