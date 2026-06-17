@@ -486,9 +486,5 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 .rv-ask { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
 .rv-ask input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px; color: var(--text); font-size: 13px; }
 .rv-ask input:focus { outline: none; border-color: var(--accent); }
-.rv-ai-actions { padding: 8px 10px 0; }
-.rv-solve { width: 100%; background: var(--accent-soft); color: var(--accent); border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
-.rv-solve:hover { background: var(--accent); color: #fff; }
-.rv-solve:disabled { opacity: .6; cursor: default; }
 
 @media (max-width: 760px) { .rv-stage { grid-template-columns: 1fr; height: auto; } .rv-screen { height: 50vh; } }

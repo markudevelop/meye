@@ -183,8 +183,14 @@ async function maybeNarrate() {
   if (Date.now() - lastNarrateAt < NARRATE_MS) return;
   narrateBusy = true;
   lastNarrateAt = Date.now();
+  // Coach mode: turn the passive narration into an active pair-programming guide that
+  // solves what it sees. Off → a brief observation.
+  const coach = ($("rv-coach") as HTMLInputElement).checked;
+  const directive = coach
+    ? "Act as my live pair-programming guide. In a few short, concrete steps (do this, then do that), tell me what to do next based on what's on screen. If you see a code bug/error or a math/logic problem, solve it and show the corrected line or snippet. Keep it tight and actionable."
+    : "";
   try {
-    appendAi("👁", await api.remoteComment(recentOcr, ""));
+    appendAi(coach ? "🧭" : "👁", await api.remoteComment(recentOcr, directive));
   } catch {
     /* transient — try again on the next frame */
   } finally {
@@ -205,34 +211,10 @@ async function ask() {
   }
 }
 
-async function solve() {
-  if (!recentOcr) {
-    appendAi("⚠️", "No screen text captured yet — give it a second.");
-    return;
-  }
-  const btn = $("rv-solve") as HTMLButtonElement;
-  btn.disabled = true;
-  appendAi("🧑 You:", "Solve what's on screen", true);
-  try {
-    appendAi(
-      "👁",
-      await api.remoteComment(
-        recentOcr,
-        "Solve any code bug/error or math/logic problem visible on screen. Give the full corrected code in a code block plus a short explanation of the fix."
-      )
-    );
-  } catch (e) {
-    appendAi("⚠️", `Couldn't solve: ${String(e)}`);
-  } finally {
-    btn.disabled = false;
-  }
-}
-
 export function initRemote() {
   $("rv-connect").onclick = () => void connect();
   $("rv-disconnect").onclick = () => disconnect();
   $("rv-ask-btn").onclick = () => void ask();
-  $("rv-solve").onclick = () => void solve();
   ($("rv-ask") as HTMLInputElement).addEventListener("keydown", (e) => {
     if ((e as KeyboardEvent).key === "Enter") void ask();
   });
