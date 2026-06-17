@@ -64,5 +64,5 @@ jobs:
 
             **macOS** (universal `.dmg`/`.app`) is **unsigned** — on first launch, right-click the app → **Open**, or run `xattr -cr /Applications/Meye.app`.
             **Windows** is the `.exe` NSIS installer.
-          prerelease: true
+          prerelease: false
           args: ${{ matrix.args }}
