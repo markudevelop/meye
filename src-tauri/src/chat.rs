@@ -250,16 +250,27 @@ pub async fn comment_on(context: &str, question: &str) -> Result<String, String>
     if p.provider == "anthropic" {
         return Err("Chat via the Anthropic provider isn't wired yet — use a custom/openai/ollama preset (DeepSeek works).".into());
     }
-    let system = "You are Meye, watching a live screen through its on-screen text (OCR). Be a \
-        concise, proactive helper: in 2-4 short sentences, say what the user seems to be doing and \
-        add genuinely useful help — if you see a math problem, solve it briefly with the key steps; \
-        if code, point out a bug or improvement; if notes, suggest structure or a missing point. \
-        Don't just echo the text back, and don't pad. If the text is too sparse to tell, say so in \
-        one line.";
-    let user = if question.trim().is_empty() {
-        format!("Current screen text:\n\n{context}")
+    let asked = !question.trim().is_empty();
+    // Two modes: passive narration (short, but still actionable) vs an explicit ask /
+    // "solve this" (full problem-solver — actually fixes code, works the problem).
+    let system = if asked {
+        "You are Meye, looking at the user's live screen via its on-screen text (OCR). Answer their \
+         request fully and concretely. If there is code with a bug, error, or unfinished logic, \
+         SOLVE it: give the corrected code in a fenced ```code block``` and a short explanation of \
+         the fix and why. If it's a math/logic/algorithm problem, work it out with the key steps and \
+         the final answer. Prefer a complete, usable solution over a description. If the OCR text \
+         looks truncated, solve what's visible and note what you'd need to see."
     } else {
+        "You are Meye, watching the user's live screen via on-screen text (OCR). In 2-4 short \
+         sentences: say what they're doing and proactively help. If you see a code bug or error, \
+         name it AND give the concrete fix (the corrected line/snippet), not just a description. If \
+         a math problem, give the answer with the key steps. Don't echo the text back or pad. If \
+         it's too sparse to tell, say so in one line."
+    };
+    let user = if asked {
         format!("Current screen text:\n\n{context}\n\nThe user asks: {question}")
+    } else {
+        format!("Current screen text:\n\n{context}")
     };
     let body = json!({
         "model": p.model,
@@ -267,7 +278,8 @@ pub async fn comment_on(context: &str, question: &str) -> Result<String, String>
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
-        "max_tokens": 512
+        // Full solutions (incl. corrected code) need room; narration stays tight.
+        "max_tokens": if asked { 1500 } else { 512 }
     });
     let resp = post_body(&p, &body).send().await.map_err(|e| e.to_string())?;
     let v: Value = resp.json().await.map_err(|e| e.to_string())?;

@@ -8,12 +8,14 @@ import { renderMarkdown } from "./md";
 
 const POLL_MS = 1500; // how often we ask the host for its latest frame
 const NARRATE_MS = 12000; // min gap between automatic AI narration calls
-// Window for the "latest frame" lookup. Deliberately WIDE: start_time is computed from THIS
-// viewer's clock but compared against the HOST's timestamps, which can differ by hours (timezone
-// offset, clock skew, UTC-vs-local storage). A tight window wrongly reports "host idle". 24h still
-// bounds the host query enough to stay fast; we always take the newest row (limit 1), so a wide
-// window doesn't show stale frames — only the most recent one.
-const LATEST_WINDOW_MS = 24 * 60 * 60 * 1000;
+// "Latest frame" window. The host filters by start_time against ITS clock, which can differ from
+// this viewer's by hours (timezone/skew/UTC-vs-local). So: cast a wide net only until we've seen
+// one frame, then anchor a NARROW window to the host's own clock (learned from that frame's
+// timestamp). Narrow keeps each poll cheap on the host — a fixed 24h window made every 1.5s poll a
+// heavy whole-day scan that could overload (and degrade) the host's recorder.
+const FIRST_WINDOW_MS = 24 * 60 * 60 * 1000; // clock-agnostic, used only until the first frame
+const NARROW_WINDOW_MS = 15 * 60 * 1000; // light steady-state window, anchored to host time
+let hostSkewMs: number | null = null; // (host frame time) − (this viewer's clock)
 
 let host = "";
 let token = "";
@@ -27,7 +29,10 @@ let ticking = false; // guard so a slow poll never overlaps the next
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 }
-const sinceIso = () => new Date(Date.now() - LATEST_WINDOW_MS).toISOString();
+function sinceIso(): string {
+  const base = hostSkewMs === null ? Date.now() - FIRST_WINDOW_MS : Date.now() + hostSkewMs - NARROW_WINDOW_MS;
+  return new Date(base).toISOString();
+}
 
 function setStatus(text: string, live: boolean) {
   $("rv-status").innerHTML = `<span class="live-pulse${live ? "" : " off"}"></span> ${esc(text)}`;
@@ -98,6 +103,7 @@ async function connect() {
     lastFrameId = null;
     recentOcr = "";
     lastNarrateAt = 0;
+    hostSkewMs = null;
     $("rv-ai-out").innerHTML = `<div class="meta">Narration appears here as the screen changes.</div>`;
     ($("rv-img") as HTMLImageElement).removeAttribute("src");
     $("rv-setup").classList.add("hidden");
@@ -143,6 +149,8 @@ async function tick() {
     const text = String(c.text ?? c.ocr_text ?? "").trim();
     const app = c.app_name ?? "";
     const ts = c.timestamp ?? "";
+    const tsMs = ts ? new Date(ts).getTime() : NaN;
+    if (!isNaN(tsMs)) hostSkewMs = tsMs - Date.now(); // anchor the next window to the host's clock
     if (text) recentOcr = text;
     $("rv-meta").textContent = [app, ts ? new Date(ts).toLocaleTimeString() : ""].filter(Boolean).join(" · ");
     if (fid != null && fid !== lastFrameId) {
@@ -197,10 +205,34 @@ async function ask() {
   }
 }
 
+async function solve() {
+  if (!recentOcr) {
+    appendAi("⚠️", "No screen text captured yet — give it a second.");
+    return;
+  }
+  const btn = $("rv-solve") as HTMLButtonElement;
+  btn.disabled = true;
+  appendAi("🧑 You:", "Solve what's on screen", true);
+  try {
+    appendAi(
+      "👁",
+      await api.remoteComment(
+        recentOcr,
+        "Solve any code bug/error or math/logic problem visible on screen. Give the full corrected code in a code block plus a short explanation of the fix."
+      )
+    );
+  } catch (e) {
+    appendAi("⚠️", `Couldn't solve: ${String(e)}`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 export function initRemote() {
   $("rv-connect").onclick = () => void connect();
   $("rv-disconnect").onclick = () => disconnect();
   $("rv-ask-btn").onclick = () => void ask();
+  $("rv-solve").onclick = () => void solve();
   ($("rv-ask") as HTMLInputElement).addEventListener("keydown", (e) => {
     if ((e as KeyboardEvent).key === "Enter") void ask();
   });
