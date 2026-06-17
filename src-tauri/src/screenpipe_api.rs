@@ -192,9 +192,15 @@ fn remote_base(host: &str) -> String {
 
 /// Latest screen frames + OCR text from a remote host, bounded to `since` (RFC3339)
 /// so the host never runs an unbounded whole-DB scan.
-pub async fn remote_search(host: &str, token: &str, limit: u32, since: Option<String>) -> Result<Value, String> {
+pub async fn remote_search(
+    host: &str,
+    token: &str,
+    content_type: &str,
+    limit: u32,
+    since: Option<String>,
+) -> Result<Value, String> {
     let mut q: Vec<(String, String)> = vec![
-        ("content_type".into(), "ocr".into()),
+        ("content_type".into(), content_type.into()),
         ("limit".into(), limit.to_string()),
     ];
     if let Some(s) = since {

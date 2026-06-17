@@ -324,6 +324,81 @@ pub fn reassert_scheduled() -> Result<Vec<String>, String> {
     Ok(names)
 }
 
+/// Recursively copy a directory tree, including dotfiles/dirs like `.pi`.
+fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(dst)?;
+    for entry in std::fs::read_dir(src)? {
+        let entry = entry?;
+        let from = entry.path();
+        let to = dst.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            copy_dir_all(&from, &to)?;
+        } else {
+            std::fs::copy(&from, &to)?;
+        }
+    }
+    Ok(())
+}
+
+/// Substitute the `{{VAULT}}` placeholder in a single pipe.md with the configured vault path.
+fn apply_vault(pipe_md: &std::path::Path, vault: &str) {
+    if let Ok(s) = std::fs::read_to_string(pipe_md) {
+        if s.contains("{{VAULT}}") {
+            let _ = std::fs::write(pipe_md, s.replace("{{VAULT}}", vault));
+        }
+    }
+}
+
+/// Seed bundled default pipes into `~/.screenpipe/pipes/` on first run. For each bundled pipe
+/// whose target dir does not yet exist, copy it in and substitute the vault path into its
+/// pipe.md. Idempotent and non-destructive: an existing pipe (user edits, logs, output) is
+/// never touched, so a second machine gets the same set without overwriting anything. Returns
+/// the names of pipes that were newly seeded.
+pub fn seed_defaults(
+    bundled_pipes: &std::path::Path,
+    target_pipes: &std::path::Path,
+    vault: &str,
+) -> std::io::Result<Vec<String>> {
+    let mut seeded = Vec::new();
+    if !bundled_pipes.is_dir() {
+        return Ok(seeded);
+    }
+    std::fs::create_dir_all(target_pipes)?;
+    for entry in std::fs::read_dir(bundled_pipes)? {
+        let entry = entry?;
+        if !entry.file_type()?.is_dir() {
+            continue;
+        }
+        let target = target_pipes.join(entry.file_name());
+        if target.exists() {
+            continue; // never clobber an existing pipe
+        }
+        copy_dir_all(&entry.path(), &target)?;
+        apply_vault(&target.join("pipe.md"), vault);
+        seeded.push(entry.file_name().to_string_lossy().into_owned());
+    }
+    Ok(seeded)
+}
+
+/// Re-point already-seeded pipes at a new vault by replacing the old vault path with the new
+/// one in every installed pipe.md. Best-effort; used when the user changes the vault later.
+pub fn rewrite_vault(target_pipes: &std::path::Path, old: &str, new: &str) {
+    if old == new || old.is_empty() {
+        return;
+    }
+    let Ok(entries) = std::fs::read_dir(target_pipes) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let md = entry.path().join("pipe.md");
+        if let Ok(s) = std::fs::read_to_string(&md) {
+            if s.contains(old) {
+                let _ = std::fs::write(&md, s.replace(old, new));
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -428,5 +503,40 @@ notion-crm-sync                productivity    25         Auto-detect business c
         assert!(out.contains("My schedule: do not touch this line."));
         // frontmatter schedule replaced, body schedule untouched => 2 total
         assert_eq!(out.matches("schedule:").count(), 2);
+    }
+
+    #[test]
+    fn seed_copies_missing_and_substitutes_vault() {
+        let base = std::env::temp_dir().join("meye_seed_copy");
+        let _ = std::fs::remove_dir_all(&base);
+        let bundled = base.join("bundled");
+        let target = base.join("target");
+        std::fs::create_dir_all(bundled.join("p1")).unwrap();
+        std::fs::write(bundled.join("p1/pipe.md"), "note: {{VAULT}}/Daily/x.md").unwrap();
+
+        let seeded = seed_defaults(&bundled, &target, "/V").unwrap();
+        assert_eq!(seeded, vec!["p1".to_string()]);
+        let out = std::fs::read_to_string(target.join("p1/pipe.md")).unwrap();
+        assert!(out.contains("/V/Daily/x.md"));
+        assert!(!out.contains("{{VAULT}}"));
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn seed_skips_existing_pipe() {
+        let base = std::env::temp_dir().join("meye_seed_skip");
+        let _ = std::fs::remove_dir_all(&base);
+        let bundled = base.join("bundled");
+        let target = base.join("target");
+        std::fs::create_dir_all(bundled.join("p1")).unwrap();
+        std::fs::write(bundled.join("p1/pipe.md"), "fresh {{VAULT}}").unwrap();
+        std::fs::create_dir_all(target.join("p1")).unwrap();
+        std::fs::write(target.join("p1/pipe.md"), "USER EDITS").unwrap();
+
+        let seeded = seed_defaults(&bundled, &target, "/V").unwrap();
+        assert!(seeded.is_empty()); // existing pipe skipped
+        let out = std::fs::read_to_string(target.join("p1/pipe.md")).unwrap();
+        assert_eq!(out, "USER EDITS"); // untouched
+        let _ = std::fs::remove_dir_all(&base);
     }
 }

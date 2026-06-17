@@ -477,6 +477,23 @@ pub fn api_get_remote_enabled() -> bool {
     crate::prefs::get_remote_enabled()
 }
 
+/// The configured Obsidian vault path (or the per-OS default if unset). Pre-fills the
+/// onboarding/Settings field.
+#[tauri::command]
+pub fn api_get_obsidian_vault() -> String {
+    crate::prefs::get_obsidian_vault()
+}
+
+/// Set the Obsidian vault path and re-point any already-seeded pipes (obsidian-sync and the
+/// summary pipes) at the new location by rewriting their pipe.md.
+#[tauri::command]
+pub fn api_set_obsidian_vault(path: String) -> Result<(), String> {
+    let old = crate::prefs::get_obsidian_vault();
+    crate::prefs::set_obsidian_vault(&path)?;
+    crate::pipes::rewrite_vault(&paths::data_dir().join("pipes"), &old, &path);
+    Ok(())
+}
+
 /// Host: turn LAN exposure on/off (relaunches the recorder with/without --listen-on-lan).
 #[tauri::command]
 pub async fn api_set_remote_enabled(on: bool) -> Result<(), String> {
@@ -504,7 +521,15 @@ pub fn api_remote_pairing() -> Result<Value, String> {
 /// Viewer: latest frame id + OCR text from a remote host (bounded by `since`, RFC3339).
 #[tauri::command]
 pub async fn api_remote_latest(host: String, token: String, since: String) -> Result<Value, String> {
-    crate::screenpipe_api::remote_search(&host, &token, 1, Some(since)).await
+    crate::screenpipe_api::remote_search(&host, &token, "ocr", 1, Some(since)).await
+}
+
+/// Viewer: recent audio transcriptions from a remote host (bounded by `since`, RFC3339).
+/// Lets the viewer's AI hear a meeting on the host — system audio (the other party) and/or
+/// the host's mic, whichever streams the host is transcribing.
+#[tauri::command]
+pub async fn api_remote_audio(host: String, token: String, since: String, limit: u32) -> Result<Value, String> {
+    crate::screenpipe_api::remote_search(&host, &token, "audio", limit, Some(since)).await
 }
 
 /// Viewer: a remote frame JPEG as a data: URL ready for an <img> tag.

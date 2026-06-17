@@ -41,3 +41,39 @@ pub fn set_remote_enabled(on: bool) -> Result<(), String> {
     v["remote_enabled"] = Value::Bool(on);
     write(&v)
 }
+
+/// Where the seeded `obsidian-sync` pipe writes daily notes. Falls back to a per-OS default
+/// (the same value onboarding/Settings pre-fill) so seeding has a target even before the user
+/// picks one. The value is substituted into the bundled pipe's `{{VAULT}}` placeholder.
+pub fn get_obsidian_vault() -> String {
+    read()
+        .get("obsidian_vault")
+        .and_then(|v| v.as_str())
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .unwrap_or_else(default_obsidian_vault)
+}
+
+pub fn set_obsidian_vault(path: &str) -> Result<(), String> {
+    let mut v = read();
+    v["obsidian_vault"] = Value::String(path.to_string());
+    write(&v)
+}
+
+/// Best-guess Obsidian vault location per OS: macOS → the iCloud Obsidian path, Windows →
+/// `%USERPROFILE%\iCloudDrive\Obsidian`, otherwise `~/Documents/Obsidian`.
+pub fn default_obsidian_vault() -> String {
+    let home = if cfg!(windows) {
+        std::env::var("USERPROFILE")
+    } else {
+        std::env::var("HOME")
+    }
+    .unwrap_or_default();
+    #[cfg(target_os = "macos")]
+    let rel = "Library/Mobile Documents/com~apple~CloudDocs/Obsidian/Obsidian Vault iCloud";
+    #[cfg(windows)]
+    let rel = "iCloudDrive\\Obsidian";
+    #[cfg(not(any(target_os = "macos", windows)))]
+    let rel = "Documents/Obsidian";
+    std::path::Path::new(&home).join(rel).to_string_lossy().into_owned()
+}

@@ -125,6 +125,9 @@ pub fn run() {
             commands::api_set_remote_enabled,
             commands::api_remote_pairing,
             commands::api_remote_latest,
+            commands::api_remote_audio,
+            commands::api_get_obsidian_vault,
+            commands::api_set_obsidian_vault,
             commands::api_remote_frame,
             commands::api_remote_comment,
         ])
@@ -141,6 +144,18 @@ pub fn run() {
             // to click Start every time they open the app — which they do not.
             if agent::is_installed() && binary::is_pinned() {
                 let _ = agent::start();
+            }
+
+            // Seed bundled default pipes into ~/.screenpipe/pipes (idempotent; never clobbers an
+            // existing pipe). Lets a fresh install — e.g. a second machine — get the same set of
+            // automations instead of an empty Pipes tab. obsidian-sync's {{VAULT}} placeholder is
+            // resolved to the configured (or per-OS default) Obsidian vault path.
+            if let Ok(res) = app.path().resource_dir() {
+                let _ = pipes::seed_defaults(
+                    &res.join("pipes"),
+                    &paths::data_dir().join("pipes"),
+                    &prefs::get_obsidian_vault(),
+                );
             }
 
             // Minimal tray: open the app, one state-aware recording toggle, quit.

@@ -88,6 +88,10 @@ export const api = {
   remotePairing: () => invoke("api_remote_pairing") as Promise<{ host: string; port: number; token: string; enabled: boolean }>,
   remoteLatest: (host: string, token: string, since: string) =>
     invoke("api_remote_latest", { host, token, since }) as Promise<any>,
+  remoteAudio: (host: string, token: string, since: string, limit: number) =>
+    invoke("api_remote_audio", { host, token, since, limit }) as Promise<any>,
+  getObsidianVault: () => invoke("api_get_obsidian_vault") as Promise<string>,
+  setObsidianVault: (path: string) => invoke("api_set_obsidian_vault", { path }) as Promise<void>,
   remoteFrame: (host: string, token: string, id: number) =>
     invoke("api_remote_frame", { host, token, id }) as Promise<string>,
   remoteComment: (context: string, question: string) =>

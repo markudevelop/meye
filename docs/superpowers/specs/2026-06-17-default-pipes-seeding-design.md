@@ -50,16 +50,19 @@ copied `pipe.md`.
 - Resolves the resource dir via Tauri's resource resolver; resolves the target
   via existing `paths::` helpers.
 
-### 3. Vault path config + onboarding step
-- New pref `obsidian_vault` (stored alongside existing prefs).
-- Onboarding gains one step: "Where's your Obsidian vault?", pre-filled with an
-  auto-detected default per OS:
+### 3. Vault path config
+- New pref `obsidian_vault` (stored alongside existing prefs), with a per-OS
+  default used both as the seeding fallback and the pre-filled field value:
   - macOS: `~/Library/Mobile Documents/com~apple~CloudDocs/Obsidian/Obsidian Vault iCloud`
   - Windows: `%USERPROFILE%\iCloudDrive\Obsidian`
   - else: `~/Documents/Obsidian`
-- A Settings field updates it later; changing it rewrites the `{{VAULT}}` target
-  in `obsidian-sync/pipe.md` (re-substitute from the bundled snapshot's template
-  line so repeated edits don't corrupt the file).
+- An "Obsidian vault" field on the **Automations (Pipes) tab** (where it's most
+  discoverable, next to the pipes it affects) shows the current path and saves a
+  new one. Saving calls `pipes::rewrite_vault(old, new)`, which replaces the old
+  vault path with the new one across every installed `pipe.md` — so the already-
+  seeded obsidian-sync and summary pipes re-point without re-seeding.
+- (A dedicated onboarding step was considered but deferred — the auto-detected
+  default plus this always-visible field covers first-run and later changes.)
 
 ### 4. Pipes tab accuracy
 Seeded pipes live in the standard dir, so `pipeList` surfaces them

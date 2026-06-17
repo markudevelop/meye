@@ -280,4 +280,15 @@ export function initPipes() {
       refreshPipes();
     });
   };
+
+  // Obsidian vault: show the current path; saving re-points the seeded pipes at the new folder.
+  const vaultInput = $("p-vault") as HTMLInputElement;
+  void api.getObsidianVault().then((v) => {
+    vaultInput.value = v;
+  });
+  $("p-vault-save").onclick = () => {
+    const path = vaultInput.value.trim();
+    if (!path) return;
+    void wrap("Save Obsidian vault", () => api.setObsidianVault(path));
+  };
 }

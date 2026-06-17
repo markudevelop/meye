@@ -155,6 +155,11 @@
             <header class="panel-head"><h1>Automations</h1></header>
             <p class="page-intro">Automations (“pipes”) turn your recordings into useful things — daily notes, summaries, reminders. <b>Run now</b> runs one once; <b>Runs:</b> sets how often it runs on its own. Each run uses your AI model.</p>
             <div class="section">
+              <div class="section-title">Obsidian vault</div>
+              <div class="section-desc">Where the <b>obsidian-sync</b> automation (and the summary pipes) write notes. Set this to your Obsidian vault folder on this machine.</div>
+              <div class="row"><input id="p-vault" placeholder="/path/to/your/Obsidian/Vault" style="flex:1" /><button id="p-vault-save" class="primary">Save</button></div>
+            </div>
+            <div class="section">
               <div class="section-title">Your automations</div>
               <div class="section-desc">Toggle on/off, set a schedule, or run one right now.</div>
               <div id="p-list">—</div>

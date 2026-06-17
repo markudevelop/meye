@@ -24,7 +24,18 @@ let lastFrameId: number | null = null;
 let lastNarrateAt = 0;
 let narrateBusy = false;
 let recentOcr = "";
+let recentAudio = ""; // recent host audio transcript (meeting speech), newest last
+let lastAudioTs = ""; // newest audio timestamp seen — detects fresh speech
 let ticking = false; // guard so a slow poll never overlaps the next
+
+// What the AI sees: the host's on-screen text plus any recent meeting audio. Either may be
+// empty (screen-only host, or a static screen with people talking) — empty sections are dropped.
+function buildContext(): string {
+  const parts: string[] = [];
+  if (recentOcr) parts.push("SCREEN:\n" + recentOcr);
+  if (recentAudio) parts.push("MEETING AUDIO (most recent last):\n" + recentAudio);
+  return parts.join("\n\n");
+}
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
@@ -102,6 +113,8 @@ async function connect() {
     localStorage.setItem("meye.remote.token", token);
     lastFrameId = null;
     recentOcr = "";
+    recentAudio = "";
+    lastAudioTs = "";
     lastNarrateAt = 0;
     hostSkewMs = null;
     $("rv-ai-out").innerHTML = `<div class="meta">Narration appears here as the screen changes.</div>`;
@@ -162,6 +175,31 @@ async function tick() {
       }
       void maybeNarrate();
     }
+
+    // Also pull recent host audio so the AI can hear a meeting — system audio (the other
+    // party) and/or the host's mic, whichever the host is transcribing. Best-effort: a host
+    // that isn't transcribing just returns nothing. Reuses the cheap host-clock window.
+    try {
+      const ares: any = await api.remoteAudio(host, token, sinceIso(), 10);
+      const rows = (ares.data ?? []).map((h: any) => h.content ?? h);
+      const lines = rows
+        .map((c: any) => {
+          const t = String(c.transcription ?? c.text ?? "").trim();
+          if (!t) return "";
+          const who = c.speaker?.name ?? (c.speaker_id != null ? `Speaker ${c.speaker_id}` : (c.device_name ?? ""));
+          return who ? `${who}: ${t}` : t;
+        })
+        .filter(Boolean)
+        .reverse(); // screenpipe returns newest-first; show newest last for the AI
+      if (lines.length) recentAudio = lines.join("\n");
+      const maxTs = rows.map((c: any) => String(c.timestamp ?? "")).filter(Boolean).sort().pop() ?? "";
+      if (maxTs && maxTs !== lastAudioTs) {
+        lastAudioTs = maxTs;
+        void maybeNarrate(); // fresh speech — let the AI respond even if the screen didn't change
+      }
+    } catch {
+      /* audio is optional; ignore when the host isn't transcribing */
+    }
   } finally {
     ticking = false;
   }
@@ -179,7 +217,7 @@ function appendAi(who: string, text: string, isUser = false) {
 
 async function maybeNarrate() {
   if (!($("rv-narrate") as HTMLInputElement).checked) return;
-  if (narrateBusy || !recentOcr) return;
+  if (narrateBusy || (!recentOcr && !recentAudio)) return;
   if (Date.now() - lastNarrateAt < NARRATE_MS) return;
   narrateBusy = true;
   lastNarrateAt = Date.now();
@@ -187,10 +225,10 @@ async function maybeNarrate() {
   // solves what it sees. Off → a brief observation.
   const coach = ($("rv-coach") as HTMLInputElement).checked;
   const directive = coach
-    ? "Act as my live pair-programming guide. In a few short, concrete steps (do this, then do that), tell me what to do next based on what's on screen. If you see a code bug/error or a math/logic problem, solve it and show the corrected line or snippet. Keep it tight and actionable."
+    ? "Act as my live pair-programming guide. In a few short, concrete steps (do this, then do that), tell me what to do next based on what's on screen and any meeting audio. If you see a code bug/error or a math/logic problem — on screen or asked aloud — solve it and show the corrected line or snippet. Keep it tight and actionable."
     : "";
   try {
-    appendAi(coach ? "🧭" : "👁", await api.remoteComment(recentOcr, directive));
+    appendAi(coach ? "🧭" : "👁", await api.remoteComment(buildContext(), directive));
   } catch {
     /* transient — try again on the next frame */
   } finally {
@@ -205,7 +243,7 @@ async function ask() {
   input.value = "";
   appendAi("🧑 You:", q, true);
   try {
-    appendAi("👁", await api.remoteComment(recentOcr, q));
+    appendAi("👁", await api.remoteComment(buildContext(), q));
   } catch (e) {
     appendAi("⚠️", `Couldn't get an answer: ${String(e)}`);
   }
