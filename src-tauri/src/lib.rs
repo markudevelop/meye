@@ -38,8 +38,10 @@ const RESUME_LABEL: &str = "Resume recording";
 /// Managed handle to the tray icon so commands can show/hide it (discreet mode).
 pub struct AppTray(pub tauri::tray::TrayIcon);
 
-/// Apply discreet mode: hide/show Meye's own dock icon + tray icon. Never touches the
-/// macOS recording indicator.
+/// Apply discreet mode: hide/show Meye's own taskbar/dock + tray presence. Never touches the
+/// OS recording indicator, and never hides the *process* (that stays in Task Manager — hiding a
+/// running process is malware behaviour, not what this does). The recorder + automations keep
+/// running regardless; only Meye's visible GUI footprint changes.
 pub fn apply_discreet(app: &tauri::AppHandle, on: bool) {
     #[cfg(target_os = "macos")]
     {
@@ -49,6 +51,14 @@ pub fn apply_discreet(app: &tauri::AppHandle, on: bool) {
             tauri::ActivationPolicy::Regular
         };
         let _ = app.set_activation_policy(policy);
+    }
+    // Windows: drop the taskbar button (the dock-hide equivalent). Previously discreet mode
+    // only hid the tray here, so the taskbar entry stayed and it looked like nothing happened.
+    #[cfg(windows)]
+    {
+        if let Some(w) = app.get_webview_window("main") {
+            let _ = w.set_skip_taskbar(on);
+        }
     }
     if let Some(tray) = app.try_state::<AppTray>() {
         let _ = tray.0.set_visible(!on);
