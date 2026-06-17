@@ -8,7 +8,12 @@ import { renderMarkdown } from "./md";
 
 const POLL_MS = 1500; // how often we ask the host for its latest frame
 const NARRATE_MS = 12000; // min gap between automatic AI narration calls
-const OCR_WINDOW_MIN = 2; // only consider the host's last N minutes of OCR (keeps host query fast)
+// Window for the "latest frame" lookup. Deliberately WIDE: start_time is computed from THIS
+// viewer's clock but compared against the HOST's timestamps, which can differ by hours (timezone
+// offset, clock skew, UTC-vs-local storage). A tight window wrongly reports "host idle". 24h still
+// bounds the host query enough to stay fast; we always take the newest row (limit 1), so a wide
+// window doesn't show stale frames — only the most recent one.
+const LATEST_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 let host = "";
 let token = "";
@@ -17,11 +22,12 @@ let lastFrameId: number | null = null;
 let lastNarrateAt = 0;
 let narrateBusy = false;
 let recentOcr = "";
+let ticking = false; // guard so a slow poll never overlaps the next
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
 }
-const sinceIso = () => new Date(Date.now() - OCR_WINDOW_MIN * 60 * 1000).toISOString();
+const sinceIso = () => new Date(Date.now() - LATEST_WINDOW_MS).toISOString();
 
 function setStatus(text: string, live: boolean) {
   $("rv-status").innerHTML = `<span class="live-pulse${live ? "" : " off"}"></span> ${esc(text)}`;
@@ -116,34 +122,40 @@ function disconnect() {
 }
 
 async function tick() {
-  let res: any;
+  if (ticking) return; // a previous poll is still in flight — skip this beat
+  ticking = true;
   try {
-    res = await api.remoteLatest(host, token, sinceIso());
-  } catch {
-    setStatus("Reconnecting…", false);
-    return;
-  }
-  setStatus("Connected", true);
-  const hit = (res.data ?? [])[0];
-  if (!hit) {
-    $("rv-meta").textContent = "Host is idle — no recent screen activity.";
-    return;
-  }
-  const c = hit.content ?? hit;
-  const fid = c.frame_id ?? c.frameId ?? c.id;
-  const text = String(c.text ?? c.ocr_text ?? "").trim();
-  const app = c.app_name ?? "";
-  const ts = c.timestamp ?? "";
-  if (text) recentOcr = text;
-  $("rv-meta").textContent = [app, ts ? new Date(ts).toLocaleTimeString() : ""].filter(Boolean).join(" · ");
-  if (fid != null && fid !== lastFrameId) {
-    lastFrameId = fid;
+    let res: any;
     try {
-      ($("rv-img") as HTMLImageElement).src = await api.remoteFrame(host, token, fid);
+      res = await api.remoteLatest(host, token, sinceIso());
     } catch {
-      /* keep the last frame on a transient fetch error */
+      setStatus("Reconnecting…", false);
+      return;
     }
-    void maybeNarrate();
+    setStatus("Connected", true);
+    const hit = (res.data ?? [])[0];
+    if (!hit) {
+      $("rv-meta").textContent = "No frames from the host yet — is recording on over there?";
+      return;
+    }
+    const c = hit.content ?? hit;
+    const fid = c.frame_id ?? c.frameId ?? c.id;
+    const text = String(c.text ?? c.ocr_text ?? "").trim();
+    const app = c.app_name ?? "";
+    const ts = c.timestamp ?? "";
+    if (text) recentOcr = text;
+    $("rv-meta").textContent = [app, ts ? new Date(ts).toLocaleTimeString() : ""].filter(Boolean).join(" · ");
+    if (fid != null && fid !== lastFrameId) {
+      lastFrameId = fid;
+      try {
+        ($("rv-img") as HTMLImageElement).src = await api.remoteFrame(host, token, fid);
+      } catch {
+        /* keep the last frame on a transient fetch error */
+      }
+      void maybeNarrate();
+    }
+  } finally {
+    ticking = false;
   }
 }
 
