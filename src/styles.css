@@ -485,7 +485,8 @@ input[type="range"] { accent-color: var(--accent); padding: 0; }
 .rv-ai.fullscreen { position: fixed; inset: 0; z-index: 200; border-radius: 0; border: none; }
 .rv-ai.fullscreen .rv-ai-out { font-size: 14px; padding: 20px 24px; }
 .rv-ai.fullscreen .rv-msg { max-width: 1100px; width: 100%; margin: 0 auto; }
-.rv-ai-out pre { overflow-x: auto; max-width: 100%; }
+/* AI output: show code in full — wrap long lines, no inner scroll box, no height cap. */
+.rv-ai-out pre, .rv-ai-out pre.md-code { max-height: none; overflow: visible; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
 .rv-ai-out { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 12px; }
 .rv-msg { font-size: 13.5px; line-height: 1.55; }
 .rv-msg-user { color: var(--muted); }
