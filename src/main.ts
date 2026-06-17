@@ -3,6 +3,7 @@ import { initTabs, goTab, type Tab } from "./tabs";
 import { initHome, loadHome, startNewChat } from "./home";
 import { initStatus, refreshHealth } from "./status";
 import { initMemory, startMemory, stopMemory } from "./memory";
+import { initRemote, startRemote, stopRemote } from "./remote";
 import { initDevices, refreshDevices } from "./devices";
 import { initPipes, refreshPipes } from "./pipes";
 import { initSettings, refreshSettings } from "./settings";
@@ -20,6 +21,7 @@ initPalette();
 initHome();
 initStatus();
 initMemory();
+initRemote();
 initDevices();
 initPipes();
 initSettings();
@@ -78,12 +80,16 @@ document.querySelectorAll<HTMLElement>(".subtab").forEach((b) => {
 
 initTabs((tab: Tab) => {
   if (tab !== "memory") stopMemory();
+  if (tab !== "remote") stopRemote();
   if (tab === "home") {
     poller(null);
     void loadHome();
   } else if (tab === "memory") {
     poller(null);
     startMemory();
+  } else if (tab === "remote") {
+    poller(null);
+    startRemote();
   } else if (tab === "pipes") {
     poller(() => void refreshPipes(), 5000); // auto-refresh pipe status/last-run
   } else if (tab === "settings") {

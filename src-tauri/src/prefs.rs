@@ -28,3 +28,16 @@ pub fn set_discreet(on: bool) -> Result<(), String> {
     v["discreet"] = Value::Bool(on);
     write(&v)
 }
+
+/// Remote viewing: when on, the recorder is launched with --listen-on-lan + --api-auth
+/// so another Meye instance on the LAN can view this machine (bearer-token required for
+/// non-localhost). Off by default — see `agent::program_arguments`.
+pub fn get_remote_enabled() -> bool {
+    read().get("remote_enabled").and_then(|v| v.as_bool()).unwrap_or(false)
+}
+
+pub fn set_remote_enabled(on: bool) -> Result<(), String> {
+    let mut v = read();
+    v["remote_enabled"] = Value::Bool(on);
+    write(&v)
+}

@@ -20,6 +20,13 @@ pub fn program_arguments() -> Vec<String> {
         "record".to_string(),
     ];
     v.extend(extra_args());
+    // Remote viewing (opt-in, off by default): serve the API on the LAN with a bearer
+    // token required for non-localhost callers. The host's own app keeps using
+    // 127.0.0.1, which screenpipe always allows. Toggled via `set_remote_enabled`.
+    if crate::prefs::get_remote_enabled() {
+        v.push("--listen-on-lan".into());
+        v.push("--api-auth".into());
+    }
     v
 }
 
@@ -90,6 +97,17 @@ pub fn set_record_args(args: &[String]) -> io::Result<()> {
         paths::record_config(),
         serde_json::to_string_pretty(&json).unwrap_or_default(),
     )?;
+    write_launch_config()?;
+    if is_loaded() {
+        reload()?;
+    }
+    Ok(())
+}
+
+/// Toggle LAN remote-viewing exposure: persist the pref, regenerate the launch config
+/// (so the relaunched recorder picks up / drops --listen-on-lan), and restart it.
+pub fn set_remote_enabled(on: bool) -> io::Result<()> {
+    crate::prefs::set_remote_enabled(on).map_err(io::Error::other)?;
     write_launch_config()?;
     if is_loaded() {
         reload()?;

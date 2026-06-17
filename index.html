@@ -22,6 +22,9 @@
           <button id="tab-btn-memory" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><span>Memory</span>
           </button>
+          <button id="tab-btn-remote" class="nav-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Remote</span>
+          </button>
           <button id="tab-btn-pipes" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4m8-8h-4M6 12H2m13.5-5.5-2.8 2.8M9.3 14.7l-2.8 2.8m11 0-2.8-2.8M9.3 9.3 6.5 6.5"/><circle cx="12" cy="12" r="3"/></svg><span>Automations</span>
           </button>
@@ -96,6 +99,55 @@
             <div id="mem-feed"></div>
             <div id="mem-sentinel" style="height:1px"></div>
             <p id="mem-end" class="meta hidden">— that's the beginning of your recordings —</p>
+          </section>
+
+          <section id="panel-remote" class="panel hidden">
+            <header class="panel-head"><h1>Remote viewer</h1></header>
+            <p class="page-intro">View another Meye machine on your Wi-Fi and let the AI watch along — it describes what's happening and helps on the fly (e.g. solves a math problem it sees in your notes). Read-only: it never controls the other machine.</p>
+
+            <div id="rv-setup">
+              <div class="section">
+                <div class="section-title">Host this machine</div>
+                <div class="section-desc">Let another device view this screen, with the AI watching along. Off by default.</div>
+                <div class="rv-warn">⚠️ <b>Trusted networks only.</b> While this is on, your screen <b>images</b> are reachable by other devices on your local network — not just the paired device (the screen <b>text</b> requires the pairing code, but images do not). Enable only on a network you trust, like your home Wi-Fi or personal hotspot, and turn it off when you're done.</div>
+                <label class="rv-check"><input type="checkbox" id="rv-host-toggle" /> <span>Enable remote viewing of this machine</span></label>
+                <div id="rv-host-info" class="rv-host-info hidden"></div>
+              </div>
+              <div class="section">
+                <div class="section-title">View another machine</div>
+                <div class="section-desc">Enter the address &amp; pairing code shown on that machine's Remote tab.</div>
+                <div class="rv-fields">
+                  <input id="rv-host" placeholder="Address (e.g. 192.168.1.42)" autocomplete="off" />
+                  <input id="rv-token" placeholder="Pairing code" autocomplete="off" />
+                  <button id="rv-connect" class="primary">Connect</button>
+                </div>
+                <div id="rv-error" class="warn hidden"></div>
+              </div>
+            </div>
+
+            <div id="rv-live" class="rv-live hidden">
+              <div class="rv-toolbar">
+                <span id="rv-status" class="rv-status"><span class="live-pulse"></span> Connecting…</span>
+                <label class="rv-check"><input type="checkbox" id="rv-narrate" checked /> <span>AI narration</span></label>
+                <button id="rv-disconnect">Disconnect</button>
+              </div>
+              <div class="rv-stage">
+                <div class="rv-screen">
+                  <img id="rv-img" alt="Remote screen — waiting for first frame…" />
+                  <div id="rv-meta" class="rv-meta"></div>
+                </div>
+                <aside class="rv-ai">
+                  <div class="rv-ai-head">👁 AI watching</div>
+                  <div id="rv-ai-out" class="rv-ai-out"><div class="meta">Narration appears here as the screen changes.</div></div>
+                  <div class="rv-ask">
+                    <input id="rv-ask" placeholder="Ask about what's on screen…" autocomplete="off" />
+                    <button id="rv-ask-btn" class="send-btn" aria-label="Ask">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m6 11 6-6 6 6"/></svg>
+                    </button>
+                  </div>
+                </aside>
+              </div>
+            </div>
           </section>
 
           <section id="panel-pipes" class="panel hidden">

@@ -82,6 +82,16 @@ export const api = {
   deleteRange: (start: string, end: string) => invoke("api_delete_range", { start, end }) as Promise<any>,
   getDiscreet: () => invoke("api_get_discreet") as Promise<boolean>,
   setDiscreet: (on: boolean) => invoke("api_set_discreet", { on }) as Promise<void>,
+  // Remote viewing
+  getRemoteEnabled: () => invoke("api_get_remote_enabled") as Promise<boolean>,
+  setRemoteEnabled: (on: boolean) => invoke("api_set_remote_enabled", { on }) as Promise<void>,
+  remotePairing: () => invoke("api_remote_pairing") as Promise<{ host: string; port: number; token: string; enabled: boolean }>,
+  remoteLatest: (host: string, token: string, since: string) =>
+    invoke("api_remote_latest", { host, token, since }) as Promise<any>,
+  remoteFrame: (host: string, token: string, id: number) =>
+    invoke("api_remote_frame", { host, token, id }) as Promise<string>,
+  remoteComment: (context: string, question: string) =>
+    invoke("api_remote_comment", { context, question }) as Promise<string>,
   parseVoiceCommand: (transcript: string) =>
     invoke("api_parse_voice_command", { transcript }) as Promise<{ action: string; arg: string } | null>,
 };

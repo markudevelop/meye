@@ -239,6 +239,45 @@ pub async fn chat(question: &str) -> Result<ChatReply, String> {
     })
 }
 
+/// Comment on what's on a *remote* screen, given its OCR text directly (no recording
+/// search — the viewer already has the live text). Used by the remote viewer for live
+/// narration and on-the-fly help. Reuses the default model preset.
+pub async fn comment_on(context: &str, question: &str) -> Result<String, String> {
+    let p = default_preset()?;
+    if p.url.is_empty() || p.model.is_empty() {
+        return Err("Default preset is missing a URL or model — check the Settings tab.".into());
+    }
+    if p.provider == "anthropic" {
+        return Err("Chat via the Anthropic provider isn't wired yet — use a custom/openai/ollama preset (DeepSeek works).".into());
+    }
+    let system = "You are Meye, watching a live screen through its on-screen text (OCR). Be a \
+        concise, proactive helper: in 2-4 short sentences, say what the user seems to be doing and \
+        add genuinely useful help — if you see a math problem, solve it briefly with the key steps; \
+        if code, point out a bug or improvement; if notes, suggest structure or a missing point. \
+        Don't just echo the text back, and don't pad. If the text is too sparse to tell, say so in \
+        one line.";
+    let user = if question.trim().is_empty() {
+        format!("Current screen text:\n\n{context}")
+    } else {
+        format!("Current screen text:\n\n{context}\n\nThe user asks: {question}")
+    };
+    let body = json!({
+        "model": p.model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "max_tokens": 512
+    });
+    let resp = post_body(&p, &body).send().await.map_err(|e| e.to_string())?;
+    let v: Value = resp.json().await.map_err(|e| e.to_string())?;
+    v.pointer("/choices/0/message/content")
+        .and_then(|s| s.as_str())
+        .map(|s| s.to_string())
+        .filter(|s| !s.is_empty())
+        .ok_or_else(|| format!("unexpected model response: {v}"))
+}
+
 #[cfg(test)]
 mod probe {
     //! Live probes (ignored by default — hit real screenpipe + the DeepSeek API).

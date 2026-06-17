@@ -445,6 +445,81 @@ pub fn api_set_discreet(app: tauri::AppHandle, on: bool) -> Result<(), String> {
     Ok(())
 }
 
+// --- remote viewing ---
+
+/// This machine's primary LAN IPv4. Uses a UDP "connect" (no packets sent) to learn
+/// which local interface routes outward, then reads that socket's local address.
+fn lan_ip() -> Option<String> {
+    let sock = std::net::UdpSocket::bind("0.0.0.0:0").ok()?;
+    sock.connect("8.8.8.8:80").ok()?;
+    sock.local_addr().ok().map(|a| a.ip().to_string())
+}
+
+/// Minimal standard base64 (no padding-free variants); avoids pulling a crate in just
+/// to data-URL the proxied frame JPEGs.
+fn base64_encode(data: &[u8]) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(data.len().div_ceil(3) * 4);
+    for chunk in data.chunks(3) {
+        let n = ((chunk[0] as u32) << 16)
+            | ((*chunk.get(1).unwrap_or(&0) as u32) << 8)
+            | (*chunk.get(2).unwrap_or(&0) as u32);
+        out.push(T[(n >> 18 & 63) as usize] as char);
+        out.push(T[(n >> 12 & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { T[(n >> 6 & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { T[(n & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+#[tauri::command]
+pub fn api_get_remote_enabled() -> bool {
+    crate::prefs::get_remote_enabled()
+}
+
+/// Host: turn LAN exposure on/off (relaunches the recorder with/without --listen-on-lan).
+#[tauri::command]
+pub async fn api_set_remote_enabled(on: bool) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::agent::set_remote_enabled(on).map_err(|e| e.to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Host: pairing info a viewer needs — this machine's LAN IP, port, and recorder token.
+#[tauri::command]
+pub fn api_remote_pairing() -> Result<Value, String> {
+    let token = crate::screenpipe_api::local_token()
+        .ok_or("Recorder token unavailable — is recording running?")?;
+    let host = lan_ip().ok_or("Could not determine this machine's LAN IP address.")?;
+    Ok(serde_json::json!({
+        "host": host,
+        "port": paths::PORT,
+        "token": token,
+        "enabled": crate::prefs::get_remote_enabled(),
+    }))
+}
+
+/// Viewer: latest frame id + OCR text from a remote host (bounded by `since`, RFC3339).
+#[tauri::command]
+pub async fn api_remote_latest(host: String, token: String, since: String) -> Result<Value, String> {
+    crate::screenpipe_api::remote_search(&host, &token, 1, Some(since)).await
+}
+
+/// Viewer: a remote frame JPEG as a data: URL ready for an <img> tag.
+#[tauri::command]
+pub async fn api_remote_frame(host: String, token: String, id: i64) -> Result<String, String> {
+    let bytes = crate::screenpipe_api::remote_frame(&host, &token, id).await?;
+    Ok(format!("data:image/jpeg;base64,{}", base64_encode(&bytes)))
+}
+
+/// Viewer: AI commentary on the watched screen's current OCR text.
+#[tauri::command]
+pub async fn api_remote_comment(context: String, question: String) -> Result<String, String> {
+    crate::chat::comment_on(&context, &question).await
+}
+
 #[tauri::command]
 pub fn api_parse_voice_command(transcript: String) -> Option<crate::voice::VoiceCommand> {
     crate::voice::parse_voice_command(&transcript)

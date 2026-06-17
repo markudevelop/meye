@@ -174,6 +174,63 @@ pub async fn delete_range(start: &str, end: &str) -> Result<Value, String> {
     post("/data/delete-range", serde_json::json!({ "start": start, "end": end })).await
 }
 
+// --- remote viewing: read another Meye host's screenpipe over the LAN ---
+
+/// This machine's recorder API token, for handing to a paired viewer.
+pub fn local_token() -> Option<String> {
+    auth_token()
+}
+
+/// Base URL for a remote host: accepts "ip" or "ip:port", defaulting to our port.
+fn remote_base(host: &str) -> String {
+    if host.contains(':') {
+        format!("http://{host}")
+    } else {
+        format!("http://{host}:{}", paths::PORT)
+    }
+}
+
+/// Latest screen frames + OCR text from a remote host, bounded to `since` (RFC3339)
+/// so the host never runs an unbounded whole-DB scan.
+pub async fn remote_search(host: &str, token: &str, limit: u32, since: Option<String>) -> Result<Value, String> {
+    let mut q: Vec<(String, String)> = vec![
+        ("content_type".into(), "ocr".into()),
+        ("limit".into(), limit.to_string()),
+    ];
+    if let Some(s) = since {
+        if !s.is_empty() {
+            q.push(("start_time".into(), s));
+        }
+    }
+    client()
+        .get(format!("{}/search", remote_base(host)))
+        .bearer_auth(token)
+        .query(&q)
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?
+        .json::<Value>()
+        .await
+        .map_err(|e| e.to_string())
+}
+
+/// A frame JPEG from a remote host, as raw bytes (the viewer proxies it so the
+/// bearer header can be sent — an <img> tag can't).
+pub async fn remote_frame(host: &str, token: &str, id: i64) -> Result<Vec<u8>, String> {
+    let resp = client()
+        .get(format!("{}/frames/{id}", remote_base(host)))
+        .bearer_auth(token)
+        .timeout(std::time::Duration::from_secs(10))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !resp.status().is_success() {
+        return Err(format!("remote frame fetch failed: HTTP {}", resp.status()));
+    }
+    resp.bytes().await.map(|b| b.to_vec()).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

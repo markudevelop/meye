@@ -121,6 +121,12 @@ pub fn run() {
             commands::api_get_discreet,
             commands::api_set_discreet,
             commands::api_parse_voice_command,
+            commands::api_get_remote_enabled,
+            commands::api_set_remote_enabled,
+            commands::api_remote_pairing,
+            commands::api_remote_latest,
+            commands::api_remote_frame,
+            commands::api_remote_comment,
         ])
         .setup(|app| {
             // Upgrade old plists in-place before anything else touches the agent.
