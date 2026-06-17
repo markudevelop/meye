@@ -20,6 +20,18 @@ pub fn program_arguments() -> Vec<String> {
         "record".to_string(),
     ];
     v.extend(extra_args());
+    // Bound DB/disk growth. screenpipe writes a per-frame accessibility blob plus decomposed
+    // OCR/AX `elements` rows + an FTS5 index, all unbounded without retention. A bloated DB
+    // (observed at 11GB / 2.4M element rows) causes write amplification that throttles capture
+    // to a near-frozen fps. Retention is the only durable bound, so force it on even for older
+    // saved record-config.json files written before this flag existed — otherwise upgrading
+    // users keep growing forever. A config that already pins --retention-days is left untouched.
+    if !v.iter().any(|a| a == "--retention-days") {
+        v.push("--retention-days".into());
+        v.push("30".into());
+        v.push("--retention-mode".into());
+        v.push("all".into());
+    }
     // Remote viewing (opt-in, off by default): serve the API on the LAN with a bearer
     // token required for non-localhost callers. The host's own app keeps using
     // 127.0.0.1, which screenpipe always allows. Toggled via `set_remote_enabled`.
@@ -43,6 +55,14 @@ pub fn default_record_args() -> Vec<String> {
         "--prioritize-input-latency".into(),
         "--audio-device".into(),
         "System Audio (output)".into(),
+        // Cap DB/disk growth — parity with the Windows default. Without this the macOS DB
+        // grew unbounded (11GB), and the resulting write amplification throttled capture.
+        // POST /retention/configure does not persist across recorder restarts, so it must
+        // be a launch flag. The user can lower this in Performance → Capture sources.
+        "--retention-days".into(),
+        "30".into(),
+        "--retention-mode".into(),
+        "all".into(),
     ]
 }
 
