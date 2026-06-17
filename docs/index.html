@@ -4,9 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Meye — My memory</title>
-<meta name="description" content="Meye privately records your screen & audio on your Mac, so you can search and chat with everything you've seen. Free, and nothing leaves your computer." />
+<meta name="description" content="Meye privately records your screen & audio on your own computer, so you can search and chat with everything you've seen. Free for macOS & Windows, and nothing leaves your device." />
 <meta property="og:title" content="Meye — My memory" />
-<meta property="og:description" content="A free, private, local memory for your Mac. Search and chat with everything you've seen." />
+<meta property="og:description" content="A free, private, local memory for your Mac or PC. Search and chat with everything you've seen." />
 <meta property="og:type" content="website" />
 <style>
   /* ── tokens lifted from the app (src/styles.css) ── */
@@ -142,15 +142,15 @@
   <!-- HERO -->
   <section class="hero">
     <div class="wrap">
-      <span class="pill"><span class="dot"></span> 100% local · free · open source · nothing leaves your Mac</span>
+      <span class="pill"><span class="dot"></span> 100% local · free · open source · nothing leaves your device</span>
       <h1>Meye — <span class="accent">my memory</span></h1>
-      <p class="sub">Meye privately records your screen and audio on your Mac, so you can search and chat with everything you've ever seen, read, or heard.</p>
+      <p class="sub">Meye privately records your screen and audio on your own computer, so you can search and chat with everything you've ever seen, read, or heard.</p>
       <div class="cta">
         <!-- DOWNLOAD: GitHub Releases "latest" — auto-points to the newest published release -->
-        <a class="btn primary lg" href="https://github.com/markudevelop/meye/releases/latest">Download for macOS — free</a>
+        <a class="btn primary lg" href="https://github.com/markudevelop/meye/releases/latest">Download — free</a>
         <a class="btn lg" href="#how">See how it works</a>
       </div>
-      <p class="fineprint">Free · No account · macOS</p>
+      <p class="fineprint">Free · No account · macOS &amp; Windows</p>
     </div>
   </section>
 
@@ -164,7 +164,7 @@
         <div class="card">
           <div class="ic">🔒</div>
           <h3>Private by default</h3>
-          <p>Recording and search run entirely on your Mac. Your data never touches a server — not ours, not anyone's.</p>
+          <p>Recording and search run entirely on your own machine. Your data never touches a server — not ours, not anyone's.</p>
         </div>
         <div class="card">
           <div class="ic">💬</div>
@@ -214,9 +214,9 @@
         <p>Your memory belongs to you. Meye keeps it on your machine and asks nothing in return.</p>
         <p style="margin-top:4px;font-size:13px;opacity:.75">Open source under <a href="https://github.com/markudevelop/meye/blob/main/LICENSE">AGPL-3.0</a> — read, audit, and build on the <a href="https://github.com/markudevelop/meye">full source on GitHub</a>.</p>
         <!-- DOWNLOAD: GitHub Releases "latest" — auto-points to the newest published release -->
-        <a class="btn primary lg" href="https://github.com/markudevelop/meye/releases/latest">Download for macOS</a>
-        <p style="margin-top:14px;font-size:13px;opacity:.75">Universal (Apple Silicon + Intel) · macOS 13+ · ~5&nbsp;MB</p>
-        <p style="margin-top:8px;font-size:13px;opacity:.75">Windows &amp; Linux — <a href="https://github.com/markudevelop/meye/issues/new?title=Windows+support+request&amp;body=I+want+Meye+for+Windows">request support</a> (coming soon)</p>
+        <a class="btn primary lg" href="https://github.com/markudevelop/meye/releases/latest">Download</a>
+        <p style="margin-top:14px;font-size:13px;opacity:.75">macOS (universal, 13+) &amp; Windows 10/11 — pick your build on the releases page</p>
+        <p style="margin-top:8px;font-size:13px;opacity:.75">Linux — <a href="https://github.com/markudevelop/meye/issues/new?title=Linux+support+request&amp;body=I+want+Meye+for+Linux">request support</a> (coming soon)</p>
       </div>
 
       <div class="band" style="margin-top:18px">
@@ -229,6 +229,15 @@
         </ol>
         <p style="margin:0;font-size:13px;opacity:.75">If macOS says “Meye is damaged,” run in Terminal once: <code>xattr -dr com.apple.quarantine /Applications/Meye.app</code></p>
       </div>
+
+      <div class="band" style="margin-top:18px">
+        <h3 style="margin:0 0 8px;font-size:16px">First launch on Windows</h3>
+        <p style="margin:0 0 6px">The Windows installer isn't code-signed yet, so SmartScreen may warn the first time. One-time steps:</p>
+        <ol style="margin:0 0 6px 18px;padding:0;line-height:1.6">
+          <li>Run <strong>Meye_…_x64-setup.exe</strong>.</li>
+          <li>If a “Windows protected your PC” dialog appears, click <strong>More info → Run anyway</strong>.</li>
+        </ol>
+      </div>
     </div>
   </section>
 
@@ -240,7 +249,7 @@
       <div class="faq">
         <details open>
           <summary>Where does my data go?</summary>
-          <p>Nowhere. Meye records, indexes, and runs AI search entirely on your own Mac. Nothing is uploaded — there are no accounts and no servers involved in capturing or searching your memory.</p>
+          <p>Nowhere. Meye records, indexes, and runs AI search entirely on your own machine. Nothing is uploaded — there are no accounts and no servers involved in capturing or searching your memory.</p>
         </details>
         <details>
           <summary>Is Meye really free?</summary>
