@@ -211,10 +211,22 @@ async function ask() {
   }
 }
 
+/** Blow the AI panel up to fill the window so long code fixes are readable. */
+function toggleFullscreen(on?: boolean) {
+  const ai = $("rv-ai");
+  const full = on ?? !ai.classList.contains("fullscreen");
+  ai.classList.toggle("fullscreen", full);
+  $("rv-expand").textContent = full ? "✕ Exit full screen" : "⤢ Full screen";
+}
+
 export function initRemote() {
   $("rv-connect").onclick = () => void connect();
   $("rv-disconnect").onclick = () => disconnect();
   $("rv-ask-btn").onclick = () => void ask();
+  $("rv-expand").onclick = () => toggleFullscreen();
+  document.addEventListener("keydown", (e) => {
+    if ((e as KeyboardEvent).key === "Escape") toggleFullscreen(false);
+  });
   ($("rv-ask") as HTMLInputElement).addEventListener("keydown", (e) => {
     if ((e as KeyboardEvent).key === "Enter") void ask();
   });
