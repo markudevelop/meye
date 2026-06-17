@@ -38,6 +38,18 @@ pub fn program_arguments() -> Vec<String> {
     if crate::prefs::get_remote_enabled() {
         v.push("--listen-on-lan".into());
         v.push("--api-auth".into());
+        // While remote viewing is on (you intend to be watched), capture far more often so a
+        // static screen still refreshes ~every 1.5s for the viewer instead of every ~60s on the
+        // idle interval. This reverts to the low-overhead default the moment remote viewing is
+        // turned off. Respect an explicit value the user pinned in record-config.json.
+        if !v.iter().any(|a| a == "--idle-capture-interval-ms") {
+            v.push("--idle-capture-interval-ms".into());
+            v.push("1500".into());
+        }
+        if !v.iter().any(|a| a == "--min-capture-interval-ms") {
+            v.push("--min-capture-interval-ms".into());
+            v.push("750".into());
+        }
     }
     v
 }
