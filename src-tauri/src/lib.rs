@@ -22,6 +22,8 @@ mod activity;
 mod prefs;
 #[allow(dead_code)]
 mod voice;
+#[allow(dead_code)]
+mod procutil;
 
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
@@ -191,6 +193,7 @@ pub fn run() {
             let tray_toggle = toggle_i.clone();
             tauri::async_runtime::spawn(async move {
                 let mut prev_running = false;
+                let mut prev_alive = false;
                 loop {
                     let status = if !agent::is_installed() {
                         health::Status::NotInstalled
@@ -200,16 +203,22 @@ pub fn run() {
                             None => {
                                 if agent::is_loaded() && !agent::missing_permissions().is_empty() {
                                     health::Status::WaitingPermissions
+                                } else if agent::is_running() {
+                                    // Process alive but API not up: booting / first-run
+                                    // downloads. Without this the dashboard claims
+                                    // "Stopped" for minutes right after Start.
+                                    health::Status::Starting
                                 } else {
                                     health::Status::Down
                                 }
                             }
                         }
                     };
-                    // On the edge into "running" (app launch, or a recorder restart while
+                    // On the edge into "API up" (app launch, or a recorder restart while
                     // the dashboard is open), re-arm any scheduled pipe that drifted to
                     // disabled so scheduled agents keep firing. Fire-and-forget; never
-                    // blocks the status emit. Manual pipes are left untouched.
+                    // blocks the status emit. Manual pipes are left untouched. (Starting
+                    // doesn't count — pipe CLI calls need the API.)
                     let running =
                         matches!(status, health::Status::Healthy | health::Status::Degraded);
                     if running && !prev_running {
@@ -217,12 +226,15 @@ pub fn run() {
                             let _ = crate::pipes::reassert_scheduled();
                         });
                     }
-                    // Keep tray toggle label honest: only "Pause" if a recorder process is
-                    // actually alive. Edge-only so we are not re-setting the same string.
-                    if running != prev_running {
-                        let _ = tray_toggle.set_text(if running { PAUSE_LABEL } else { RESUME_LABEL });
-                    }
                     prev_running = running;
+                    // Keep tray toggle label honest: "Pause" whenever a recorder process is
+                    // actually alive (including boot). Edge-only so we are not re-setting
+                    // the same string.
+                    let alive = running || matches!(status, health::Status::Starting);
+                    if alive != prev_alive {
+                        let _ = tray_toggle.set_text(if alive { PAUSE_LABEL } else { RESUME_LABEL });
+                    }
+                    prev_alive = alive;
                     let _ = handle.emit("status", &status);
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 }
@@ -235,6 +247,7 @@ pub fn run() {
         .run(|app, event| {
             // macOS "reopen" (clicking the dock icon, or `open -a Meye` while it's already
             // running) — re-show the window. Critical for getting back in from discreet mode.
+            #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen { .. } = event {
                 if let Some(w) = app.get_webview_window("main") {
                     let _ = w.show();

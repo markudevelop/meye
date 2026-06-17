@@ -1,7 +1,7 @@
 import { $, wrap } from "./ui";
 import { api } from "./api";
 
-type Status = "Healthy" | "Degraded" | "Down" | "NotInstalled" | "WaitingPermissions";
+type Status = "Healthy" | "Degraded" | "Down" | "NotInstalled" | "WaitingPermissions" | "Starting";
 
 const PANE: Record<string, string> = {
   "Screen Recording": "screen",
@@ -10,13 +10,14 @@ const PANE: Record<string, string> = {
 };
 
 function applyStatus(s: Status) {
-  const cls = ({ Healthy: "green", Degraded: "yellow", Down: "red", NotInstalled: "grey", WaitingPermissions: "orange" } as Record<Status, string>)[s] ?? "grey";
+  const cls = ({ Healthy: "green", Degraded: "yellow", Down: "red", NotInstalled: "grey", WaitingPermissions: "orange", Starting: "yellow" } as Record<Status, string>)[s] ?? "grey";
   const label = ({
     Healthy: "Recording",
     Degraded: "Degraded",
     Down: "Stopped",
     NotInstalled: "Not set up",
     WaitingPermissions: "Waiting for permissions",
+    Starting: "Starting…",
   } as Record<Status, string>)[s] ?? s;
   for (const id of ["dot", "side-dot"]) {
     const el = document.getElementById(id);
@@ -34,7 +35,7 @@ function applyStatus(s: Status) {
 
   // Reflect the live state in the buttons: highlight the action you'd actually take, and
   // disable the ones that don't apply (can't Start when already recording, etc).
-  const running = s === "Healthy" || s === "Degraded";
+  const running = s === "Healthy" || s === "Degraded" || s === "Starting";
   const stopped = s === "Down";
   const start = $("btn-start") as HTMLButtonElement;
   const stop = $("btn-stop") as HTMLButtonElement;
@@ -45,10 +46,14 @@ function applyStatus(s: Status) {
   start.classList.toggle("primary", !running); // primary (highlighted) when stopped/idle
   stop.classList.remove("primary");
 
-  // A plain-language hint when stopped (no /health to drive the reason line otherwise).
+  // A plain-language hint when stopped or booting (no /health to drive the reason line).
   const reason = $("health-reason");
   if (stopped) {
     reason.textContent = "⏹ Recording is stopped. Press Start to begin capturing again.";
+    reason.classList.remove("hidden");
+  } else if (s === "Starting") {
+    reason.textContent =
+      "⏳ Recorder is starting — on first run it downloads ffmpeg and the transcription model, which can take a few minutes. Check the log tail below for progress.";
     reason.classList.remove("hidden");
   }
 }
@@ -56,7 +61,7 @@ function applyStatus(s: Status) {
 async function renderPerms() {
   const p = await api.getPermissions();
   $("perms-msg").textContent = p.waiting.length
-    ? `Waiting for permissions: ${p.waiting.join(", ")}. Grant in System Settings, then Re-check.`
+    ? `Waiting for permissions: ${p.waiting.join(", ")}. Grant in your system's privacy settings, then Re-check.`
     : "Starting…";
   const box = $("perms-buttons");
   box.innerHTML = "";
@@ -79,6 +84,9 @@ async function refreshState() {
 
 export async function refreshHealth() {
   const h = await api.getHealth();
+  // Always refresh the log tail — while booting (health not up yet) the logs are the
+  // only progress indicator (ffmpeg/model downloads).
+  $("logs-pre").textContent = await api.tailLogs(40);
   if (!h) return;
   $("m-version").textContent = h.version || "—";
   const secs = Math.round(h.pipeline?.uptime_secs ?? 0);
@@ -99,6 +107,9 @@ export async function refreshHealth() {
   if (h.status && h.status !== "healthy" && h.status !== "ok") {
     if (coreOk && pending > 0) {
       reason.textContent = `✓ Recording normally — whisper is transcribing ${pending} audio segment${pending === 1 ? "" : "s"} in the background. This clears itself.`;
+    } else if (h.frame_status === "ok" && h.audio_status === "not_started") {
+      reason.textContent =
+        "✓ Screen is recording. Audio is idle — system audio is captured automatically when sound plays, and a microphone is picked up the moment you connect one.";
     } else {
       reason.textContent = h.message || "Some subsystems are not healthy — see logs below.";
     }
@@ -106,8 +117,6 @@ export async function refreshHealth() {
   } else {
     reason.classList.add("hidden");
   }
-
-  $("logs-pre").textContent = await api.tailLogs(40);
 }
 
 export function initStatus() {

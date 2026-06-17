@@ -86,12 +86,24 @@ pub fn tail_logs(lines: usize) -> String {
     )
 }
 
+#[cfg(not(windows))]
 fn open_path(path: &str) -> Result<(), String> {
     std::process::Command::new("open")
         .arg(path)
         .status()
         .map_err(|e| e.to_string())
         .and_then(|s| if s.success() { Ok(()) } else { Err("open failed".into()) })
+}
+
+#[cfg(windows)]
+fn open_path(path: &str) -> Result<(), String> {
+    // explorer opens folders and ms-settings: URIs alike, but exits 1 even on
+    // success — fire and forget instead of checking the status.
+    crate::procutil::cmd("explorer")
+        .arg(path)
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
 }
 
 #[derive(serde::Serialize)]
@@ -104,6 +116,7 @@ pub fn get_permissions() -> Permissions {
     Permissions { waiting: agent::missing_permissions() }
 }
 
+#[cfg(not(windows))]
 #[tauri::command]
 pub fn open_settings(pane: String) -> Result<(), String> {
     // Pause the recorder before opening Settings. Otherwise launchd keeps relaunching it
@@ -115,6 +128,18 @@ pub fn open_settings(pane: String) -> Result<(), String> {
         "microphone" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
         "accessibility" => "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
         _ => "x-apple.systempreferences:com.apple.preference.security?Privacy",
+    };
+    open_path(url)
+}
+
+#[cfg(windows)]
+#[tauri::command]
+pub fn open_settings(pane: String) -> Result<(), String> {
+    // No TCC equivalent on Windows — no prompt-flap problem, so the recorder keeps
+    // running. Screen capture needs no system permission; mic does.
+    let url = match pane.as_str() {
+        "microphone" => "ms-settings:privacy-microphone",
+        _ => "ms-settings:privacy",
     };
     open_path(url)
 }

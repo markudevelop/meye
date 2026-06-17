@@ -7,9 +7,19 @@ import { renderMarkdown } from "./md";
 // current frame, and an infinite-scroll feed below. Replaces the old Live/Search/Timeline tabs.
 
 const PAGE = 24;
+// screenpipe's /search gathers every row in the [start_time, end_time] window (up to its
+// internal 10k cap) BEFORE applying our limit — and each frames row drags a large
+// accessibility-tree blob off disk. With no window it scans the whole DB → multi-minute
+// queries that exhaust the connection pool. So the browse feed pages BACKWARD in bounded
+// time windows: each request only ever scans ~WINDOW_MS of history, never the whole table.
+const WINDOW_MS = 6 * 60 * 60 * 1000; // 6h gather window per page
+const FLOOR_MS = 31 * 24 * 60 * 60 * 1000; // stop paging past ~retention; nothing older is kept
+const isoFrom = (ms: number) => new Date(ms).toISOString();
+
 let query = "";
 let ctype = "all";
-let offset = 0;
+let offset = 0; // used only by the keyword-search path (FTS-indexed, fast)
+let cursorEnd: number | null = null; // browse path: end_time (ms epoch) for the next page; null = now
 let loading = false;
 let done = false;
 let observer: IntersectionObserver | null = null;
@@ -39,35 +49,67 @@ function card(hit: any): string {
   }</div>`;
 }
 
+/** Keyword search path — FTS-indexed, so plain offset paging stays fast. */
+async function loadSearch(): Promise<any[]> {
+  const res: any = await api.search({ q: query, content_type: ctype, limit: PAGE, offset });
+  const data: any[] = res.data ?? res.results ?? [];
+  offset += data.length;
+  if (data.length < PAGE) {
+    done = true;
+    $("mem-end").classList.remove("hidden");
+  }
+  return data;
+}
+
+/** Browse path — no query. Page backward through history in bounded time windows so
+ * screenpipe only ever scans ~WINDOW_MS of rows per request, never the whole table. */
+async function loadBrowse(): Promise<any[]> {
+  let end = cursorEnd ?? Date.now();
+  const floor = Date.now() - FLOOR_MS;
+  // Step back over inactive gaps (screen locked, off-hours) until a window has rows.
+  for (let step = 0; step < 30 && end > floor; step++) {
+    const start = Math.max(end - WINDOW_MS, floor);
+    const res: any = await api.search({ content_type: ctype, start_time: isoFrom(start), end_time: isoFrom(end), limit: PAGE });
+    const data: any[] = res.data ?? res.results ?? [];
+    if (data.length) {
+      const oldest = data[data.length - 1];
+      const ts = new Date((oldest.content ?? oldest).timestamp ?? "").getTime();
+      cursorEnd = isNaN(ts) ? start : ts - 1; // exclusive: next page resumes just before the oldest shown
+      if (cursorEnd <= floor) {
+        done = true;
+        $("mem-end").classList.remove("hidden");
+      }
+      return data;
+    }
+    end = start; // empty window — keep stepping back
+  }
+  done = true;
+  $("mem-end").classList.remove("hidden");
+  return [];
+}
+
 async function loadMore() {
   if (loading || done) return;
   loading = true;
+  const fresh = !$("mem-feed").querySelector(".tl-card"); // no cards yet → first page of this query
   const spinner = `<div class="loading-row"><span class="run-spin"></span> ${query ? "Searching your memory…" : "Loading your memory…"}</div>`;
-  if (offset === 0) $("mem-feed").innerHTML = spinner;
+  if (fresh) $("mem-feed").innerHTML = spinner;
   else $("mem-feed").insertAdjacentHTML("beforeend", `<div class="loading-row" id="mem-more"><span class="run-spin"></span></div>`);
   try {
-    const res: any = await api.search({ q: query || undefined, content_type: ctype, limit: PAGE, offset });
-    const data: any[] = res.data ?? res.results ?? [];
-    if (offset === 0) $("mem-feed").innerHTML = "";
+    const data: any[] = query ? await loadSearch() : await loadBrowse();
+    if (fresh) $("mem-feed").innerHTML = "";
     document.getElementById("mem-more")?.remove();
     if (!data.length) {
-      done = true;
-      $("mem-end").classList.remove("hidden");
-      if (offset === 0)
+      if (fresh)
         $("mem-feed").innerHTML = query
           ? `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><div class="es-title">No matches for "${esc(query)}"</div><div class="es-sub">Try fewer or different words.</div></div>`
           : `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div class="es-title">Nothing here yet</div><div class="es-sub">Your memory fills up as you work. Make sure recording is on in Settings → Recorder.</div></div>`;
       return;
     }
     $("mem-feed").insertAdjacentHTML("beforeend", data.map(card).join(""));
-    offset += data.length;
-    if (data.length < PAGE) {
-      done = true;
-      $("mem-end").classList.remove("hidden");
-    }
   } catch (e) {
     document.getElementById("mem-more")?.remove();
-    if (offset === 0) $("mem-feed").innerHTML = "";
+    if (fresh) $("mem-feed").innerHTML = "";
     $("mem-feed").insertAdjacentHTML("beforeend", `<p class="warn">Couldn't load: ${esc(String(e))} (is the recorder running?)</p>`);
     done = true;
   } finally {
@@ -77,6 +119,7 @@ async function loadMore() {
 
 function resetFeed() {
   offset = 0;
+  cursorEnd = null;
   done = false;
   $("mem-feed").innerHTML = "";
   $("mem-end").classList.add("hidden");
@@ -92,7 +135,8 @@ export function searchMemory(q: string) {
 
 async function tickLive() {
   try {
-    const res: any = await api.search({ content_type: "ocr", limit: 1 });
+    // Bounded to the last 2h so this 4s tick can never trigger a whole-DB scan.
+    const res: any = await api.search({ content_type: "ocr", limit: 1, start_time: isoFrom(Date.now() - 2 * 60 * 60 * 1000) });
     const f = (res.data ?? [])[0];
     if (!f) return;
     const c = f.content ?? f;

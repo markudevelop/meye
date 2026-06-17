@@ -27,10 +27,10 @@ export function initOnboarding() {
   $("onboard").querySelectorAll<HTMLElement>(".onboard-skip, .onboard-finish").forEach((b) => (b.onclick = finish));
 
   $("onboard-setup").onclick = async () => {
-    $("onboard-setup-status").textContent = "Setting up… approve the macOS permission prompts.";
+    $("onboard-setup-status").textContent = "Setting up… approve any system permission prompts.";
     await wrap("Set up & start", () => api.setup());
     $("onboard-setup-status").innerHTML =
-      "✓ Recorder installed. If macOS asked for Screen Recording / Microphone, allow <b>Meye Recorder</b>, then continue.";
+      "✓ Recorder installed. If your system asked for Screen Recording / Microphone, allow <b>Meye Recorder</b>, then continue.";
   };
 
   if (localStorage.getItem(KEY) === "1") return;

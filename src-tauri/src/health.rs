@@ -8,6 +8,9 @@ pub enum Status {
     Down,
     NotInstalled,
     WaitingPermissions,
+    /// Recorder process is alive but /health isn't answering yet — boot, or the
+    /// first-run dependency downloads (ffmpeg, whisper model), which take minutes.
+    Starting,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -26,6 +29,10 @@ pub struct AudioPipeline {
     pub pending_transcription_segments: u64,
     #[serde(default)]
     pub total_words: u64,
+    #[serde(default)]
+    pub process_errors: u64,
+    #[serde(default)]
+    pub stream_timeouts: u64,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -64,7 +71,14 @@ pub fn classify(h: &Health) -> Status {
     match h.status.as_str() {
         "healthy" | "ok" => Status::Healthy,
         "degraded" => {
-            let core_ok = h.frame_status == "ok" && h.audio_status == "ok";
+            // Audio "not_started" without errors just means idle: no mic connected and
+            // nothing playing through the speakers. Capture self-starts the moment sound
+            // flows or a mic appears — silence is not Degraded. Real failures (stream
+            // opens failing, e.g. a permission-blocked mic) keep the warning.
+            let audio_idle = h.audio_status == "not_started"
+                && h.audio_pipeline.process_errors == 0
+                && h.audio_pipeline.stream_timeouts == 0;
+            let core_ok = h.frame_status == "ok" && (h.audio_status == "ok" || audio_idle);
             if core_ok {
                 Status::Healthy
             } else {
@@ -140,6 +154,26 @@ mod tests {
         assert_eq!(classify(&h), Status::Healthy);
         h.status = "whatever".into();
         assert_eq!(classify(&h), Status::Down);
+    }
+
+    #[test]
+    fn idle_audio_is_healthy_but_audio_errors_are_degraded() {
+        // No mic + silence: screenpipe says degraded/not_started but capture is fine.
+        let mut h = Health::default();
+        h.status = "degraded".into();
+        h.frame_status = "ok".into();
+        h.audio_status = "not_started".into();
+        assert_eq!(classify(&h), Status::Healthy);
+        // Same shape but the audio stream is actually erroring => keep the warning.
+        h.audio_pipeline.process_errors = 3;
+        assert_eq!(classify(&h), Status::Degraded);
+        h.audio_pipeline.process_errors = 0;
+        h.audio_pipeline.stream_timeouts = 1;
+        assert_eq!(classify(&h), Status::Degraded);
+        // Screen broken is never excused by idle audio.
+        h.audio_pipeline.stream_timeouts = 0;
+        h.frame_status = "stalled".into();
+        assert_eq!(classify(&h), Status::Degraded);
     }
 
     #[test]

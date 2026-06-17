@@ -1,11 +1,10 @@
-use crate::paths;
+use crate::{paths, procutil};
 use serde_json::Value;
 use std::path::PathBuf;
-use std::process::Command;
 
 /// Run `screenpipe pipe <args...>` via the pinned binary, returning stdout on success.
 fn run_pipe(args: &[&str]) -> Result<String, String> {
-    let out = Command::new(paths::recorder_binary())
+    let out = procutil::cmd(paths::recorder_binary())
         .arg("pipe")
         .args(args)
         .output()

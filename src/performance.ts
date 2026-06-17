@@ -176,7 +176,7 @@ export async function refreshPerfStats() {
   let status = `<b>Actually capturing:</b> ${screenState} · ${audioStateLabel}`;
   if (audioSelected && audioDisabled) {
     status +=
-      " — a device is selected but the recorder isn't recording audio. macOS is blocking microphone access for the recorder (Privacy → Microphone → enable Meye Recorder).";
+      " — a device is selected but the recorder isn't recording audio. The OS is likely blocking microphone access for the recorder (system privacy settings → Microphone → allow Meye Recorder).";
   }
   $("cap-status").innerHTML = status;
 }
