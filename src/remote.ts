@@ -176,29 +176,33 @@ async function tick() {
       void maybeNarrate();
     }
 
-    // Also pull recent host audio so the AI can hear a meeting — system audio (the other
-    // party) and/or the host's mic, whichever the host is transcribing. Best-effort: a host
-    // that isn't transcribing just returns nothing. Reuses the cheap host-clock window.
-    try {
-      const ares: any = await api.remoteAudio(host, token, sinceIso(), 10);
-      const rows = (ares.data ?? []).map((h: any) => h.content ?? h);
-      const lines = rows
-        .map((c: any) => {
-          const t = String(c.transcription ?? c.text ?? "").trim();
-          if (!t) return "";
-          const who = c.speaker?.name ?? (c.speaker_id != null ? `Speaker ${c.speaker_id}` : (c.device_name ?? ""));
-          return who ? `${who}: ${t}` : t;
-        })
-        .filter(Boolean)
-        .reverse(); // screenpipe returns newest-first; show newest last for the AI
-      if (lines.length) recentAudio = lines.join("\n");
-      const maxTs = rows.map((c: any) => String(c.timestamp ?? "")).filter(Boolean).sort().pop() ?? "";
-      if (maxTs && maxTs !== lastAudioTs) {
-        lastAudioTs = maxTs;
-        void maybeNarrate(); // fresh speech — let the AI respond even if the screen didn't change
+    // Audio is OPT-IN (default off): the viewer is screen-only unless the user ticks "Include
+    // audio". This keeps the host's mic / meeting speech off the wire and out of the AI context
+    // by default — you choose to listen, per connection.
+    if (($("rv-audio") as HTMLInputElement).checked) {
+      try {
+        const ares: any = await api.remoteAudio(host, token, sinceIso(), 10);
+        const rows = (ares.data ?? []).map((h: any) => h.content ?? h);
+        const lines = rows
+          .map((c: any) => {
+            const t = String(c.transcription ?? c.text ?? "").trim();
+            if (!t) return "";
+            const who = c.speaker?.name ?? (c.speaker_id != null ? `Speaker ${c.speaker_id}` : (c.device_name ?? ""));
+            return who ? `${who}: ${t}` : t;
+          })
+          .filter(Boolean)
+          .reverse(); // screenpipe returns newest-first; show newest last for the AI
+        if (lines.length) recentAudio = lines.join("\n");
+        const maxTs = rows.map((c: any) => String(c.timestamp ?? "")).filter(Boolean).sort().pop() ?? "";
+        if (maxTs && maxTs !== lastAudioTs) {
+          lastAudioTs = maxTs;
+          void maybeNarrate(); // fresh speech — let the AI respond even if the screen didn't change
+        }
+      } catch {
+        /* audio is optional; ignore when the host isn't transcribing */
       }
-    } catch {
-      /* audio is optional; ignore when the host isn't transcribing */
+    } else if (recentAudio) {
+      recentAudio = ""; // audio just turned off — drop it from the AI's context immediately
     }
   } finally {
     ticking = false;
