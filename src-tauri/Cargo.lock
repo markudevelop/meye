@@ -1830,7 +1830,7 @@ dependencies = [
 
 [[package]]
 name = "meye"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "libc",
  "reqwest 0.12.28",
