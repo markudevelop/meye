@@ -77,11 +77,16 @@ function renderAudioDevices(devs: any, args: string[]) {
   const disabled = args.includes("--disable-audio");
   const selected: string[] = [];
   for (let i = 0; i < args.length; i++) if (args[i] === "--audio-device") selected.push(args[i + 1] ?? "");
-  el.innerHTML = "";
+  // No explicit --audio-device and not disabled = screenpipe records EVERY device. Show those
+  // toggles ON so the UI reflects what's actually captured (previously they all looked off).
+  const captureAll = !disabled && selected.length === 0;
+  el.innerHTML = captureAll
+    ? "<p class='meta'>Recording all audio devices (default). Turn off the ones you don't want — turn them all off to stop audio entirely.</p>"
+    : "";
   for (const d of list) {
     const name = String(d?.name ?? "");
     if (!name) continue;
-    const on = !disabled && selected.includes(name);
+    const on = !disabled && (captureAll || selected.includes(name));
     const row = document.createElement("div");
     row.className = "toggle-row";
     row.innerHTML =
@@ -99,8 +104,15 @@ async function toggleDevice(name: string, on: boolean) {
   const cur = await api.getRecordArgs().catch(() => [] as string[]);
   let sel: string[] = [];
   for (let i = 0; i < cur.length; i++) if (cur[i] === "--audio-device") sel.push(cur[i + 1] ?? "");
+  // Were we in "capture all" mode (no explicit devices) and turning one OFF? Expand to the full
+  // device list first so we drop just that one device instead of disabling all audio.
+  if (sel.length === 0 && !cur.includes("--disable-audio") && !on) {
+    const devs: any = await api.audioDevices().catch(() => []);
+    const all: any[] = Array.isArray(devs) ? devs : (devs?.data ?? []);
+    sel = all.map((d) => String(d?.name ?? "")).filter(Boolean);
+  }
   sel = sel.filter((d) => d !== name);
-  if (on) sel.push(name);
+  if (on && !sel.includes(name)) sel.push(name);
   const base = stripAudioSources(cur).filter((a) => a !== "--disable-audio");
   if (sel.length === 0) {
     base.push("--disable-audio");
