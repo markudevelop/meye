@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Remote viewing connects to another Meye host by LAN IP. macOS (Sequoia+) gates outbound
+       local-network connections behind a privacy prompt; without this usage string the prompt is
+       unreliable/silently denied, so the viewer fails with "error sending request" while the
+       host's own localhost API still works. Declaring it makes macOS show a proper Allow prompt. -->
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Meye connects to another Meye device on your local network to view its screen and audio.</string>
+</dict>
+</plist>

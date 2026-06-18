@@ -92,6 +92,8 @@ pub fn build_info_plist(bundle_id: &str, exec_name: &str) -> String {
   <string>Meye records the screen so you can search and recall what you saw.</string>
   <key>NSAccessibilityUsageDescription</key>
   <string>Meye reads on-screen UI text so the timeline can capture what you were working on.</string>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Meye serves your recordings to another Meye device on your local network when remote viewing is on.</string>
 </dict>
 </plist>
 "#
@@ -120,7 +122,11 @@ pub fn migrate_binary_name() {
         }
     }
     let needs_info = match std::fs::read_to_string(paths::recorder_info_plist()) {
-        Ok(s) => !s.contains("NSScreenCaptureUsageDescription") || s.contains("<string>screenpipe</string>"),
+        Ok(s) => {
+            !s.contains("NSScreenCaptureUsageDescription")
+                || !s.contains("NSLocalNetworkUsageDescription")
+                || s.contains("<string>screenpipe</string>")
+        }
         Err(_) => false,
     };
     if needs_info {
@@ -274,6 +280,7 @@ mod tests {
         assert!(xml.contains("<key>CFBundleExecutable</key>"));
         assert!(xml.contains("<string>meye-recorder</string>"));
         assert!(xml.contains("<key>NSMicrophoneUsageDescription</key>"));
+        assert!(xml.contains("<key>NSLocalNetworkUsageDescription</key>"));
         assert!(xml.contains("<key>LSUIElement</key>"));
     }
 }
