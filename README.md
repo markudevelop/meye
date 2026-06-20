@@ -5,6 +5,8 @@
 screenpipe's full API in a usable UI, and grows AI recall + Obsidian organization on top.
 Runs on **macOS** and **Windows**.
 
+**Website & downloads:** [markudevelop.github.io/meye](https://markudevelop.github.io/meye/) · grab a build from [Releases](https://github.com/markudevelop/meye/releases).
+
 ## What it does
 - **Keeps screenpipe alive** — on macOS via a launchd agent (`KeepAlive` + `RunAtLoad`); on
   Windows via a Task Scheduler task (logon trigger + 1-minute keep-alive tick). Auto-restarts

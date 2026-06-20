@@ -1,5 +1,5 @@
 ---
-schedule: 0 23 * * 0
+schedule: 0 21 * * 0
 enabled: true
 title: Weekly Summary
 icon: 📅

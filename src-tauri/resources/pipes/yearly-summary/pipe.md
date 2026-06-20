@@ -1,5 +1,5 @@
 ---
-schedule: 0 1 1 1 *
+schedule: 0 22 1 1 *
 enabled: true
 title: Yearly Summary
 icon: 🎆

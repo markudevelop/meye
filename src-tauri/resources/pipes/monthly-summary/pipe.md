@@ -1,5 +1,5 @@
 ---
-schedule: 30 0 1 * *
+schedule: 30 21 1 * *
 enabled: true
 title: Monthly Summary
 icon: 🗓
