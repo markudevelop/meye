@@ -1,6 +1,6 @@
 [package]
 name = "meye"
-version = "0.1.14"
+version = "0.1.15"
 description = "Meye — local personal-memory app on screenpipe"
 authors = ["Mark Uretsky"]
 edition = "2021"

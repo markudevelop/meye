@@ -1,5 +1,6 @@
 import { $, wrap, toast } from "./ui";
 import { api } from "./api";
+import { goTab } from "./tabs";
 
 function esc(s: string): string {
   return s.replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
@@ -63,6 +64,15 @@ export function initSettings() {
     localStorage.setItem("meye.dev", on ? "1" : "0");
     document.body.classList.toggle("dev", on);
     toast(on ? "Developer mode on — technical extras shown" : "Developer mode off");
+  };
+  const remote = $("set-remote") as HTMLInputElement;
+  remote.checked = localStorage.getItem("meye.remote") === "1";
+  remote.onchange = () => {
+    const on = remote.checked;
+    localStorage.setItem("meye.remote", on ? "1" : "0");
+    document.body.classList.toggle("remote-on", on);
+    if (!on) goTab("home"); // leave the Remote tab if it was open as it's being hidden
+    toast(on ? "Remote viewing on — Remote tab shown" : "Remote viewing off — Remote tab hidden");
   };
   $("set-create").onclick = () =>
     wrap("Create preset", () =>

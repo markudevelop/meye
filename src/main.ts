@@ -16,6 +16,8 @@ import { api } from "./api";
 
 // Restore developer-mode visibility before anything renders.
 if (localStorage.getItem("meye.dev") === "1") document.body.classList.add("dev");
+// Remote viewing is opt-in — hide the Remote tab unless the user enabled it in Settings.
+if (localStorage.getItem("meye.remote") === "1") document.body.classList.add("remote-on");
 
 initPalette();
 initHome();

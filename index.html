@@ -22,7 +22,7 @@
           <button id="tab-btn-memory" class="nav-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg><span>Memory</span>
           </button>
-          <button id="tab-btn-remote" class="nav-item">
+          <button id="tab-btn-remote" class="nav-item remote-only">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span>Remote</span>
           </button>
           <button id="tab-btn-pipes" class="nav-item">
@@ -352,6 +352,15 @@
                     <div class="tr-desc">Shows the technical extras — raw logs, record flags, automation config editor, the SQL console, and raw device JSON. Leave off for a cleaner app.</div>
                   </div>
                   <label class="switch"><input type="checkbox" id="set-dev" /><span class="slider"></span></label>
+                </div>
+              </div>
+              <div class="section">
+                <div class="toggle-row">
+                  <div class="tr-text">
+                    <div class="tr-title">Remote viewing</div>
+                    <div class="tr-desc">Adds the Remote tab so you can view another machine on your LAN (or let this one be viewed). Off by default — turn on only when you actually need it.</div>
+                  </div>
+                  <label class="switch"><input type="checkbox" id="set-remote" /><span class="slider"></span></label>
                 </div>
               </div>
             </div>

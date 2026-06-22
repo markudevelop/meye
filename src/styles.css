@@ -154,6 +154,9 @@ h3 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacin
 /* developer-only elements — hidden unless body.dev */
 body:not(.dev) .dev-only { display: none !important; }
 
+/* remote-viewing elements — hidden unless body.remote-on (opt-in via Settings) */
+body:not(.remote-on) .remote-only { display: none !important; }
+
 /* Settings sub-tabs (segmented nav) */
 .subtabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 4px 0 18px; flex-wrap: wrap; }
 .subtab { background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 9px 12px; font-size: 13.5px; font-weight: 500; color: var(--muted); cursor: pointer; }
